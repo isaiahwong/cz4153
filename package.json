@@ -1,15 +1,21 @@
 {
-  "name": "cz4153",
+  "name": "dns",
   "version": "1.0.0",
+  "private": true,
   "description": "",
   "main": "index.js",
   "scripts": {
+    "compile": "SKIP_LOAD=true hardhat clean && SKIP_LOAD=true hardhat compile",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^3.0.0",
-    "hardhat": "^2.17.4"
+    "hardhat": "^2.17.4",
+    "typechain": "^8.3.1"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.9.3"
   }
 }
