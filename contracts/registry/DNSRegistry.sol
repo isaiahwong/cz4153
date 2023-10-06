@@ -38,15 +38,27 @@ contract DNSRegistry is IDNS {
         return subdomain;
     }
 
+    function setResolver(bytes32 domain, address _resolver) public auth(domain) {
+        registrars[domain].resolver = _resolver;
+    }
+
     function resolver(bytes32 domain) public view returns (address) {
         return registrars[domain].resolver;
     }
 
-    function domainOwner(bytes32 domain) public view override returns (address) {
+    function addr(bytes32 domain) public view override returns (address) {
         return registrars[domain].owner;
     }
 
     function exists(bytes32 domain) public view returns (bool) {
         return registrars[domain].owner != address(0x0);
+    }
+
+    function bulkResolve(bytes32[] memory domains) public view returns (address[] memory) {
+        address[] memory addresses = new address[](domains.length);
+        for (uint256 i = 0; i < domains.length; i++) {
+            addresses[i] = addr(domains[i]);
+        }
+        return addresses;
     }
 }

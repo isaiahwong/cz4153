@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
 interface IDNS {
     event NewDomainOwner(bytes32 indexed parentDomain, bytes32 indexed domain, address owner);
@@ -10,5 +10,5 @@ interface IDNS {
         address owner
     ) external returns (bytes32);
 
-    function domainOwner(bytes32 domain) external view returns (address);
+    function addr(bytes32 domain) external view returns (address);
 }
