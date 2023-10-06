@@ -4,12 +4,14 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+import "./IRegistrar.sol";
 import "./Auction.sol";
 import "./Errors.sol";
 import "../registry/IDNS.sol";
+
 import "hardhat/console.sol";
 
-contract Registrar is ERC721, Auction, Ownable {
+contract Registrar is ERC721, Auction, IRegistrar, Ownable {
 
     IDNS private dns;
 
@@ -26,12 +28,6 @@ contract Registrar is ERC721, Auction, Ownable {
 
     // authorized addresses
     mapping(address => bool) private authorized;
-
-    event SubdomainRegistered(
-        uint256 indexed id,
-        address indexed owner,
-        uint256 expires
-    );
 
     modifier auth() {
         require(authorized[msg.sender]);
@@ -100,27 +96,30 @@ contract Registrar is ERC721, Auction, Ownable {
         return commitment;
     }
 
-    function revealRegister(bytes32 subdomain, bytes32 secret, uint256 value) public returns (bool) {
+    function revealRegister(string calldata subdomainPlainText, bytes32 secret, uint256 value) public returns (bool) {
+        bytes32 subdomainHash = keccak256(abi.encodePacked(subdomainPlainText));
+
         bool bidSuccess = revealAuction(
-            getSubdomainCurrentVersion(subdomain),
+            getSubdomainCurrentVersion(subdomainHash),
             secret,
             value
         );
 
+        // Return if bid was unsuccessful
         if (!bidSuccess) {
             return bidSuccess;
         }
 
-        uint256 id = uint256(subdomain);
+        uint256 id = uint256(subdomainHash);
 
         // Burn subdomain if exists prior
         if (_exists(id)) {
             _burn(id);
         }
         _mint(msg.sender, id);
-        dns.setSubDomain(tld, subdomain, msg.sender);
+        dns.setSubDomain(tld, subdomainHash, msg.sender);
 
-        emit SubdomainRegistered(id, msg.sender, expiries[subdomain]);
+        emit SubdomainRegistered(msg.sender, name(), subdomainPlainText, expiries[subdomainHash], auctionHighestBid(subdomainHash));
 
         return bidSuccess;
     }
