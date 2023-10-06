@@ -10,11 +10,11 @@ abstract contract Auction {
         uint256 end;
     }
 
-    mapping(address => mapping(bytes32 => uint256)) bids;
+    mapping(address => mapping(bytes32 => uint256)) internal bids;
 
     uint256 private auctionDuration;
 
-    mapping(bytes32 => Record) auctions;
+    mapping(bytes32 => Record) internal auctions;
 
     constructor(uint256 _duration) {
         _setDuration(_duration);

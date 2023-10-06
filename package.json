@@ -16,6 +16,7 @@
     "typechain": "^8.3.1"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.9.3"
+    "@openzeppelin/contracts": "^4.9.3",
+    "eth-ens-namehash": "^2.0.8"
   }
 }
