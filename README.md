@@ -5,3 +5,8 @@
 $ cd frontend 
 $ npm i && npm run start
 ```
+
+## Running Tests
+```
+$ npm run test
+```
