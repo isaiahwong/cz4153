@@ -27,37 +27,16 @@ class App extends React.Component<any, any> {
 
         // To connect to the user's wallet, we have to run this method.
         // It returns a promise that will resolve to the user's address.
-        const [selectedAddress] = await window.ethereum.request({method: 'eth_requestAccounts'});
+        const provider = new ethers.BrowserProvider(window.ethereum)
+        const signer = await provider.getSigner();
 
         // Once we have the address, we can initialize the application.
 
         // First we check the network
         this._checkNetwork();
 
-        this._initialize(selectedAddress);
+        this._initialize(signer.address);
 
-    }
-
-    async _switchChain() {
-        const chainIdHex = `0x${App.HARDHAT_NETWORK_ID.toString()}`
-        await window.ethereum.request({
-            method: "wallet_switchEthereumChain",
-            params: [{chainId: chainIdHex}],
-        });
-        await this._initialize(this.state.selectedAddress);
-    }
-
-    async _initializeEthers() {
-
-        this._provider = new ethers.BrowserProvider(window.ethereum);
-
-        // Then, we initialize the contract using that provider and the token's
-        // artifact. You can do this same thing with your contracts.
-        // this._token = new ethers.Contract(
-        //     contractAddress.Token,
-        //     TokenArtifact.abi,
-        //     this._provider.getSigner(0)
-        // );
     }
 
     _initialize(userAddress: string) {
@@ -66,15 +45,13 @@ class App extends React.Component<any, any> {
         this.setState({
             selectedAddress: userAddress,
         });
-
-        this._initializeEthers();
     }
 
     // This method checks if the selected network is Localhost:8545
     _checkNetwork() {
-        if (window.ethereum.networkVersion !== App.HARDHAT_NETWORK_ID) {
-            this._switchChain();
-        }
+        // if (window.ethereum.networkVersion !== App.HARDHAT_NETWORK_ID) {
+        //     this._switchChain();
+        // }
     }
 
     render() {

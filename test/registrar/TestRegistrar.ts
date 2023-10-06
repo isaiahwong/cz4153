@@ -7,9 +7,10 @@ import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 import {DNSRegistry, Registrar} from "../../typechain-types";
 import {moveTime} from "../util/time";
 import {expectFailure} from "../util/exception";
+import {deployDNS, deployRegistrar, randomSecret} from "../../scripts/setup";
 
 const AUCTION_DURATION = 3 * 60; // 3 minutes
-const EMPTY_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000'
+
 let registrar: Registrar;
 let registrarOwner: SignerWithAddress;
 
@@ -20,11 +21,7 @@ let buyer1: SignerWithAddress;
 let buyer2: SignerWithAddress;
 let buyer3: SignerWithAddress;
 
-function randomSecret() {
-    return (
-        '0x' + crypto.randomBytes(24).toString('hex')
-    )
-}
+
 
 before(async () => {
     const accounts = await ethers.getSigners();
@@ -35,23 +32,11 @@ before(async () => {
     buyer3 = accounts[3];
 
     // Deploy DNS
-    const dnsFactory = await ethers.getContractFactory("DNSRegistry");
-    dns = await dnsFactory.connect(dnsOwner).deploy();
-
+    dns = await deployDNS(dnsOwner);
 
     // Deploy Registrar
     const tld = "ntu";
-    const fqdn = namehash.hash(tld)
-
-    const registrarFactory = await ethers.getContractFactory("Registrar");
-    registrar = await registrarFactory.connect(registrarOwner).deploy(tld, "ntu.dns", fqdn, AUCTION_DURATION, dns.target);
-
-    // Set registrar as owner of ntu
-    await dns.setSubDomain(
-        EMPTY_BYTES32,
-        ethers.keccak256(ethers.toUtf8Bytes(tld)),
-        registrar.target,
-    );
+    registrar = await deployRegistrar(registrarOwner, dns, tld, AUCTION_DURATION);
 });
 
 it("should allow commit and reveal", async () => {
