@@ -6,22 +6,32 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./Auction.sol";
 import "./Errors.sol";
+import "../registry/IDNS.sol";
+import "hardhat/console.sol";
 
 contract Registrar is ERC721, Auction, Ownable {
-    bytes32 public tld;
 
-    uint256 public TENURE = 365 days;
-    uint256 public GRACE_PERIOD = 90 days;
+    IDNS private dns;
+
+    bytes32 private tld;
+
+    uint256 private TENURE = 365 days;
+    uint256 private GRACE_PERIOD = 90 days;
 
     // subdomain to expiry times
-    mapping(bytes32 => uint256) expiries;
+    mapping(bytes32 => uint256) private expiries;
 
-    // subdomain to version
-    mapping(bytes32 => uint256) versions;
+    // subdomain to monotonic increasing version
+    mapping(bytes32 => uint256) private versions;
 
     // authorized addresses
-    mapping(address => bool) public authorized;
+    mapping(address => bool) private authorized;
 
+    event SubdomainRegistered(
+        uint256 indexed id,
+        address indexed owner,
+        uint256 expires
+    );
 
     modifier auth() {
         require(authorized[msg.sender]);
@@ -31,43 +41,88 @@ contract Registrar is ERC721, Auction, Ownable {
     constructor(
         string memory name,
         string memory symbol,
-        string memory _tld,
-        uint256 _auctionDuration
+        bytes32 _tld,
+        uint256 _auctionDuration,
+        address _dns
     ) ERC721(name, symbol) Auction(_auctionDuration) {
-        tld = keccak256(abi.encodePacked(_tld));
+        tld = _tld;
+        dns = IDNS(_dns);
+    }
+
+    function getTLD() public view returns (bytes32) {
+        return tld;
     }
 
     function hasSubdomainExpired(bytes32 subdomain) public view returns (bool) {
         return expiries[subdomain] + GRACE_PERIOD < block.timestamp;
     }
 
-    function getSubdomain(bytes32 subdomain) public view returns (bytes32) {
+    function getSubdomainCurrentVersion(bytes32 subdomain) public view returns (bytes32) {
         return keccak256(abi.encodePacked(subdomain, versions[subdomain]));
     }
 
     function makeSubdomainCommitment(bytes32 subdomain, bytes32 secret, uint256 value) public view returns (bytes32) {
-        return makeCommitment(msg.sender, getSubdomain(subdomain), secret, value);
+        return makeCommitment(msg.sender, getSubdomainCurrentVersion(subdomain), secret, value);
     }
 
-    function commit(bytes32 subdomain, bytes32 commitment) public payable {
+    /**
+     * @dev canCommit returns true when either the domain has expired or an ongoing auction has happening
+     */
+    function canCommit(bytes32 subdomain) public view returns (bool) {
+        return hasSubdomainExpired(subdomain) || !hasAuctionExpired(getSubdomainCurrentVersion(subdomain));
+    }
+
+    /**
+     * @dev commit commits a subdomain to an auction.
+     * When the first commit happens, a new expiry time is set.
+     * This is to ensure that in the event where a subdomain is not revealed, it will
+     * still be available for renewal.
+     */
+    function commit(bytes32 subdomain, bytes32 secret) public payable returns (bytes32) {
         // Check if the name is available
-        if (!hasSubdomainExpired(subdomain)) {
+        if (!canCommit(subdomain)) {
             revert Errors.DomainNotExpired();
         }
 
-        // Set expiry time to duration of auction
-        expiries[getSubdomain(subdomain)] = block.timestamp + TENURE + getAuctionDuration();
+        // Set new expiry time if it expired
+        if (hasSubdomainExpired(subdomain)) {
+            // Increment version
+            versions[subdomain] += 1;
+
+            // Set expiry time to duration of auction
+            expiries[subdomain] = block.timestamp + TENURE + getAuctionDuration();
+        }
+
+        bytes32 commitment = makeSubdomainCommitment(subdomain, secret, msg.value);
 
         // Commit the bid
-        commitBid(getSubdomain(subdomain), commitment);
+        commitBid(getSubdomainCurrentVersion(subdomain), commitment);
+        return commitment;
     }
 
     function revealRegister(bytes32 subdomain, bytes32 secret, uint256 value) public returns (bool) {
-        return revealAuction(
-            getSubdomain(subdomain),
+        bool bidSuccess = revealAuction(
+            getSubdomainCurrentVersion(subdomain),
             secret,
             value
         );
+
+        if (!bidSuccess) {
+            return bidSuccess;
+        }
+
+        uint256 id = uint256(subdomain);
+
+        // Burn subdomain if exists prior
+        if (_exists(id)) {
+            _burn(id);
+        }
+        _mint(msg.sender, id);
+        dns.setSubDomain(tld, subdomain, msg.sender);
+
+        emit SubdomainRegistered(id, msg.sender, expiries[subdomain]);
+
+        return bidSuccess;
     }
 
 }

@@ -9,4 +9,6 @@ interface IDNS {
         bytes32 domain,
         address owner
     ) external returns (bytes32);
+
+    function domainOwner(bytes32 domain) external view returns (address);
 }
