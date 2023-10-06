@@ -6,18 +6,13 @@ import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 import {AuctionMock} from "../../typechain-types";
 import {moveTime} from "../util/time";
 import {expectFailure} from "../util/exception";
+import {randomSecret} from "../../scripts/setup";
 
 const AUCTION_DURATION = 3 * 60; // 3 minutes
 let auction: AuctionMock;
 let auctionOwner: SignerWithAddress;
 let buyer1: SignerWithAddress;
 let buyer2: SignerWithAddress;
-
-function randomSecret() {
-    return (
-        '0x' + crypto.randomBytes(24).toString('hex')
-    )
-}
 
 before(async () => {
     const accounts = await ethers.getSigners();
