@@ -117,7 +117,7 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
             _burn(id);
         }
         _mint(msg.sender, id);
-        dns.setSubDomain(tld, subdomainHash, msg.sender);
+        dns.setSubDomain(tld, subdomainPlainText, msg.sender);
 
         emit SubdomainRegistered(msg.sender, name(), subdomainPlainText, expiries[subdomainHash], auctionHighestBid(subdomainHash));
 

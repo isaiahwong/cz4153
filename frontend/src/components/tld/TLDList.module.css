@@ -1,0 +1,11 @@
+.tld {
+    max-width: 600px;
+    margin: 0 auto;
+    border: 1px solid black;
+    border-radius: 10px;
+    padding: 10px;
+}
+.item {
+    height: 100px;
+    border: 1px solid black;
+}

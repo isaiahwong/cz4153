@@ -29,12 +29,13 @@ contract DNSRegistry is IDNS {
 
     function setSubDomain(
         bytes32 parentDomain,
-        bytes32 domain,
+        string memory domain,
         address owner
     ) public auth(parentDomain) override returns (bytes32) {
-        bytes32 subdomain = makeSubdomain(parentDomain, domain);
+        bytes32 domainHash = keccak256(abi.encodePacked(domain));
+        bytes32 subdomain = makeSubdomain(parentDomain, domainHash);
         registrars[subdomain].owner = owner;
-        emit NewDomainOwner(parentDomain, domain, owner);
+        emit NewDomainOwner(parentDomain, domainHash, domain, owner);
         return subdomain;
     }
 
@@ -50,8 +51,8 @@ contract DNSRegistry is IDNS {
         return registrars[domain].owner;
     }
 
-    function exists(bytes32 domain) public view returns (bool) {
-        return registrars[domain].owner != address(0x0);
+    function available(bytes32 domain) public view returns (bool) {
+        return registrars[domain].owner == address(0x0);
     }
 
     function bulkResolve(bytes32[] memory domains) public view returns (address[] memory) {

@@ -4,7 +4,7 @@ import crypto from "crypto";
 import namehash from "eth-ens-namehash";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 
-import {DNSRegistry, Registrar} from "../../typechain-types";
+import {DNSRegistry, Registrar} from "../../frontend/src/api/typechain-types";
 import {moveTime} from "../util/time";
 import {expectFailure} from "../util/exception";
 import {deployDNS, deployRegistrar, randomSecret} from "../../scripts/setup";
