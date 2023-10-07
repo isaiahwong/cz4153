@@ -1,23 +1,25 @@
 import React, {useEffect, useState} from 'react';
 import {useNavigate, useParams} from "react-router-dom";
+import Button from "@mui/material/Button";
 
 import Header from "../../components/header/Header";
 import {dnsContract} from "../../api/contract/contract";
 import {useWallet} from "../../api/wallet/wallet";
-import {WithLoader} from "../../components/hoc/hoc";
+import {WithConnect, WithLoader} from "../../components/hoc/hoc";
 import {Box, Grid, TextField, Typography} from '@mui/material';
+import CommitmentStore, {Commitment} from "../../store/commits";
 
 import style from "./Domain.module.css";
-import Button from "@mui/material/Button";
+import {randomSecret} from "../../common/common";
 
 interface BidPanelProps {
     bid: number;
     onBidChange: (e: any) => void;
-    onCommit: () => void;
+    onClick: () => void;
 }
 
 function BidPanel(props: BidPanelProps) {
-    const { bid, onBidChange } = props;
+    const {bid, onBidChange} = props;
     return (
         <>
             <TextField
@@ -36,7 +38,7 @@ function BidPanel(props: BidPanelProps) {
                 <Button
                     variant="contained"
                     className={style.button}
-                    onClick={props.onCommit}
+                    onClick={props.onClick}
                 >
                     <Typography variant="body1" fontWeight="bold">
                         COMMIT
@@ -47,12 +49,32 @@ function BidPanel(props: BidPanelProps) {
     )
 }
 
+function WaitPanel(props: BidPanelProps) {
+    const {bid, onClick} = props;
+    return (
+        <>
+            <div onClick={onClick}>
+
+                waiting..
+            </div>
+        </>
+    )
+}
+
+enum Stages {
+    commit,
+    wait,
+    reveal,
+}
+
 export default function Domain() {
     const {domain} = useParams();
     const [subdomain, setSubdomain] = useState<string>("");
     const [tld, setTLD] = useState<string>("");
     const [loading, setLoading] = useState(false);
     const [bid, setBid] = useState(0.003);
+    const [stage, setStage] = useState<Stages>(Stages.commit);
+    const [submittedCommitment, setSubmittedCommitment] = useState<Commitment | null>(null);
 
     const navigate = useNavigate();
     const {provider, signer, connect} = useWallet();
@@ -69,7 +91,25 @@ export default function Domain() {
             setTLD(tld!);
             setSubdomain(domain!.replace(`.${tld}`, ''));
         })
+        connect();
     }, []);
+
+    useEffect(() => {
+        if (!signer || !tld || !subdomain) return;
+
+        // Return if commitment is in state
+        if (submittedCommitment) {
+            setStage(Stages.wait);
+            return;
+        }
+
+        CommitmentStore.getCommit(signer.address, tld, subdomain).then((commit) => {
+            if (commit) {
+                setStage(Stages.wait);
+                setSubmittedCommitment(commit);
+            }
+        });
+    }, [signer, submittedCommitment, tld]);
 
     const onBidChange = (e: any) => {
         setBid(e.target.value);
@@ -80,10 +120,43 @@ export default function Domain() {
             await connect();
             return;
         }
-        await dnsContract.commit(provider, signer,"123", tld!, subdomain!, bid)
 
+        const commitment = {
+            owner: signer?.address!,
+            tld: tld!,
+            subdomain: subdomain!,
+            secret: randomSecret(),
+            value: bid.toString()
+        }
+
+        await dnsContract.commit(provider, signer, commitment.secret, tld!, subdomain!, commitment.value)
+        await CommitmentStore.addCommit(commitment);
+        setSubmittedCommitment(commitment);
     }
 
+    const onReveal = async () => {
+        if (!signer) {
+            await connect();
+            return;
+        }
+
+        if (!submittedCommitment) return;
+
+        await dnsContract.reveal(provider, signer, submittedCommitment.secret, tld!, subdomain!, submittedCommitment.value)
+        await CommitmentStore.deleteCommit(submittedCommitment);
+    }
+
+    const processStage = () => {
+        switch (stage) {
+            case Stages.commit:
+                return <BidPanel bid={bid} onBidChange={onBidChange} onClick={onCommit}/>;
+            case Stages.wait:
+                return <WaitPanel bid={bid} onBidChange={onBidChange} onClick={onReveal}/>;
+            case Stages.reveal:
+                return <BidPanel bid={bid} onBidChange={onBidChange} onClick={onCommit}/>;
+        }
+
+    }
 
     return (
         <>
@@ -102,11 +175,10 @@ export default function Domain() {
                                 justifyContent={"center"}
                                 alignItems={"center"}
                             >
-                                <BidPanel
-                                    bid={bid}
-                                    onBidChange={onBidChange}
-                                    onCommit={onCommit}
-                                />
+                                <WithConnect onClick={() => connect()} pred={!!signer}>
+                                    {processStage()}
+                                </WithConnect>
+
                             </Box>
                         </Box>
                     </Grid>

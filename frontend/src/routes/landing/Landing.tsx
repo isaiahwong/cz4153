@@ -31,9 +31,7 @@ export default function Landing() {
             const available = await dnsContract.isAvailable(provider, selectedTld.name, search);
             const fqdn = `${search}.${selectedTld.name}`;
 
-            if (available) {
-                setSearchTerms({...searchTerms, [fqdn]: available})
-            }
+            setSearchTerms({...searchTerms, [fqdn]: available})
         }, 1000);
 
         return () => clearTimeout(delay)

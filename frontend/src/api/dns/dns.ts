@@ -1,4 +1,4 @@
-import {DNSRegistry, DNSRegistry__factory, IRegistrar__factory} from "../typechain-types";
+import {DNSRegistry__factory, IRegistrar__factory} from "../typechain-types";
 import {ethers, JsonRpcSigner, namehash} from "ethers";
 
 export interface TLD {
@@ -15,7 +15,7 @@ export class DNSContract {
     }
 
     removeTLD(tld: string, domain: string) {
-        return  domain.replace(tld, '').replace('.', '');
+        return domain.replace(tld, '').replace('.', '');
     }
 
     async isAvailable(provider: any, tld: string, subdomain: string) {
@@ -36,14 +36,27 @@ export class DNSContract {
         return !(await dnsRegistry.available(namehash));
     }
 
-    async commit(provider: any, signer: JsonRpcSigner, secret: string, tld: string, subdomain: string, value: number) {
+    async getTLDAddr(provider: any, tld: string) {
         const dnsRegistry = DNSRegistry__factory.connect(this.address, provider);
-        const registryAddr = await dnsRegistry.addr(namehash(tld))
+        return dnsRegistry.addr(namehash(tld))
+    }
+
+    async commit(provider: any, signer: JsonRpcSigner, secret: string, tld: string, subdomain: string, value: string) {
+        const registryAddr = await this.getTLDAddr(provider, tld);
         const registrar = IRegistrar__factory.connect(registryAddr, provider);
         secret = ethers.keccak256(ethers.toUtf8Bytes(secret));
-
         const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
-        await registrar.connect(signer).commit(subdomainHash, secret, {value: ethers.parseEther(value.toString())});
+        console.log(subdomain, secret, ethers.parseEther(value.toString()));
+
+        await registrar.connect(signer).commit(subdomainHash, secret, {value: ethers.parseEther(value)});
+    }
+
+    async reveal(provider: any, signer: JsonRpcSigner, secret: string, tld: string, subdomain: string, value: string) {
+        const registryAddr = await this.getTLDAddr(provider, tld);
+        const registrar = IRegistrar__factory.connect(registryAddr, provider);
+        secret = ethers.keccak256(ethers.toUtf8Bytes(secret));
+        console.log(subdomain, secret, ethers.parseEther(value.toString()));
+        await registrar.connect(signer).revealRegister(subdomain, secret, ethers.parseEther(value));
     }
 
     async getTLDs(provider: any): Promise<TLD[]> {

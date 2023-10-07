@@ -1,5 +1,5 @@
 import React from "react";
-import {Box, CircularProgress } from "@mui/material";
+import {Box, Button, CircularProgress } from "@mui/material";
 
 export function Loader() {
     return (
@@ -24,5 +24,16 @@ export function WithLoader(props: { pred: boolean, children: any }) {
     }
     return (
         <Loader />
+    );
+}
+
+export function WithConnect(props: { onClick: any, pred: boolean, children: any }) {
+    if (props.pred) {
+        return props.children;
+    }
+    return (
+        <Button onClick={props.onClick}>
+            Connect
+        </Button>
     );
 }

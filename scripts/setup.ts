@@ -1,4 +1,3 @@
-import namehash from "eth-ens-namehash";
 import {ethers, userConfig} from "hardhat";
 import crypto from "crypto";
 import fs from "fs/promises";
