@@ -4,7 +4,7 @@ import crypto from "crypto";
 import fs from "fs/promises";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 
-import {DNSRegistry, Registrar} from "../typechain-types";
+import {DNSRegistry, Registrar} from "../frontend/src/api/typechain-types";
 
 const EMPTY_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000'
 
@@ -36,14 +36,14 @@ export async function deployRegistrar(
     tld: string,
     auctionDuration: number,
 ): Promise<Registrar> {
-    const fqdn = namehash.hash(tld)
+    const fqdn = ethers.namehash(tld)
     const registrarFactory = await ethers.getContractFactory("Registrar");
     const registrar = await registrarFactory.connect(deployer).deploy(tld, `${tld}.dns`, fqdn, auctionDuration, dns.target);
 
     // Set registrar as owner of TLD
     await dns.setSubDomain(
         EMPTY_BYTES32,
-        ethers.keccak256(ethers.toUtf8Bytes(tld)),
+        tld,
         registrar.target,
     );
     return registrar;

@@ -18,7 +18,10 @@ const config: HardhatUserConfig = {
       },
     },
   },
-  client: ["./",  "./frontend"],
+  typechain: {
+    outDir: "frontend/src/api/typechain-types",
+  },
+  client: ["./",  "./frontend/src/api"],
 };
 
 export default config;

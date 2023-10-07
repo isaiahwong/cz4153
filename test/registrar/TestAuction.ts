@@ -3,7 +3,7 @@ import { expect } from "chai";
 import crypto from "crypto";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 
-import {AuctionMock} from "../../typechain-types";
+import {AuctionMock} from "../../frontend/src/api/typechain-types";
 import {moveTime} from "../util/time";
 import {expectFailure} from "../util/exception";
 import {randomSecret} from "../../scripts/setup";

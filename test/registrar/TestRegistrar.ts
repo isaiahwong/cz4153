@@ -1,10 +1,8 @@
 import {ethers} from "hardhat";
 import {expect} from "chai";
-import crypto from "crypto";
-import namehash from "eth-ens-namehash";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 
-import {DNSRegistry, Registrar} from "../../typechain-types";
+import {DNSRegistry, Registrar} from "../../frontend/src/api/typechain-types";
 import {moveTime} from "../util/time";
 import {expectFailure} from "../util/exception";
 import {deployDNS, deployRegistrar, randomSecret} from "../../scripts/setup";
@@ -80,7 +78,7 @@ it("should allow commit and reveal", async () => {
     await Promise.all(reveals);
 
     // Ensure buyer1 is the owner of student.ntu
-    expect(await dns.addr(namehash.hash("student.ntu"))).to.equal(buyer1.address);
+    expect(await dns.addr(ethers.namehash("student.ntu"))).to.equal(buyer1.address);
 });
 
 it("should fail to register owned domains", async () => {
