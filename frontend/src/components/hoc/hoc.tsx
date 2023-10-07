@@ -19,7 +19,7 @@ export function WithPred(props: { pred: boolean, children: any }) {
 }
 
 export function WithLoader(props: { pred: boolean, children: any }) {
-    if (props.pred) {
+    if (!props.pred) {
         return props.children;
     }
     return (

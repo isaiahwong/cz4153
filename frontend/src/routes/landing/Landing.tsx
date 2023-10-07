@@ -21,7 +21,7 @@ export default function Landing() {
     const [searchDomain, setSearchDomain] = useState('')
     const [searchTerms, setSearchTerms] = useState<Record<string, boolean>>({})
     const navigate = useNavigate();
-    const {signer, provider} = useWallet();
+    const { provider} = useWallet();
 
     useEffect(() => {
         const delay = setTimeout(async () => {

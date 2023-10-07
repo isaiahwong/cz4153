@@ -1,5 +1,5 @@
-import {DNSRegistry, DNSRegistry__factory} from "../typechain-types";
-import {ethers} from "ethers";
+import {DNSRegistry, DNSRegistry__factory, IRegistrar__factory} from "../typechain-types";
+import {ethers, JsonRpcSigner, namehash} from "ethers";
 
 export interface TLD {
     name: string;
@@ -22,6 +22,28 @@ export class DNSContract {
         const dnsRegistry = DNSRegistry__factory.connect(this.address, provider);
         const namehash = ethers.namehash(`${subdomain}.${tld}`);
         return dnsRegistry.available(namehash);
+    }
+
+    /**
+     * Checks if a TLD is valid
+     * @param provider
+     * @param tld
+     */
+    async isValidTLD(provider: any, tld: string) {
+        const dnsRegistry = DNSRegistry__factory.connect(this.address, provider);
+        const namehash = ethers.namehash(tld);
+        // Available TLD means it is not registered
+        return !(await dnsRegistry.available(namehash));
+    }
+
+    async commit(provider: any, signer: JsonRpcSigner, secret: string, tld: string, subdomain: string, value: number) {
+        const dnsRegistry = DNSRegistry__factory.connect(this.address, provider);
+        const registryAddr = await dnsRegistry.addr(namehash(tld))
+        const registrar = IRegistrar__factory.connect(registryAddr, provider);
+        secret = ethers.keccak256(ethers.toUtf8Bytes(secret));
+
+        const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
+        await registrar.connect(signer).commit(subdomainHash, secret, {value: ethers.parseEther(value.toString())});
     }
 
     async getTLDs(provider: any): Promise<TLD[]> {
