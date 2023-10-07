@@ -1,11 +1,25 @@
 .tld {
-    max-width: 600px;
-    margin: 0 auto;
-    border: 1px solid black;
-    border-radius: 10px;
-    padding: 10px;
+
 }
+
 .item {
     height: 100px;
-    border: 1px solid black;
+    border: 1px solid rgb(232, 232, 232);
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.item:hover {
+    background-color: #1757E7;
+    color: white;
+}
+
+.back {
+    cursor: pointer;
+}
+
+.selectedTLD {
+    background-color: #1757E7;
+    color: white;
 }

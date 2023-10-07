@@ -9,6 +9,15 @@ export function Loader() {
     );
 }
 
+export function WithPred(props: { pred: boolean, children: any }) {
+    if (props.pred) {
+        return props.children;
+    }
+    return (
+        <></>
+    );
+}
+
 export function WithLoader(props: { pred: boolean, children: any }) {
     if (props.pred) {
         return props.children;

@@ -4,4 +4,4 @@ import {ethers} from "ethers";
 
 declare var window: any;
 
-export const dnsContract = new DNSContract(addresses.dns, new ethers.BrowserProvider(window.ethereum));
+export const dnsContract = new DNSContract(addresses.dns);

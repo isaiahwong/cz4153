@@ -1,62 +1,76 @@
-import {ethers} from "ethers";
 import {useEffect, useState} from "react";
-import {JsonRpcSigner} from "ethers/lib.esm";
+import  {ethers, parseEther, BrowserProvider, JsonRpcSigner, Network} from "ethers";
 
-declare var window: any;
-
-class Wallet {
-    provider!: ethers.BrowserProvider;
-    private _signer!: ethers.JsonRpcSigner;
-    private _network!: ethers.Network;
-    private _ready: boolean = false;
-
-
-    get signer() {
-        return this._signer;
+declare global {
+    interface Window {
+        ethereum: any;
     }
-
-    get network() {
-        return this._network;
-    }
-
-    get ready() {
-        return this._ready;
-    }
-
-    async connectWallet() {
-        this.provider = new ethers.BrowserProvider(window.ethereum);
-        this._signer = await this.provider.getSigner();
-        this._network = await this._signer.provider.getNetwork()
-        this._ready = true;
-    }
-
 }
 
-const walletSingleton = new Wallet();
-walletSingleton.connectWallet();
+type ExtensionForProvider = {
+    on: (event: string, callback: (...params: any) => void) => void;
+};
 
-export function useWallet() {
-    const [wallet, _] = useState<Wallet>(walletSingleton);
-    const [ready, setReady] = useState<boolean>(false);
+type GenericProvider = BrowserProvider & ExtensionForProvider;
 
-    useEffect(() => {
-        waitReady();
-    }, []);
-
-    const waitReady = async () => {
-        await new Promise((resolve) => {
-            const interval = setInterval(() => {
-                if (wallet.ready) {
-                    clearInterval(interval);
-                    resolve(true);
-                }
-            }, 1);
-        });
-        setReady(true);
-    }
-
-    return {wallet, ready};
+interface ProviderRpcError extends Error {
+    message: string;
+    code: number;
+    data?: unknown;
 }
 
-export default walletSingleton;
+const setupProvider = () => {
+    if (!window.ethereum) throw Error('Could not find wallet extension');
+    const newProvider = new BrowserProvider(window.ethereum);
+    listenToEvents(newProvider);
 
+    return newProvider
+}
+
+const listenToEvents = (provider: BrowserProvider) => {
+    (window.ethereum as GenericProvider).on('chainChanged', async (net: number) => {
+        window.location.reload();
+    });
+    (window.ethereum as GenericProvider).on('disconnect', (error: ProviderRpcError) => {
+        throw Error(error.message);
+    });
+}
+
+function useWallet() {
+    const provider = setupProvider();
+    const [hasWallet, setHasWallet] = useState<boolean>(!!window.ethereum);
+    const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
+    const [network, setNetwork] = useState<Network | null>(null);
+
+
+    const connect = async () => {
+        if (!window.ethereum) throw Error('Could not find wallet extension');
+
+        const network: Network = await provider.getNetwork();
+        const signer: JsonRpcSigner = await provider.getSigner();
+        setNetwork(network);
+        setSigner(signer);
+    }
+
+    const sendTransaction = async (from: string, to: string, valueInEther: string) =>  {
+        const params = [{
+            from,
+            to,
+            value: parseEther( valueInEther)
+        }];
+        const transactionHash = await provider.send('eth_sendTransaction', params);
+        return transactionHash;
+    }
+
+
+    return {
+        hasWallet,
+        signer,
+        provider,
+        network,
+        connect,
+        sendTransaction
+    }
+}
+
+export { useWallet }

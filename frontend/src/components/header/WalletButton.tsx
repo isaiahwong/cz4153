@@ -1,14 +1,11 @@
-import React from "react";
+import React, {useEffect} from "react";
 import Button from "@mui/material/Button";
 import {Grid} from "@mui/material";
 import Typography from "@mui/material/Typography";
 import _ from 'lodash';
-import wallet, {useWallet} from "../../api/wallet/wallet";
 
 import style from "./WalletButton.module.css";
-import {Loader} from "../hoc/hoc";
-
-wallet.connectWallet();
+import {useWallet} from "../../api/wallet/wallet";
 
 function truncateAddress(address?: string) {
     if (!address) {
@@ -18,16 +15,16 @@ function truncateAddress(address?: string) {
 }
 
 export default function WalletButton() {
-    const {wallet, ready} = useWallet();
+    const {signer, network, connect} = useWallet();
 
-    if (!ready) {
-        return (
-            <Loader/>
-        );
-    }
+    const title = `${_.capitalize(network?.name)} (${truncateAddress(signer?.address)})`;
+    const connected = signer !== undefined;
 
-    const title = `${_.capitalize(wallet.network.name)} (${truncateAddress(wallet.signer?.address)})`;
-    const connected = wallet.signer !== undefined;
+    useEffect(() => {
+        if (!signer) {
+            connect();
+        }
+    }, []);
 
     const connectedButton = (
         <Grid alignContent={"flex-start"}>
@@ -45,7 +42,7 @@ export default function WalletButton() {
 
     );
 
-    const disconnectedButton = <Button color="inherit" onClick={wallet.connectWallet}>Connect</Button>;
+    const disconnectedButton = <Button color="inherit" onClick={connect}>Connect</Button>;
     const button = connected ? connectedButton : disconnectedButton;
 
     return (

@@ -36,7 +36,7 @@ export async function deployRegistrar(
     tld: string,
     auctionDuration: number,
 ): Promise<Registrar> {
-    const fqdn = namehash.hash(tld)
+    const fqdn = ethers.namehash(tld)
     const registrarFactory = await ethers.getContractFactory("Registrar");
     const registrar = await registrarFactory.connect(deployer).deploy(tld, `${tld}.dns`, fqdn, auctionDuration, dns.target);
 
