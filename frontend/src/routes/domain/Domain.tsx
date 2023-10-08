@@ -260,6 +260,7 @@ export default function Domain() {
         const deadline = await dnsContract.getAuctionDeadline(provider, tld, subdomain);
         const remain = timeDiffNowSec(Number(deadline));
 
+        // if deadline is over and no commitment => pending reveal
         if ((Number(deadline) != 0  && remain <= 0) && !commitment) {
             return Stages.pendingReveal;
         }
