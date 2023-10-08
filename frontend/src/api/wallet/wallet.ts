@@ -22,17 +22,20 @@ interface ProviderRpcError extends Error {
 const setupProvider = () => {
     if (!window.ethereum) throw Error('Could not find wallet extension');
     const newProvider = new BrowserProvider(window.ethereum);
-    listenToEvents(newProvider);
 
     return newProvider
 }
 
-const listenToEvents = (provider: BrowserProvider) => {
+export const listenToEvents = () => {
+    if (!window.ethereum) return;
     (window.ethereum as GenericProvider).on('chainChanged', async (net: number) => {
         window.location.reload();
     });
+    (window.ethereum as GenericProvider).on('accountsChanged', (error: ProviderRpcError) => {
+        window.location.reload();
+    });
     (window.ethereum as GenericProvider).on('disconnect', (error: ProviderRpcError) => {
-        throw Error(error.message);
+        window.location.reload();
     });
 }
 

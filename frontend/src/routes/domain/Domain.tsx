@@ -10,13 +10,32 @@ import {Box, Grid, TextField, Typography} from '@mui/material';
 import CommitmentStore, {Commitment} from "../../store/commits";
 
 import style from "./Domain.module.css";
-import {randomSecret} from "../../common/common";
-import {ContractEventPayload} from "ethers";
+import {randomSecret, timeDiffNowSec} from "../../common/common";
+import LinearProgressWithLabel from "../../components/common/LinearProgressWithLabel";
+import {TypedContractEvent, TypedEventLog} from "../../api/typechain-types/common";
+import {SubdomainRegisteredEvent} from "../../api/typechain-types/contracts/registrar/Registrar";
+import {JsonRpcSigner} from "ethers";
 
 interface BidPanelProps {
     bid: number;
     onBidChange: (e: any) => void;
     onClick: () => void;
+}
+
+function ViewOnlyPanel() {
+    return (
+        <>
+            Domain unclaimed
+        </>
+    )
+}
+
+function PendingRevealPanel() {
+    return (
+        <>
+            Pending Reveal
+        </>
+    )
 }
 
 function BidPanel(props: BidPanelProps) {
@@ -58,7 +77,7 @@ interface WaitPanelProps {
 function WaitPanel(props: WaitPanelProps) {
     const {commitment, onAuctionEnded} = props;
     const {provider} = useWallet();
-
+    const [progress, setProgress] = useState(0);
 
     useEffect(() => {
         if (!commitment) return;
@@ -71,48 +90,63 @@ function WaitPanel(props: WaitPanelProps) {
 
     const getDeadline = async () => {
         const deadline = await dnsContract.getAuctionDeadline(provider, commitment.tld, commitment.subdomain);
-        let remain = deadline - BigInt(Math.round(Date.now() / 1000));
+        const duration = await dnsContract.getAuctionDuration(provider, commitment.tld);
+        let remain = timeDiffNowSec(Number(deadline));
 
         // Deadline 0 means auction has not started yet
         if (Number(deadline) != 0 && remain < 0) {
             onAuctionEnded();
             return;
         }
-
-        if (remain < 0) {
-            remain = BigInt(1);
+        if (remain < 0 || remain > Number(duration)) {
+            remain = Number(duration);
         }
-        console.log(remain)
-        setTimeout(getDeadline, Number(remain) * 1000);
+
+        setProgress(((Number(duration) - remain) / Number(duration)) * 100)
+        setTimeout(getDeadline, 100);
     }
 
     if (!commitment) {
         return <Navigate to={'/'}/>;
     }
-
     return (
-        <>
-            <div>
-
-                waiting..
-            </div>
-        </>
+        <Grid container>
+            <Grid item xs={12}>
+                <Typography fontWeight={"bold"}>
+                    Waiting for bid auction to end
+                </Typography>
+                <LinearProgressWithLabel value={progress}/>
+            </Grid>
+        </Grid>
     )
 }
 
 interface RevealPanelProps {
     onClick: () => void;
+    commitment: Commitment | null;
 }
 
 function RevealPanel(props: RevealPanelProps) {
-    const {onClick} = props;
-    return (
-        <>
-            <div onClick={onClick}>
+    const {onClick, commitment} = props;
 
-                reveal..
-            </div>
-        </>
+    return (
+        <Grid container>
+            <Grid item xs={12}>
+                <WithLoader pred={!commitment}>
+                    <Box display={"flex"} justifyContent={"center"}>
+                        <Button
+                            variant="contained"
+                            className={style.button}
+                            onClick={onClick}
+                        >
+                            <Typography variant="body1" fontWeight="bold">
+                                Reveal
+                            </Typography>
+                        </Button>
+                    </Box>
+                </WithLoader>
+            </Grid>
+        </Grid>
     )
 }
 
@@ -128,10 +162,23 @@ function OwnerPanel() {
     )
 }
 
+function LosePanel() {
+    return (
+        <>
+            <div>
+                You lost the bid
+            </div>
+        </>
+    )
+}
+
 enum Stages {
+    viewOnly,
     commit,
     wait,
     reveal,
+    pendingReveal,
+    lose,
     owner
 }
 
@@ -139,10 +186,11 @@ export default function Domain() {
     const {domain} = useParams();
     const [subdomain, setSubdomain] = useState<string>("");
     const [tld, setTLD] = useState<string>("");
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [bid, setBid] = useState(0.003);
     const [stage, setStage] = useState<Stages>(Stages.commit);
     const [submittedCommitment, setSubmittedCommitment] = useState<Commitment | null>(null);
+    const [owner, setOwner] = useState<string | null>(null);
 
     const navigate = useNavigate();
     const {provider, signer, connect} = useWallet();
@@ -153,69 +201,142 @@ export default function Domain() {
 
     // Initializations
     useEffect(() => {
-        // Attempt to connect
-        connect();
-
         // Ensure domain is valid
         const tld = domain!.split('.').pop();
-        dnsContract.isValidTLD(provider, tld!).then((valid) => {
+        dnsContract.isValidTLD(provider, tld!).then(async (valid) => {
             if (!valid) navigate('/');
             const subdomain = domain!.replace(`.${tld}`, '');
-            setLoading(!valid);
+
+            // Attempt to connect
+            await connect();
+
             setTLD(tld!);
             setSubdomain(subdomain);
-
-            dnsContract.onRegisteredDomains(provider, tld!, subdomain, onDomainRegistered);
+            // dnsContract.onRegisteredDomains(provider, tld!, subdomain, onDomainRegistered);
         })
-
-        return () => {
-            console.log("unsubscribing", tld, subdomain)
-            dnsContract.offRegisteredDomains(provider, tld!, subdomain!, onDomainRegistered);
-        }
     }, []);
 
     useEffect(() => {
-        Promise.all([waitStage(), ownerStage()]);
-    }, [signer, submittedCommitment, tld]);
+        if (stage !== Stages.reveal) return;
+        const listeners = setInterval(async () => {
+            const registeredEvents = await dnsContract.querySubdomainRegistered(provider, tld!, subdomain!);
+            const bidFailedEvents = await dnsContract.querySubdomainBidFailed(provider, tld!, subdomain!);
+            await onDomainRegistered(registeredEvents);
+            await onBidFailed(bidFailedEvents);
+        }, 500);
 
-    const waitStage = async () => {
+        return () => clearInterval(listeners);
+    }, [tld, subdomain, stage]);
+
+    useEffect(() => {
         if (!signer || !tld || !subdomain) return;
 
-        // Return if commitment is in state
-        if (submittedCommitment) {
-            setStage(Stages.wait);
-            return;
+        getStage().then((stage) => {
+            setLoading(false);
+            setStage(stage);
+        });
+    }, [signer, tld, subdomain]);
+
+    const getStage = async () => {
+        if (!tld || !subdomain) return Stages.viewOnly;
+        const addr = await dnsContract.getAddr(provider, `${subdomain}.${tld}`);
+
+        // Owner
+        if (addr !== dnsContract.EMPTY_ADDRESS) {
+            setOwner(addr);
+            return Stages.owner;
+        }
+
+        // If no wallet connected, view only
+        if (!signer) {
+            return Stages.viewOnly;
         }
 
         const commitment = await CommitmentStore.getCommit(signer.address, tld, subdomain);
-        if (commitment) {
-            setStage(Stages.wait);
-            setSubmittedCommitment(commitment);
+        setSubmittedCommitment(commitment);
+
+        const deadline = await dnsContract.getAuctionDeadline(provider, tld, subdomain);
+        const remain = timeDiffNowSec(Number(deadline));
+
+        if (Number(deadline) != 0 && !commitment) {
+            return Stages.pendingReveal;
         }
+
+        // If no commitment, commit
+        if (!commitment) {
+            return Stages.commit;
+        }
+
+        // Reveal stage if deadline is over. Deadline 0 means auction has not started yet
+        if (Number(deadline) != 0 && remain < 0) {
+            return Stages.reveal;
+        }
+
+        // Wait stage
+        return Stages.wait
     }
 
-    const revealStage = () => {
+    const onRevealStage = () => {
+        if (owner) return;
         setStage(Stages.reveal);
     }
 
-    const ownerStage = async () => {
+    const onLostStage = () => {
+        setStage(Stages.lose);
+    }
+
+    const onOwnerStage = async (signer: JsonRpcSigner) => {
         if (!signer || !subdomain || !tld) return;
         const addr = await dnsContract.getAddr(provider, `${subdomain}.${tld}`);
         if (addr === signer.address) {
             setStage(Stages.owner);
+            setOwner(addr);
+            return;
         }
+
+        setTimeout(() => {
+            onOwnerStage(signer);
+        }, 100);
     }
 
-    const onDomainRegistered = async (event: ContractEventPayload) => {
-        if (!event.args) return;
+    const onDomainRegistered = async (events: Array<TypedEventLog<TypedContractEvent<SubdomainRegisteredEvent.InputTuple, SubdomainRegisteredEvent.OutputTuple, SubdomainRegisteredEvent.OutputObject>>>) => {
+        const event = events.find((event) => {
+            if (!event.args) return false;
 
-        if (event.args.expires < BigInt(Math.round(Date.now() / 1000))) return;
-        if (!signer) return;
+            // if domain has expired, we ignore
+            if (event.args.expires < BigInt(Math.round(Date.now() / 1000))) return;
+            return true;
+        });
 
-        if (event.args.owner === signer.address) {
-            await ownerStage();
+        if (!signer || !event) return;
+
+        if (signer.address !== event.args.owner) {
+            return;
         }
+
+        // Handle fail bid
+        await onOwnerStage(signer);
     }
+
+    const onBidFailed = async (events: Array<TypedEventLog<TypedContractEvent<SubdomainRegisteredEvent.InputTuple, SubdomainRegisteredEvent.OutputTuple, SubdomainRegisteredEvent.OutputObject>>>) => {
+        const event = events.find((event) => {
+            if (!event.args) return false;
+
+            // if domain has expired, we ignore
+            if (event.args.expires < BigInt(Math.round(Date.now() / 1000))) return;
+            return true;
+        });
+
+        if (!signer || !event) return;
+
+        if (signer.address !== event.args.owner) {
+            return;
+        }
+
+        // Handle fail bid
+        await onLostStage();
+    }
+
 
     const onBidChange = (e: any) => {
         setBid(e.target.value);
@@ -238,6 +359,7 @@ export default function Domain() {
         await dnsContract.commit(provider, signer, commitment.secret, tld!, subdomain!, commitment.value)
         await CommitmentStore.addCommit(commitment);
         setSubmittedCommitment(commitment);
+        setStage(Stages.wait);
     }
 
     const onReveal = async () => {
@@ -249,16 +371,23 @@ export default function Domain() {
         if (!submittedCommitment) return;
         await dnsContract.reveal(provider, signer, submittedCommitment.secret, tld!, subdomain!, submittedCommitment.value)
         await CommitmentStore.deleteCommit(submittedCommitment);
+        setSubmittedCommitment(null);
     }
 
     const processStage = () => {
         switch (stage) {
+            case Stages.viewOnly:
+                return <ViewOnlyPanel/>;
             case Stages.commit:
                 return <BidPanel bid={bid} onBidChange={onBidChange} onClick={onCommit}/>;
             case Stages.wait:
-                return <WaitPanel commitment={submittedCommitment} onAuctionEnded={revealStage}/>;
+                return <WaitPanel commitment={submittedCommitment} onAuctionEnded={onRevealStage}/>;
             case Stages.reveal:
-                return <RevealPanel onClick={onReveal}/>;
+                return <RevealPanel commitment={submittedCommitment} onClick={onReveal}/>;
+            case Stages.pendingReveal:
+                return <PendingRevealPanel/>;
+            case Stages.lose:
+                return <LosePanel/>;
             case Stages.owner:
                 return <OwnerPanel/>;
         }

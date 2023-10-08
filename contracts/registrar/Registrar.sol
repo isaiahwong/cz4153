@@ -111,6 +111,7 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
 
         // Return if bid was unsuccessful
         if (!bidSuccess) {
+            emit SubdomainBidFailed(msg.sender, keccak256(abi.encodePacked(name())), subdomainHash, name(), subdomainPlainText, expiries[subdomainHash]);
             return bidSuccess;
         }
 

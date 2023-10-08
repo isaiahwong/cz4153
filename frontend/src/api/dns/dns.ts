@@ -12,6 +12,7 @@ type DomainRegisteredCB = ((event: any, a1: any, a2: any) => void);
 export class DNSContract {
     readonly address: string;
     readonly EMPTY_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
+    readonly EMPTY_ADDRESS = '0x0000000000000000000000000000000000000000';
 
     constructor(address: string, provider?: any) {
         this.address = address;
@@ -44,6 +45,13 @@ export class DNSContract {
         return dnsRegistry.addr(namehash(tld))
     }
 
+    async isExpired(provider: any, tld: string, subdomain: string) {
+        const registryAddr = await this.getAddr(provider, tld);
+        const registrar = IRegistrar__factory.connect(registryAddr, provider);
+        const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
+        return registrar.hasSubdomainExpired(subdomainHash);
+    }
+
     async commit(provider: any, signer: JsonRpcSigner, secret: string, tld: string, subdomain: string, value: string) {
         const registryAddr = await this.getAddr(provider, tld);
         const registrar = IRegistrar__factory.connect(registryAddr, provider);
@@ -71,6 +79,12 @@ export class DNSContract {
         return events;
     }
 
+    async getAuctionDuration(provider: any, tld: string) {
+        const registryAddr = await this.getAddr(provider, tld);
+        const registrar = IRegistrar__factory.connect(registryAddr, provider);
+        return registrar.getAuctionDuration();
+    }
+
     async getAuctionDeadline(provider: any, tld: string, subdomain: string) {
         const registryAddr = await this.getAddr(provider, tld);
         const registrar = IRegistrar__factory.connect(registryAddr, provider);
@@ -78,6 +92,27 @@ export class DNSContract {
 
         return registrar.auctionDeadline(subdomainHash);
     }
+
+    async querySubdomainRegistered(provider: any, tld: string, subdomain: string) {
+        const registryAddr = await this.getAddr(provider, tld);
+        const registrar = IRegistrar__factory.connect(registryAddr, provider);
+        const tldHash =ethers.keccak256(ethers.toUtf8Bytes(tld));
+        const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
+
+        const filter = registrar.filters.SubdomainRegistered(undefined, tldHash, subdomainHash);
+        return await registrar.queryFilter(filter);
+    }
+
+    async querySubdomainBidFailed(provider: any, tld: string, subdomain: string) {
+        const registryAddr = await this.getAddr(provider, tld);
+        const registrar = IRegistrar__factory.connect(registryAddr, provider);
+        const tldHash =ethers.keccak256(ethers.toUtf8Bytes(tld));
+        const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
+
+        const filter = registrar.filters.SubdomainBidFailed(undefined, tldHash, subdomainHash);
+        return await registrar.queryFilter(filter);
+    }
+
 
     async onRegisteredDomains(provider: any, tld: string, subdomain: string, callback: DomainRegisteredCB) {
         const registryAddr = await this.getAddr(provider, tld);

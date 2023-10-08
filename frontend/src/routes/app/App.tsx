@@ -9,6 +9,9 @@ import NotFound from "../error/NotFound";
 import PrivateRoute from "../../components/hoc/Auth";
 import {Switch} from "@mui/material";
 import Domain from "../domain/Domain";
+import {listenToEvents} from "../../api/wallet/wallet";
+
+listenToEvents();
 
 export default function App() {
     return (
