@@ -14,6 +14,7 @@ import {WithPred} from "../../components/hoc/hoc";
 import {useWallet} from "../../api/wallet/wallet";
 import Header from "../../components/header/Header";
 import {dnsContract} from "../../api/contract/contract";
+import DomainStore from "../../store/domains";
 
 
 export default function Landing() {
@@ -24,6 +25,16 @@ export default function Landing() {
     const { provider} = useWallet();
 
     useEffect(() => {
+        if (!selectedTld) {
+            setSearchTerms({});
+            return;
+        }
+        DomainStore.getDomainsMap(selectedTld.name).then((domains) => {
+            setSearchTerms(domains);
+        });
+    }, [selectedTld]);
+
+    useEffect(() => {
         const delay = setTimeout(async () => {
             if (!selectedTld || !searchDomain) return;
 
@@ -31,6 +42,7 @@ export default function Landing() {
             const available = await dnsContract.isAvailable(provider, selectedTld.name, search);
             const fqdn = `${search}.${selectedTld.name}`;
 
+            await DomainStore.setDomain({name: fqdn, available});
             setSearchTerms({...searchTerms, [fqdn]: available})
         }, 1000);
 

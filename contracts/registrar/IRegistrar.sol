@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-interface IRegistrar {
+import "./IAuction.sol";
+
+interface IRegistrar is IAuction {
     event SubdomainRegistered(
         address indexed owner,
-        string domain,
+        bytes32 indexed tldHash,
+        bytes32 indexed subdomainHash,
+        string tld,
         string subdomain,
         uint256 expires,
         uint256 cost

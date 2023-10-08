@@ -127,13 +127,13 @@ it("should register multiple domains and list all domains owned", async () => {
     // Filter out expired domains
     const domains = events
         .map(event => event.args)
-        .filter(args => args !== undefined && args![3] > Date.now() / 1000)
+        .filter(args => args !== undefined && args.expires> Date.now() / 1000)
         .map(args => args!);
 
     expect(domains.length).equal(2);
 
     // Ensure domains are listed in events
     bids.forEach((bid, i) => {
-        expect(domains[i][2]).equal(bid.subdomain);
+        expect(domains[i].subdomain).equal(bid.subdomain);
     });
 });
