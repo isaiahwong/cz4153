@@ -42,7 +42,6 @@ function useWallet() {
     const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
     const [network, setNetwork] = useState<Network | null>(null);
 
-
     const connect = async () => {
         if (!window.ethereum) throw Error('Could not find wallet extension');
 
@@ -52,24 +51,12 @@ function useWallet() {
         setSigner(signer);
     }
 
-    const sendTransaction = async (from: string, to: string, valueInEther: string) =>  {
-        const params = [{
-            from,
-            to,
-            value: parseEther( valueInEther)
-        }];
-        const transactionHash = await provider.send('eth_sendTransaction', params);
-        return transactionHash;
-    }
-
-
     return {
         hasWallet,
         signer,
         provider,
         network,
         connect,
-        sendTransaction
     }
 }
 

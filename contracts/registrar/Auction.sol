@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
+import "./IAuction.sol";
 import "./Errors.sol";
 
-abstract contract Auction {
+abstract contract Auction is IAuction {
     struct Record {
         address maxBidder;
         uint256 maxBid;
@@ -15,6 +16,16 @@ abstract contract Auction {
     uint256 private auctionDuration;
 
     mapping(bytes32 => Record) internal auctions;
+
+    modifier revealAfter(bytes32 label) {
+        if (!auctionExists(label)) {
+            revert Errors.AuctionDoesNotExist();
+        }
+        if (!hasAuctionExpired(label)) {
+            revert Errors.AuctionNotExpired();
+        }
+        _;
+    }
 
     constructor(uint256 _duration) {
         _setDuration(_duration);
@@ -28,21 +39,15 @@ abstract contract Auction {
         return auctions[label].end < block.timestamp;
     }
 
-    function auctionDeadline(bytes32 label) public view returns (uint256) {
+    function auctionDeadline(bytes32 label) public virtual view returns (uint256) {
         return auctions[label].end;
     }
 
-    function auctionHighestBid(bytes32 label) public view returns (uint256) {
+    function auctionHighestBid(bytes32 label) public view revealAfter(label) returns (uint256) {
         return auctions[label].maxBid;
     }
 
-    function auctionHighestBidder(bytes32 label) public view returns (address) {
-        if (!auctionExists(label)) {
-            revert Errors.AuctionDoesNotExist();
-        }
-        if (!hasAuctionExpired(label)) {
-            revert Errors.AuctionNotExpired();
-        }
+    function auctionHighestBidder(bytes32 label) public view revealAfter(label) returns (address) {
         return auctions[label].maxBidder;
     }
 

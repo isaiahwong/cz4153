@@ -2,14 +2,14 @@ import {ethers} from "hardhat";
 import {expect} from "chai";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 
-import {DNSRegistry, Registrar} from "../../frontend/src/api/typechain-types";
+import {DNSRegistry, IRegistrar, IRegistrar__factory, Registrar} from "../../frontend/src/api/typechain-types";
 import {moveTime} from "../util/time";
 import {expectFailure} from "../util/exception";
 import {deployDNS, deployRegistrar, randomSecret} from "../../scripts/setup";
 
 const AUCTION_DURATION = 3 * 60; // 3 minutes
 
-let registrar: Registrar;
+let registrar: IRegistrar;
 let registrarOwner: SignerWithAddress;
 
 let dns: DNSRegistry;
@@ -18,8 +18,6 @@ let dnsOwner: SignerWithAddress;
 let buyer1: SignerWithAddress;
 let buyer2: SignerWithAddress;
 let buyer3: SignerWithAddress;
-
-
 
 before(async () => {
     const accounts = await ethers.getSigners();
@@ -129,13 +127,13 @@ it("should register multiple domains and list all domains owned", async () => {
     // Filter out expired domains
     const domains = events
         .map(event => event.args)
-        .filter(args => args !== undefined && args![3] > Date.now() / 1000)
+        .filter(args => args !== undefined && args.expires> Date.now() / 1000)
         .map(args => args!);
 
     expect(domains.length).equal(2);
 
     // Ensure domains are listed in events
     bids.forEach((bid, i) => {
-        expect(domains[i][2]).equal(bid.subdomain);
+        expect(domains[i].subdomain).equal(bid.subdomain);
     });
 });

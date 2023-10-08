@@ -45,6 +45,10 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         dns = IDNS(_dns);
     }
 
+    function auctionDeadline(bytes32 subdomain) public override (IAuction, Auction) view virtual returns (uint256) {
+        return Auction.auctionDeadline(getSubdomainCurrentVersion(subdomain));
+    }
+
     function getTLD() public view returns (bytes32) {
         return tld;
     }
@@ -119,7 +123,7 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         _mint(msg.sender, id);
         dns.setSubDomain(tld, subdomainPlainText, msg.sender);
 
-        emit SubdomainRegistered(msg.sender, name(), subdomainPlainText, expiries[subdomainHash], auctionHighestBid(subdomainHash));
+        emit SubdomainRegistered(msg.sender, keccak256(abi.encodePacked(name())), subdomainHash, name(), subdomainPlainText, expiries[subdomainHash], auctionHighestBid(getSubdomainCurrentVersion(subdomainHash)));
 
         return bidSuccess;
     }
