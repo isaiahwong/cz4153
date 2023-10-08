@@ -9,4 +9,6 @@ interface IAuction {
     function auctionHighestBid(bytes32 label) external view returns (uint256);
 
     function auctionHighestBidder(bytes32 label) external view  returns (address);
+
+    function getAuctionDuration() external view returns (uint256);
 }
