@@ -150,13 +150,15 @@ function RevealPanel(props: RevealPanelProps) {
     )
 }
 
+interface OwnerPanelProps {
+    owner: string | null;
+}
 
-function OwnerPanel() {
+function OwnerPanel(props: OwnerPanelProps) {
     return (
         <>
             <div>
-
-                owner..
+                {props.owner}
             </div>
         </>
     )
@@ -258,7 +260,7 @@ export default function Domain() {
         const deadline = await dnsContract.getAuctionDeadline(provider, tld, subdomain);
         const remain = timeDiffNowSec(Number(deadline));
 
-        if (Number(deadline) != 0 && !commitment) {
+        if ((Number(deadline) != 0  && remain <= 0) && !commitment) {
             return Stages.pendingReveal;
         }
 
@@ -314,7 +316,7 @@ export default function Domain() {
             return;
         }
 
-        // Handle fail bid
+        // Handle success bid
         await onOwnerStage(signer);
     }
 
@@ -389,7 +391,7 @@ export default function Domain() {
             case Stages.lose:
                 return <LosePanel/>;
             case Stages.owner:
-                return <OwnerPanel/>;
+                return <OwnerPanel owner={owner}/>;
         }
     }
 
