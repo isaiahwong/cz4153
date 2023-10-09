@@ -48,6 +48,12 @@ const _abi = [
         name: "expires",
         type: "uint256",
       },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "refund",
+        type: "uint256",
+      },
     ],
     name: "SubdomainBidFailed",
     type: "event",
@@ -183,6 +189,25 @@ const _abi = [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "subdomain",
+        type: "bytes32",
+      },
+    ],
+    name: "expiry",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "getAuctionDuration",
     outputs: [
@@ -218,6 +243,54 @@ const _abi = [
     inputs: [
       {
         internalType: "bytes32",
+        name: "commitment",
+        type: "bytes32",
+      },
+    ],
+    name: "hasCommitment",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "subdomain",
+        type: "bytes32",
+      },
+      {
+        internalType: "bytes32",
+        name: "secret",
+        type: "bytes32",
+      },
+      {
+        internalType: "uint256",
+        name: "value",
+        type: "uint256",
+      },
+    ],
+    name: "hasDomainCommitment",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
         name: "subdomain",
         type: "bytes32",
       },
@@ -228,6 +301,35 @@ const _abi = [
         internalType: "bool",
         name: "",
         type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "subdomain",
+        type: "bytes32",
+      },
+      {
+        internalType: "bytes32",
+        name: "secret",
+        type: "bytes32",
+      },
+      {
+        internalType: "uint256",
+        name: "value",
+        type: "uint256",
+      },
+    ],
+    name: "makeSubdomainCommitment",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
       },
     ],
     stateMutability: "view",

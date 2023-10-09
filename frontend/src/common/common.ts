@@ -1,4 +1,5 @@
 import crypto from "crypto-js";
+import {BrowserProvider, ethers} from "ethers";
 
 export function randomSecret() {
     return (
@@ -6,6 +7,7 @@ export function randomSecret() {
     )
 }
 
-export function timeDiffNowSec(future: number) {
-    return future - Math.round(Date.now() / 1000)
+export async function timeDiffFromBlock(provider: BrowserProvider, future: number) {
+    const now = (await provider.getBlock("latest"))!.timestamp;
+    return future - Number(now);
 }

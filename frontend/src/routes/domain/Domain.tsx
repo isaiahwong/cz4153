@@ -1,176 +1,57 @@
 import React, {useEffect, useState} from 'react';
-import {Navigate, useNavigate, useParams} from "react-router-dom";
-import Button from "@mui/material/Button";
+import {useNavigate, useParams} from "react-router-dom";
+import {Box, Grid, Typography} from '@mui/material';
+import {ethers, JsonRpcSigner} from "ethers";
 
 import Header from "../../components/header/Header";
 import {dnsContract} from "../../api/contract/contract";
 import {useWallet} from "../../api/wallet/wallet";
 import {WithConnect, WithLoader} from "../../components/hoc/hoc";
-import {Box, Grid, TextField, Typography} from '@mui/material';
+
 import CommitmentStore, {Commitment} from "../../store/commits";
 
 import style from "./Domain.module.css";
-import {randomSecret, timeDiffNowSec} from "../../common/common";
-import LinearProgressWithLabel from "../../components/common/LinearProgressWithLabel";
+import {randomSecret, timeDiffFromBlock} from "../../common/common";
 import {TypedContractEvent, TypedEventLog} from "../../api/typechain-types/common";
-import {SubdomainRegisteredEvent} from "../../api/typechain-types/contracts/registrar/Registrar";
-import {JsonRpcSigner} from "ethers";
+import {
+    SubdomainBidFailedEvent,
+    SubdomainRegisteredEvent
+} from "../../api/typechain-types/contracts/registrar/Registrar";
+import ViewOnlyPanel from "../../components/domain/ViewOnlyPanel";
+import BidPanel from "../../components/domain/BidPanel";
+import RevealPanel from "../../components/domain/RevealPanel";
+import WaitPanel from '../../components/domain/WaitPanel';
+import PendingRevealPanel from "../../components/domain/PendingRevealPanel";
+import OwnerPanel from "../../components/domain/OwnerPanel";
+import Button from "@mui/material/Button";
 
-interface BidPanelProps {
-    bid: number;
-    onBidChange: (e: any) => void;
-    onClick: () => void;
+interface LostPanelProps {
+    onNext: () => void;
+    refund: string;
 }
 
-function ViewOnlyPanel() {
-    return (
-        <>
-            Domain unclaimed
-        </>
-    )
-}
-
-function PendingRevealPanel() {
-    return (
-        <>
-            Pending Reveal
-        </>
-    )
-}
-
-function BidPanel(props: BidPanelProps) {
-    const {bid, onBidChange} = props;
-    return (
-        <>
-            <TextField
-                className={style.field}
-                type="number"
-                label="Enter Bid"
-                onChange={onBidChange}
-                error={bid < 0.003}
-                helperText={bid < 0.003 ? "Bid must be at least 0.003 ETH" : ""}
-                InputLabelProps={{
-                    shrink: true,
-                }}
-            />
-
-            <Box mt={2}>
-                <Button
-                    variant="contained"
-                    className={style.button}
-                    onClick={props.onClick}
-                >
-                    <Typography variant="body1" fontWeight="bold">
-                        COMMIT
-                    </Typography>
-                </Button>
-            </Box>
-        </>
-    )
-}
-
-interface WaitPanelProps {
-    commitment: Commitment | null;
-    onAuctionEnded: () => void;
-}
-
-function WaitPanel(props: WaitPanelProps) {
-    const {commitment, onAuctionEnded} = props;
-    const {provider} = useWallet();
-    const [progress, setProgress] = useState(0);
-
-    useEffect(() => {
-        if (!commitment) return;
-        getDeadline();
-    }, []);
-
-    if (!commitment) {
-        return <Navigate to={'/'}/>;
-    }
-
-    const getDeadline = async () => {
-        const deadline = await dnsContract.getAuctionDeadline(provider, commitment.tld, commitment.subdomain);
-        const duration = await dnsContract.getAuctionDuration(provider, commitment.tld);
-        let remain = timeDiffNowSec(Number(deadline));
-
-        // Deadline 0 means auction has not started yet
-        if (Number(deadline) != 0 && remain < 0) {
-            onAuctionEnded();
-            return;
-        }
-        if (remain < 0 || remain > Number(duration)) {
-            remain = Number(duration);
-        }
-
-        setProgress(((Number(duration) - remain) / Number(duration)) * 100)
-        setTimeout(getDeadline, 100);
-    }
-
-    if (!commitment) {
-        return <Navigate to={'/'}/>;
-    }
+function LostPanel(props: LostPanelProps) {
     return (
         <Grid container>
             <Grid item xs={12}>
-                <Typography fontWeight={"bold"}>
-                    Waiting for bid auction to end
-                </Typography>
-                <LinearProgressWithLabel value={progress}/>
-            </Grid>
-        </Grid>
-    )
-}
-
-interface RevealPanelProps {
-    onClick: () => void;
-    commitment: Commitment | null;
-}
-
-function RevealPanel(props: RevealPanelProps) {
-    const {onClick, commitment} = props;
-
-    return (
-        <Grid container>
-            <Grid item xs={12}>
-                <WithLoader pred={!commitment}>
-                    <Box display={"flex"} justifyContent={"center"}>
-                        <Button
-                            variant="contained"
-                            className={style.button}
-                            onClick={onClick}
-                        >
-                            <Typography variant="body1" fontWeight="bold">
-                                Reveal
-                            </Typography>
-                        </Button>
+                <Box display={"flex"} flexDirection={"column"} alignItems={"center"}>
+                    <Box mb={3}>
+                        <Typography variant={"body1"} fontWeight={"bold"}>
+                            You lost the bid. {props.refund} ETH has been refunded to your wallet.
+                        </Typography>
                     </Box>
-                </WithLoader>
+                    <Button
+                        variant="contained"
+                        className={style.button}
+                        onClick={props.onNext}
+                    >
+                        <Typography variant="body1" fontWeight="bold">
+                            Continue
+                        </Typography>
+                    </Button>
+                </Box>
             </Grid>
         </Grid>
-    )
-}
-
-interface OwnerPanelProps {
-    owner: string | null;
-}
-
-function OwnerPanel(props: OwnerPanelProps) {
-    return (
-        <>
-            <div>
-                {props.owner}
-            </div>
-        </>
-    )
-}
-
-function LosePanel() {
-    return (
-        <>
-            <div>
-                You lost the bid
-            </div>
-        </>
     )
 }
 
@@ -193,6 +74,7 @@ export default function Domain() {
     const [stage, setStage] = useState<Stages>(Stages.commit);
     const [submittedCommitment, setSubmittedCommitment] = useState<Commitment | null>(null);
     const [owner, setOwner] = useState<string | null>(null);
+    const [refund, setRefund] = useState<string>("0");
 
     const navigate = useNavigate();
     const {provider, signer, connect} = useWallet();
@@ -240,43 +122,45 @@ export default function Domain() {
     }, [signer, tld, subdomain]);
 
     const getStage = async () => {
+        const isOwnerStage = async (subdomain: string, tld: string) => {
+            const addr = await dnsContract.getAddr(provider, `${subdomain}.${tld}`);
+            if (addr != dnsContract.EMPTY_ADDRESS) setOwner(addr);
+            return addr !== dnsContract.EMPTY_ADDRESS;
+        }
+
+        const isPendingRevealStage = async (deadline: number, auctionTimeRemain: number, commitment: Commitment | null) => {
+            return (deadline != 0 && auctionTimeRemain <= 0) && !commitment;
+        }
+
+        const isCommitStage = (commitment: Commitment | null) => {
+            return !commitment;
+        }
+
+        const isRevealStage = (deadline: number, remain: number) => {
+            return deadline != 0 && remain < 0
+        }
+
         if (!tld || !subdomain) return Stages.viewOnly;
-        const addr = await dnsContract.getAddr(provider, `${subdomain}.${tld}`);
-
-        // Owner
-        if (addr !== dnsContract.EMPTY_ADDRESS) {
-            setOwner(addr);
-            return Stages.owner;
-        }
-
-        // If no wallet connected, view only
         if (!signer) {
-            return Stages.viewOnly;
+            return (await isOwnerStage(subdomain, tld)) ? Stages.owner : Stages.viewOnly;
         }
 
+        const deadline = await dnsContract.getAuctionDeadline(provider, tld, subdomain);
+        const auctionTimeRemain = await timeDiffFromBlock(provider, Number(deadline));
         const commitment = await CommitmentStore.getCommit(signer.address, tld, subdomain);
         setSubmittedCommitment(commitment);
 
-        const deadline = await dnsContract.getAuctionDeadline(provider, tld, subdomain);
-        const remain = timeDiffNowSec(Number(deadline));
-
-        // if deadline is over and no commitment => pending reveal
-        if ((Number(deadline) != 0  && remain <= 0) && !commitment) {
+        if (await isOwnerStage(subdomain, tld)) {
+            return Stages.owner;
+        } else if (await isPendingRevealStage(Number(deadline), auctionTimeRemain, commitment)) {
             return Stages.pendingReveal;
-        }
-
-        // If no commitment, commit
-        if (!commitment) {
-            return Stages.commit;
-        }
-
-        // Reveal stage if deadline is over. Deadline 0 means auction has not started yet
-        if (Number(deadline) != 0 && remain < 0) {
+        } else if (isRevealStage(Number(deadline), auctionTimeRemain)) {
             return Stages.reveal;
+        } else if (isCommitStage(commitment)) {
+            return Stages.commit;
+        } else {
+            return Stages.wait;
         }
-
-        // Wait stage
-        return Stages.wait
     }
 
     const onRevealStage = () => {
@@ -284,14 +168,15 @@ export default function Domain() {
         setStage(Stages.reveal);
     }
 
-    const onLostStage = () => {
+    const onLostStage = (refund: string) => {
         setStage(Stages.lose);
+        setRefund(refund);
     }
 
     const onOwnerStage = async (signer: JsonRpcSigner) => {
         if (!signer || !subdomain || !tld) return;
         const addr = await dnsContract.getAddr(provider, `${subdomain}.${tld}`);
-        if (addr === signer.address) {
+        if (addr !== dnsContract.EMPTY_ADDRESS) {
             setStage(Stages.owner);
             setOwner(addr);
             return;
@@ -313,15 +198,10 @@ export default function Domain() {
 
         if (!signer || !event) return;
 
-        if (signer.address !== event.args.owner) {
-            return;
-        }
-
-        // Handle success bid
         await onOwnerStage(signer);
     }
 
-    const onBidFailed = async (events: Array<TypedEventLog<TypedContractEvent<SubdomainRegisteredEvent.InputTuple, SubdomainRegisteredEvent.OutputTuple, SubdomainRegisteredEvent.OutputObject>>>) => {
+    const onBidFailed = async (events: Array<TypedEventLog<TypedContractEvent<SubdomainBidFailedEvent.InputTuple, SubdomainBidFailedEvent.OutputTuple, SubdomainBidFailedEvent.OutputObject>>>) => {
         const event = events.find((event) => {
             if (!event.args) return false;
 
@@ -335,11 +215,9 @@ export default function Domain() {
         if (signer.address !== event.args.owner) {
             return;
         }
-
         // Handle fail bid
-        await onLostStage();
+        onLostStage(ethers.formatEther(event.args.refund));
     }
-
 
     const onBidChange = (e: any) => {
         setBid(e.target.value);
@@ -390,9 +268,9 @@ export default function Domain() {
             case Stages.pendingReveal:
                 return <PendingRevealPanel/>;
             case Stages.lose:
-                return <LosePanel/>;
+                return <LostPanel refund={refund} onNext={() => getStage().then(setStage)}/>;
             case Stages.owner:
-                return <OwnerPanel owner={owner}/>;
+                return <OwnerPanel owner={owner!} tld={tld!} subdomain={subdomain!}/>;
         }
     }
 
@@ -416,7 +294,6 @@ export default function Domain() {
                                 <WithConnect onClick={() => connect()} pred={!!signer}>
                                     {processStage()}
                                 </WithConnect>
-
                             </Box>
                         </Box>
                     </Grid>

@@ -22,10 +22,24 @@ export class DNSContract {
         return domain.replace(tld, '').replace('.', '');
     }
 
+    async getExpiry(provider: any, tld: string, subdomain: string) {
+        const registrar = await this.getRegistrar(provider, tld);
+        const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
+        return registrar.expiry(subdomainHash);
+    }
+
     async isAvailable(provider: any, tld: string, subdomain: string) {
         const dnsRegistry = DNSRegistry__factory.connect(this.address, provider);
         const namehash = ethers.namehash(`${subdomain}.${tld}`);
         return dnsRegistry.available(namehash);
+    }
+
+    async getRegistrar(provider: any, tld: string) {
+        const registryAddr = await this.getAddr(provider, tld);
+        if (registryAddr === this.EMPTY_ADDRESS) {
+            throw new Error(`TLD ${tld} is not registered`);
+        }
+        return IRegistrar__factory.connect(registryAddr, provider);
     }
 
     /**
@@ -46,24 +60,20 @@ export class DNSContract {
     }
 
     async isExpired(provider: any, tld: string, subdomain: string) {
-        const registryAddr = await this.getAddr(provider, tld);
-        const registrar = IRegistrar__factory.connect(registryAddr, provider);
+        const registrar = await this.getRegistrar(provider, tld);
         const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
         return registrar.hasSubdomainExpired(subdomainHash);
     }
 
     async commit(provider: any, signer: JsonRpcSigner, secret: string, tld: string, subdomain: string, value: string) {
-        const registryAddr = await this.getAddr(provider, tld);
-        const registrar = IRegistrar__factory.connect(registryAddr, provider);
-        secret = ethers.keccak256(ethers.toUtf8Bytes(secret));
+        const registrar = await this.getRegistrar(provider, tld);        secret = ethers.keccak256(ethers.toUtf8Bytes(secret));
         const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
 
         await registrar.connect(signer).commit(subdomainHash, secret, {value: ethers.parseEther(value)});
     }
 
     async reveal(provider: any, signer: JsonRpcSigner, secret: string, tld: string, subdomain: string, value: string) {
-        const registryAddr = await this.getAddr(provider, tld);
-        const registrar = IRegistrar__factory.connect(registryAddr, provider);
+        const registrar = await this.getRegistrar(provider, tld);
         secret = ethers.keccak256(ethers.toUtf8Bytes(secret));
         await registrar.connect(signer).revealRegister(subdomain, secret, ethers.parseEther(value));
     }
@@ -80,22 +90,27 @@ export class DNSContract {
     }
 
     async getAuctionDuration(provider: any, tld: string) {
-        const registryAddr = await this.getAddr(provider, tld);
-        const registrar = IRegistrar__factory.connect(registryAddr, provider);
+        const registrar = await this.getRegistrar(provider, tld);
         return registrar.getAuctionDuration();
     }
 
     async getAuctionDeadline(provider: any, tld: string, subdomain: string) {
-        const registryAddr = await this.getAddr(provider, tld);
-        const registrar = IRegistrar__factory.connect(registryAddr, provider);
+        const registrar = await this.getRegistrar(provider, tld);
         const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
 
         return registrar.auctionDeadline(subdomainHash);
     }
 
+    async hasCommitment(provider: any, signer: JsonRpcSigner, secret: string, tld: string, subdomain: string, value: string) {
+        const registrar = await this.getRegistrar(provider, tld);
+        secret = ethers.keccak256(ethers.toUtf8Bytes(secret));
+        const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
+
+        return registrar.connect(signer).hasDomainCommitment(subdomainHash, secret, ethers.parseEther(value));
+    }
+
     async querySubdomainRegistered(provider: any, tld: string, subdomain: string) {
-        const registryAddr = await this.getAddr(provider, tld);
-        const registrar = IRegistrar__factory.connect(registryAddr, provider);
+        const registrar = await this.getRegistrar(provider, tld);
         const tldHash =ethers.keccak256(ethers.toUtf8Bytes(tld));
         const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
 
@@ -104,8 +119,7 @@ export class DNSContract {
     }
 
     async querySubdomainBidFailed(provider: any, tld: string, subdomain: string) {
-        const registryAddr = await this.getAddr(provider, tld);
-        const registrar = IRegistrar__factory.connect(registryAddr, provider);
+        const registrar = await this.getRegistrar(provider, tld);
         const tldHash =ethers.keccak256(ethers.toUtf8Bytes(tld));
         const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
 
@@ -115,8 +129,7 @@ export class DNSContract {
 
 
     async onRegisteredDomains(provider: any, tld: string, subdomain: string, callback: DomainRegisteredCB) {
-        const registryAddr = await this.getAddr(provider, tld);
-        const registrar = IRegistrar__factory.connect(registryAddr, provider);
+        const registrar = await this.getRegistrar(provider, tld);
         const tldHash =ethers.keccak256(ethers.toUtf8Bytes(tld));
         const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
 
@@ -125,8 +138,7 @@ export class DNSContract {
     }
 
     async offRegisteredDomains(provider: any, tld: string, subdomain: string, callback: DomainRegisteredCB) {
-        const registryAddr = await this.getAddr(provider, tld);
-        const registrar = IRegistrar__factory.connect(registryAddr, provider);
+        const registrar = await this.getRegistrar(provider, tld);
         const tldHash =ethers.keccak256(ethers.toUtf8Bytes(tld));
         const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
 

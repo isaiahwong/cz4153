@@ -53,6 +53,10 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         return tld;
     }
 
+    function expiry(bytes32 subdomain) public view returns (uint256) {
+        return expiries[subdomain];
+    }
+
     function hasSubdomainExpired(bytes32 subdomain) public view returns (bool) {
         return expiries[subdomain] + GRACE_PERIOD < block.timestamp;
     }
@@ -64,6 +68,11 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
     function makeSubdomainCommitment(bytes32 subdomain, bytes32 secret, uint256 value) public view returns (bytes32) {
         return makeCommitment(msg.sender, getSubdomainCurrentVersion(subdomain), secret, value);
     }
+
+    function hasDomainCommitment(bytes32 subdomain, bytes32 secret, uint256 value) public view returns (bool) {
+        return hasCommitment(makeCommitment(msg.sender, getSubdomainCurrentVersion(subdomain), secret, value));
+    }
+
 
     /**
      * @dev canCommit returns true when either the domain has expired or an ongoing auction has happening
@@ -103,7 +112,7 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
     function revealRegister(string calldata subdomainPlainText, bytes32 secret, uint256 value) public returns (bool) {
         bytes32 subdomainHash = keccak256(abi.encodePacked(subdomainPlainText));
 
-        bool bidSuccess = revealAuction(
+        (bool bidSuccess, uint256 refund) = revealAuction(
             getSubdomainCurrentVersion(subdomainHash),
             secret,
             value
@@ -111,7 +120,7 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
 
         // Return if bid was unsuccessful
         if (!bidSuccess) {
-            emit SubdomainBidFailed(msg.sender, keccak256(abi.encodePacked(name())), subdomainHash, name(), subdomainPlainText, expiries[subdomainHash]);
+            emit SubdomainBidFailed(msg.sender, keccak256(abi.encodePacked(name())), subdomainHash, name(), subdomainPlainText, expiries[subdomainHash], refund);
             return bidSuccess;
         }
 

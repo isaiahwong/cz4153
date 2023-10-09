@@ -34,12 +34,14 @@ export interface RegistrarInterface extends Interface {
       | "balanceOf"
       | "canCommit"
       | "commit"
-      | "commitmentExists"
+      | "expiry"
       | "getApproved"
       | "getAuctionDuration"
       | "getSubdomainCurrentVersion"
       | "getTLD"
       | "hasAuctionExpired"
+      | "hasCommitment"
+      | "hasDomainCommitment"
       | "hasSubdomainExpired"
       | "isApprovedForAll"
       | "makeCommitment"
@@ -101,10 +103,7 @@ export interface RegistrarInterface extends Interface {
     functionFragment: "commit",
     values: [BytesLike, BytesLike]
   ): string;
-  encodeFunctionData(
-    functionFragment: "commitmentExists",
-    values: [AddressLike, BytesLike]
-  ): string;
+  encodeFunctionData(functionFragment: "expiry", values: [BytesLike]): string;
   encodeFunctionData(
     functionFragment: "getApproved",
     values: [BigNumberish]
@@ -121,6 +120,14 @@ export interface RegistrarInterface extends Interface {
   encodeFunctionData(
     functionFragment: "hasAuctionExpired",
     values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "hasCommitment",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "hasDomainCommitment",
+    values: [BytesLike, BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "hasSubdomainExpired",
@@ -202,10 +209,7 @@ export interface RegistrarInterface extends Interface {
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "canCommit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "commit", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "commitmentExists",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "expiry", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getApproved",
     data: BytesLike
@@ -221,6 +225,14 @@ export interface RegistrarInterface extends Interface {
   decodeFunctionResult(functionFragment: "getTLD", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "hasAuctionExpired",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "hasCommitment",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "hasDomainCommitment",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -338,7 +350,8 @@ export namespace SubdomainBidFailedEvent {
     subdomainHash: BytesLike,
     tld: string,
     subdomain: string,
-    expires: BigNumberish
+    expires: BigNumberish,
+    refund: BigNumberish
   ];
   export type OutputTuple = [
     owner: string,
@@ -346,7 +359,8 @@ export namespace SubdomainBidFailedEvent {
     subdomainHash: string,
     tld: string,
     subdomain: string,
-    expires: bigint
+    expires: bigint,
+    refund: bigint
   ];
   export interface OutputObject {
     owner: string;
@@ -355,6 +369,7 @@ export namespace SubdomainBidFailedEvent {
     tld: string;
     subdomain: string;
     expires: bigint;
+    refund: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -489,11 +504,7 @@ export interface Registrar extends BaseContract {
     "payable"
   >;
 
-  commitmentExists: TypedContractMethod<
-    [sender: AddressLike, commitment: BytesLike],
-    [boolean],
-    "view"
-  >;
+  expiry: TypedContractMethod<[subdomain: BytesLike], [bigint], "view">;
 
   getApproved: TypedContractMethod<[tokenId: BigNumberish], [string], "view">;
 
@@ -508,6 +519,18 @@ export interface Registrar extends BaseContract {
   getTLD: TypedContractMethod<[], [string], "view">;
 
   hasAuctionExpired: TypedContractMethod<[label: BytesLike], [boolean], "view">;
+
+  hasCommitment: TypedContractMethod<
+    [commitment: BytesLike],
+    [boolean],
+    "view"
+  >;
+
+  hasDomainCommitment: TypedContractMethod<
+    [subdomain: BytesLike, secret: BytesLike, value: BigNumberish],
+    [boolean],
+    "view"
+  >;
 
   hasSubdomainExpired: TypedContractMethod<
     [subdomain: BytesLike],
@@ -634,12 +657,8 @@ export interface Registrar extends BaseContract {
     "payable"
   >;
   getFunction(
-    nameOrSignature: "commitmentExists"
-  ): TypedContractMethod<
-    [sender: AddressLike, commitment: BytesLike],
-    [boolean],
-    "view"
-  >;
+    nameOrSignature: "expiry"
+  ): TypedContractMethod<[subdomain: BytesLike], [bigint], "view">;
   getFunction(
     nameOrSignature: "getApproved"
   ): TypedContractMethod<[tokenId: BigNumberish], [string], "view">;
@@ -655,6 +674,16 @@ export interface Registrar extends BaseContract {
   getFunction(
     nameOrSignature: "hasAuctionExpired"
   ): TypedContractMethod<[label: BytesLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "hasCommitment"
+  ): TypedContractMethod<[commitment: BytesLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "hasDomainCommitment"
+  ): TypedContractMethod<
+    [subdomain: BytesLike, secret: BytesLike, value: BigNumberish],
+    [boolean],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "hasSubdomainExpired"
   ): TypedContractMethod<[subdomain: BytesLike], [boolean], "view">;
@@ -826,7 +855,7 @@ export interface Registrar extends BaseContract {
       OwnershipTransferredEvent.OutputObject
     >;
 
-    "SubdomainBidFailed(address,bytes32,bytes32,string,string,uint256)": TypedContractEvent<
+    "SubdomainBidFailed(address,bytes32,bytes32,string,string,uint256,uint256)": TypedContractEvent<
       SubdomainBidFailedEvent.InputTuple,
       SubdomainBidFailedEvent.OutputTuple,
       SubdomainBidFailedEvent.OutputObject
