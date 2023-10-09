@@ -197,7 +197,7 @@ export interface AuctionMock extends BaseContract {
 
   reveal: TypedContractMethod<
     [label: BytesLike, secret: BytesLike, value: BigNumberish],
-    [boolean],
+    [[boolean, bigint]],
     "nonpayable"
   >;
 
@@ -249,7 +249,7 @@ export interface AuctionMock extends BaseContract {
     nameOrSignature: "reveal"
   ): TypedContractMethod<
     [label: BytesLike, secret: BytesLike, value: BigNumberish],
-    [boolean],
+    [[boolean, bigint]],
     "nonpayable"
   >;
 

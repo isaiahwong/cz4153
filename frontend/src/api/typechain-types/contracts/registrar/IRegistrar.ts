@@ -141,7 +141,8 @@ export namespace SubdomainBidFailedEvent {
     subdomainHash: BytesLike,
     tld: string,
     subdomain: string,
-    expires: BigNumberish
+    expires: BigNumberish,
+    refund: BigNumberish
   ];
   export type OutputTuple = [
     owner: string,
@@ -149,7 +150,8 @@ export namespace SubdomainBidFailedEvent {
     subdomainHash: string,
     tld: string,
     subdomain: string,
-    expires: bigint
+    expires: bigint,
+    refund: bigint
   ];
   export interface OutputObject {
     owner: string;
@@ -158,6 +160,7 @@ export namespace SubdomainBidFailedEvent {
     tld: string;
     subdomain: string;
     expires: bigint;
+    refund: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -367,7 +370,7 @@ export interface IRegistrar extends BaseContract {
   >;
 
   filters: {
-    "SubdomainBidFailed(address,bytes32,bytes32,string,string,uint256)": TypedContractEvent<
+    "SubdomainBidFailed(address,bytes32,bytes32,string,string,uint256,uint256)": TypedContractEvent<
       SubdomainBidFailedEvent.InputTuple,
       SubdomainBidFailedEvent.OutputTuple,
       SubdomainBidFailedEvent.OutputObject

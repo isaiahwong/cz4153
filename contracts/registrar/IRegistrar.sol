@@ -20,7 +20,8 @@ interface IRegistrar is IAuction {
         bytes32 indexed subdomainHash,
         string tld,
         string subdomain,
-        uint256 expires
+        uint256 expires,
+        uint256 refund
     );
 
     function expiry(bytes32 subdomain) external view returns (uint256);

@@ -107,7 +107,6 @@ describe("TestAuction", () => {
         const value1 = ethers.parseEther("0.01");
 
         const commitment1 = await auction.makeCommitment(buyer1.address, label1, secret1, value1);
-
         await (await auction.connect(buyer1).commit(label1, commitment1, {value: value1})).wait();
 
         // Buyer 2
@@ -116,7 +115,6 @@ describe("TestAuction", () => {
         const value2 = ethers.parseEther("0.01");
 
         const commitment2 = await auction.makeCommitment(buyer2.address, label2, secret2, value2);
-
         await (await auction.connect(buyer2).commit(label2, commitment2, {value: value2})).wait();
 
         // Ensure registrar has the correct balance
@@ -127,14 +125,20 @@ describe("TestAuction", () => {
         await ethers.provider.send("evm_mine", [block!.timestamp + AUCTION_DURATION + 1]);
 
         await moveTime(AUCTION_DURATION + 1);
+        const buyer2BeforeRefundBalance = await ethers.provider.getBalance(buyer2.address);
 
         // Reveal
         await auction.connect(buyer1).reveal(label1, secret1, value1);
         await auction.connect(buyer2).reveal(label2, secret2, value2);
+        const buyer2AfterRefundBalance = await ethers.provider.getBalance(buyer2.address);
+
 
         expect(await auction.auctionHighestBidder(label1)).equal(buyer1.address);
 
         // Expect auction to have only the highest bid amount
         expect(await ethers.provider.getBalance(auction.target)).to.equal(auctionInitialBalance + value1);
+
+        // After refund, buyer2 should have more eth than before excluding gas
+        expect(buyer2AfterRefundBalance).gte(buyer2BeforeRefundBalance);
     });
 });

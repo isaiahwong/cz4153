@@ -4,6 +4,8 @@ pragma solidity ^0.8.9;
 import "./IAuction.sol";
 import "./Errors.sol";
 
+import "hardhat/console.sol";
+
 abstract contract Auction is IAuction {
     struct Record {
         address maxBidder;
@@ -101,7 +103,7 @@ abstract contract Auction is IAuction {
         }
     }
 
-    function revealAuction(bytes32 label, bytes32 secret, uint256 value) internal returns (bool) {
+    function revealAuction(bytes32 label, bytes32 secret, uint256 value) internal returns (bool, uint256) {
         bytes32 commitment = makeCommitment(msg.sender, label, secret, value);
 
         // Check if auction exists
@@ -119,15 +121,18 @@ abstract contract Auction is IAuction {
             revert Errors.CommitmentDoesNotExist();
         }
 
+        uint256 refund = 0;
+
         // Refund if not max bidder
         if (auctions[label].maxBidder != msg.sender) {
-            (bool success,) = msg.sender.call{value: bids[msg.sender][commitment]}("");
+            refund =  bids[msg.sender][commitment];
+            (bool success,) = msg.sender.call{value:refund}("");
             require(success, "Refund failed");
         }
 
         // Delete commitment
         delete bids[msg.sender][commitment];
 
-        return auctions[label].maxBidder == msg.sender;
+        return (auctions[label].maxBidder == msg.sender, refund);
     }
 }

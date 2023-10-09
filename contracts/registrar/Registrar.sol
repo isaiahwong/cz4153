@@ -112,7 +112,7 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
     function revealRegister(string calldata subdomainPlainText, bytes32 secret, uint256 value) public returns (bool) {
         bytes32 subdomainHash = keccak256(abi.encodePacked(subdomainPlainText));
 
-        bool bidSuccess = revealAuction(
+        (bool bidSuccess, uint256 refund) = revealAuction(
             getSubdomainCurrentVersion(subdomainHash),
             secret,
             value
@@ -120,7 +120,7 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
 
         // Return if bid was unsuccessful
         if (!bidSuccess) {
-            emit SubdomainBidFailed(msg.sender, keccak256(abi.encodePacked(name())), subdomainHash, name(), subdomainPlainText, expiries[subdomainHash]);
+            emit SubdomainBidFailed(msg.sender, keccak256(abi.encodePacked(name())), subdomainHash, name(), subdomainPlainText, expiries[subdomainHash], refund);
             return bidSuccess;
         }
 

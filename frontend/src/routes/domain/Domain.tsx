@@ -1,263 +1,57 @@
 import React, {useEffect, useState} from 'react';
-import {Navigate, useNavigate, useParams} from "react-router-dom";
-import Button from "@mui/material/Button";
-import {Box, Grid, Table, TableBody, TableCell, TableContainer, TableRow, TextField, Typography} from '@mui/material';
-import {JsonRpcSigner} from "ethers";
+import {useNavigate, useParams} from "react-router-dom";
+import {Box, Grid, Typography} from '@mui/material';
+import {ethers, JsonRpcSigner} from "ethers";
 
-import _ from 'lodash';
 import Header from "../../components/header/Header";
 import {dnsContract} from "../../api/contract/contract";
 import {useWallet} from "../../api/wallet/wallet";
-import {Loader, WithConnect, WithLoader} from "../../components/hoc/hoc";
+import {WithConnect, WithLoader} from "../../components/hoc/hoc";
 
 import CommitmentStore, {Commitment} from "../../store/commits";
 
 import style from "./Domain.module.css";
-import {randomSecret, timeDiffNowSec} from "../../common/common";
-import LinearProgressWithLabel from "../../components/common/LinearProgressWithLabel";
+import {randomSecret, timeDiffFromBlock} from "../../common/common";
 import {TypedContractEvent, TypedEventLog} from "../../api/typechain-types/common";
-import {SubdomainRegisteredEvent} from "../../api/typechain-types/contracts/registrar/Registrar";
+import {
+    SubdomainBidFailedEvent,
+    SubdomainRegisteredEvent
+} from "../../api/typechain-types/contracts/registrar/Registrar";
+import ViewOnlyPanel from "../../components/domain/ViewOnlyPanel";
+import BidPanel from "../../components/domain/BidPanel";
+import RevealPanel from "../../components/domain/RevealPanel";
+import WaitPanel from '../../components/domain/WaitPanel';
+import PendingRevealPanel from "../../components/domain/PendingRevealPanel";
+import OwnerPanel from "../../components/domain/OwnerPanel";
+import Button from "@mui/material/Button";
 
-interface BidPanelProps {
-    bid: number;
-    onBidChange: (e: any) => void;
-    onClick: () => void;
+interface LostPanelProps {
+    onNext: () => void;
+    refund: string;
 }
 
-function ViewOnlyPanel() {
-    return (
-        <Grid container>
-            <Grid item xs={12}>
-                <Box display={"flex"} flexDirection={"column"} alignItems={"center"}>
-                    <Box>
-                        <Typography variant={"h5"} fontWeight={"bold"}>
-                            Connect your wallet to bid for this domain
-                        </Typography>
-                    </Box>
-                </Box>
-            </Grid>
-        </Grid>
-    )
-}
-
-function PendingRevealPanel() {
+function LostPanel(props: LostPanelProps) {
     return (
         <Grid container>
             <Grid item xs={12}>
                 <Box display={"flex"} flexDirection={"column"} alignItems={"center"}>
                     <Box mb={3}>
-                        <Typography variant={"h5"} fontWeight={"bold"}>
-                            Waiting for reveal
+                        <Typography variant={"body1"} fontWeight={"bold"}>
+                            You lost the bid. {props.refund} ETH has been refunded to your wallet.
                         </Typography>
                     </Box>
-                    <Loader />
+                    <Button
+                        variant="contained"
+                        className={style.button}
+                        onClick={props.onNext}
+                    >
+                        <Typography variant="body1" fontWeight="bold">
+                            Continue
+                        </Typography>
+                    </Button>
                 </Box>
             </Grid>
         </Grid>
-    )
-}
-
-function BidPanel(props: BidPanelProps) {
-    const {bid, onBidChange} = props;
-    return (
-        <>
-            <TextField
-                className={style.field}
-                type="number"
-                label="Enter Bid"
-                onChange={onBidChange}
-                error={bid < 0.003}
-                helperText={bid < 0.003 ? "Bid must be at least 0.003 ETH" : ""}
-                InputLabelProps={{
-                    shrink: true,
-                }}
-            />
-
-            <Box mt={2}>
-                <Button
-                    variant="contained"
-                    className={style.button}
-                    onClick={props.onClick}
-                >
-                    <Typography variant="body1" fontWeight="bold">
-                        COMMIT
-                    </Typography>
-                </Button>
-            </Box>
-        </>
-    )
-}
-
-interface WaitPanelProps {
-    commitment: Commitment | null;
-    onAuctionEnded: () => void;
-}
-
-function WaitPanel(props: WaitPanelProps) {
-    const {commitment, onAuctionEnded} = props;
-    const {provider} = useWallet();
-    const [progress, setProgress] = useState(0);
-
-    useEffect(() => {
-        if (!commitment) return;
-        getDeadline();
-    }, []);
-
-    if (!commitment) {
-        return <Navigate to={'/'}/>;
-    }
-
-    const getDeadline = async () => {
-        const deadline = await dnsContract.getAuctionDeadline(provider, commitment.tld, commitment.subdomain);
-        const duration = await dnsContract.getAuctionDuration(provider, commitment.tld);
-        let remain = timeDiffNowSec(Number(deadline));
-
-        // Deadline 0 means auction has not started yet
-        if (Number(deadline) != 0 && remain < 0) {
-            onAuctionEnded();
-            return;
-        }
-        if (remain < 0 || remain > Number(duration)) {
-            remain = Number(duration);
-        }
-
-        setProgress(((Number(duration) - remain) / Number(duration)) * 100)
-        setTimeout(getDeadline, 100);
-    }
-
-    if (!commitment) {
-        return <Navigate to={'/'}/>;
-    }
-    return (
-        <Grid container>
-            <Grid item xs={12}>
-                <Typography fontWeight={"bold"}>
-                    Waiting for bid auction to end
-                </Typography>
-                <LinearProgressWithLabel value={progress}/>
-            </Grid>
-        </Grid>
-    )
-}
-
-interface RevealPanelProps {
-    onClick: () => void;
-    commitment: Commitment | null;
-}
-
-function RevealPanel(props: RevealPanelProps) {
-    const {onClick, commitment} = props;
-
-    return (
-        <Grid container>
-            <Grid item xs={12}>
-                <Box display={"flex"} justifyContent={"center"}>
-                    <WithLoader pred={!commitment}>
-                        <Button
-                            variant="contained"
-                            className={style.button}
-                            onClick={onClick}
-                        >
-                            <Typography variant="body1" fontWeight="bold">
-                                Reveal
-                            </Typography>
-                        </Button>
-                    </WithLoader>
-                </Box>
-            </Grid>
-        </Grid>
-    )
-}
-
-interface OwnerPanelProps {
-    owner: string;
-    tld: string;
-    subdomain: string;
-}
-
-function OwnerPanel(props: OwnerPanelProps) {
-    const {owner, tld, subdomain} = props;
-    const {provider} = useWallet();
-    const [loading, setLoading] = useState(true);
-    const [expiry, setExpiry] = useState("");
-
-    useEffect(() => {
-        getExpiry();
-    }, []);
-
-    const getExpiry = async () => {
-        const expiry = Number(await dnsContract.getExpiry(provider, tld, subdomain));
-        if (timeDiffNowSec(expiry) < 0) {
-            setExpiry("Expired");
-        } else {
-            const date = new Date(expiry * 1000);
-            setExpiry(date.toString());
-        }
-        setLoading(false);
-    }
-
-
-    return (
-        <TableContainer>
-            <Table sx={{minWidth: 300}} aria-label="simple table">
-                <WithLoader pred={loading}>
-                    <TableBody>
-                        <TableRow sx={{'td, th': {border: 0}}}>
-                            <TableCell component="th" scope="row">
-                                <Typography fontWeight={"bold"}>
-                                    TLD
-                                </Typography>
-                            </TableCell>
-                            <TableCell align="right">
-                                {_.toUpper(tld)}
-                            </TableCell>
-                        </TableRow>
-                        <TableRow sx={{'td, th': {border: 0}}}>
-                            <TableCell component="th" scope="row">
-                                <Typography fontWeight={"bold"}>
-                                    Domain
-                                </Typography>
-                            </TableCell>
-                            <TableCell align="right">
-                                <Typography variant={"body1"} >
-                                    {_.toLower(subdomain)}
-                                </Typography>
-                            </TableCell>
-                        </TableRow>
-                        <TableRow sx={{'td, th': {border: 0}}}>
-                            <TableCell component="th" scope="row">
-                                <Typography fontWeight={"bold"}>
-                                    Address
-                                </Typography>
-                            </TableCell>
-                            <TableCell align="right">
-                                {owner}
-                            </TableCell>
-                        </TableRow>
-                        <TableRow sx={{'td, th': {border: 0}}}>
-                            <TableCell component="th" scope="row">
-                                <Typography fontWeight={"bold"}>
-                                    Expiry
-                                </Typography>
-                            </TableCell>
-                            <TableCell align="right">
-                                {expiry}
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </WithLoader>
-            </Table>
-        </TableContainer>
-    )
-}
-
-function LosePanel() {
-    return (
-        <>
-            <div>
-                You lost the bid
-            </div>
-        </>
     )
 }
 
@@ -280,6 +74,7 @@ export default function Domain() {
     const [stage, setStage] = useState<Stages>(Stages.commit);
     const [submittedCommitment, setSubmittedCommitment] = useState<Commitment | null>(null);
     const [owner, setOwner] = useState<string | null>(null);
+    const [refund, setRefund] = useState<string>("0");
 
     const navigate = useNavigate();
     const {provider, signer, connect} = useWallet();
@@ -333,8 +128,8 @@ export default function Domain() {
             return addr !== dnsContract.EMPTY_ADDRESS;
         }
 
-        const isPendingRevealStage = async (deadline: number, remain: number, commitment: Commitment | null) => {
-            return (deadline != 0 && remain <= 0) && !commitment;
+        const isPendingRevealStage = async (deadline: number, auctionTimeRemain: number, commitment: Commitment | null) => {
+            return (deadline != 0 && auctionTimeRemain <= 0) && !commitment;
         }
 
         const isCommitStage = (commitment: Commitment | null) => {
@@ -351,15 +146,15 @@ export default function Domain() {
         }
 
         const deadline = await dnsContract.getAuctionDeadline(provider, tld, subdomain);
-        const remain = timeDiffNowSec(Number(deadline));
+        const auctionTimeRemain = await timeDiffFromBlock(provider, Number(deadline));
         const commitment = await CommitmentStore.getCommit(signer.address, tld, subdomain);
         setSubmittedCommitment(commitment);
 
         if (await isOwnerStage(subdomain, tld)) {
             return Stages.owner;
-        } else if (await isPendingRevealStage(Number(deadline), remain, commitment)) {
+        } else if (await isPendingRevealStage(Number(deadline), auctionTimeRemain, commitment)) {
             return Stages.pendingReveal;
-        } else if (isRevealStage(Number(deadline), remain)) {
+        } else if (isRevealStage(Number(deadline), auctionTimeRemain)) {
             return Stages.reveal;
         } else if (isCommitStage(commitment)) {
             return Stages.commit;
@@ -373,14 +168,15 @@ export default function Domain() {
         setStage(Stages.reveal);
     }
 
-    const onLostStage = () => {
+    const onLostStage = (refund: string) => {
         setStage(Stages.lose);
+        setRefund(refund);
     }
 
     const onOwnerStage = async (signer: JsonRpcSigner) => {
         if (!signer || !subdomain || !tld) return;
         const addr = await dnsContract.getAddr(provider, `${subdomain}.${tld}`);
-        if (addr === signer.address) {
+        if (addr !== dnsContract.EMPTY_ADDRESS) {
             setStage(Stages.owner);
             setOwner(addr);
             return;
@@ -402,15 +198,10 @@ export default function Domain() {
 
         if (!signer || !event) return;
 
-        if (signer.address !== event.args.owner) {
-            return;
-        }
-
-        // Handle success bid
         await onOwnerStage(signer);
     }
 
-    const onBidFailed = async (events: Array<TypedEventLog<TypedContractEvent<SubdomainRegisteredEvent.InputTuple, SubdomainRegisteredEvent.OutputTuple, SubdomainRegisteredEvent.OutputObject>>>) => {
+    const onBidFailed = async (events: Array<TypedEventLog<TypedContractEvent<SubdomainBidFailedEvent.InputTuple, SubdomainBidFailedEvent.OutputTuple, SubdomainBidFailedEvent.OutputObject>>>) => {
         const event = events.find((event) => {
             if (!event.args) return false;
 
@@ -424,9 +215,8 @@ export default function Domain() {
         if (signer.address !== event.args.owner) {
             return;
         }
-
         // Handle fail bid
-        onLostStage();
+        onLostStage(ethers.formatEther(event.args.refund));
     }
 
     const onBidChange = (e: any) => {
@@ -478,7 +268,7 @@ export default function Domain() {
             case Stages.pendingReveal:
                 return <PendingRevealPanel/>;
             case Stages.lose:
-                return <LosePanel/>;
+                return <LostPanel refund={refund} onNext={() => getStage().then(setStage)}/>;
             case Stages.owner:
                 return <OwnerPanel owner={owner!} tld={tld!} subdomain={subdomain!}/>;
         }

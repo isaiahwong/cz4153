@@ -48,6 +48,12 @@ const _abi = [
         name: "expires",
         type: "uint256",
       },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "refund",
+        type: "uint256",
+      },
     ],
     name: "SubdomainBidFailed",
     type: "event",
