@@ -1,12 +1,15 @@
 import React, {useEffect, useState} from 'react';
 import {Navigate, useNavigate, useParams} from "react-router-dom";
 import Button from "@mui/material/Button";
+import {Box, Grid, Table, TableBody, TableCell, TableContainer, TableRow, TextField, Typography} from '@mui/material';
+import {JsonRpcSigner} from "ethers";
 
+import _ from 'lodash';
 import Header from "../../components/header/Header";
 import {dnsContract} from "../../api/contract/contract";
 import {useWallet} from "../../api/wallet/wallet";
-import {WithConnect, WithLoader} from "../../components/hoc/hoc";
-import {Box, Grid, TextField, Typography} from '@mui/material';
+import {Loader, WithConnect, WithLoader} from "../../components/hoc/hoc";
+
 import CommitmentStore, {Commitment} from "../../store/commits";
 
 import style from "./Domain.module.css";
@@ -14,7 +17,6 @@ import {randomSecret, timeDiffNowSec} from "../../common/common";
 import LinearProgressWithLabel from "../../components/common/LinearProgressWithLabel";
 import {TypedContractEvent, TypedEventLog} from "../../api/typechain-types/common";
 import {SubdomainRegisteredEvent} from "../../api/typechain-types/contracts/registrar/Registrar";
-import {JsonRpcSigner} from "ethers";
 
 interface BidPanelProps {
     bid: number;
@@ -24,17 +26,34 @@ interface BidPanelProps {
 
 function ViewOnlyPanel() {
     return (
-        <>
-            Domain unclaimed
-        </>
+        <Grid container>
+            <Grid item xs={12}>
+                <Box display={"flex"} flexDirection={"column"} alignItems={"center"}>
+                    <Box>
+                        <Typography variant={"h5"} fontWeight={"bold"}>
+                            Connect your wallet to bid for this domain
+                        </Typography>
+                    </Box>
+                </Box>
+            </Grid>
+        </Grid>
     )
 }
 
 function PendingRevealPanel() {
     return (
-        <>
-            Pending Reveal
-        </>
+        <Grid container>
+            <Grid item xs={12}>
+                <Box display={"flex"} flexDirection={"column"} alignItems={"center"}>
+                    <Box mb={3}>
+                        <Typography variant={"h5"} fontWeight={"bold"}>
+                            Waiting for reveal
+                        </Typography>
+                    </Box>
+                    <Loader />
+                </Box>
+            </Grid>
+        </Grid>
     )
 }
 
@@ -132,8 +151,8 @@ function RevealPanel(props: RevealPanelProps) {
     return (
         <Grid container>
             <Grid item xs={12}>
-                <WithLoader pred={!commitment}>
-                    <Box display={"flex"} justifyContent={"center"}>
+                <Box display={"flex"} justifyContent={"center"}>
+                    <WithLoader pred={!commitment}>
                         <Button
                             variant="contained"
                             className={style.button}
@@ -143,24 +162,92 @@ function RevealPanel(props: RevealPanelProps) {
                                 Reveal
                             </Typography>
                         </Button>
-                    </Box>
-                </WithLoader>
+                    </WithLoader>
+                </Box>
             </Grid>
         </Grid>
     )
 }
 
 interface OwnerPanelProps {
-    owner: string | null;
+    owner: string;
+    tld: string;
+    subdomain: string;
 }
 
 function OwnerPanel(props: OwnerPanelProps) {
+    const {owner, tld, subdomain} = props;
+    const {provider} = useWallet();
+    const [loading, setLoading] = useState(true);
+    const [expiry, setExpiry] = useState("");
+
+    useEffect(() => {
+        getExpiry();
+    }, []);
+
+    const getExpiry = async () => {
+        const expiry = Number(await dnsContract.getExpiry(provider, tld, subdomain));
+        if (timeDiffNowSec(expiry) < 0) {
+            setExpiry("Expired");
+        } else {
+            const date = new Date(expiry * 1000);
+            setExpiry(date.toString());
+        }
+        setLoading(false);
+    }
+
+
     return (
-        <>
-            <div>
-                {props.owner}
-            </div>
-        </>
+        <TableContainer>
+            <Table sx={{minWidth: 300}} aria-label="simple table">
+                <WithLoader pred={loading}>
+                    <TableBody>
+                        <TableRow sx={{'td, th': {border: 0}}}>
+                            <TableCell component="th" scope="row">
+                                <Typography fontWeight={"bold"}>
+                                    TLD
+                                </Typography>
+                            </TableCell>
+                            <TableCell align="right">
+                                {_.toUpper(tld)}
+                            </TableCell>
+                        </TableRow>
+                        <TableRow sx={{'td, th': {border: 0}}}>
+                            <TableCell component="th" scope="row">
+                                <Typography fontWeight={"bold"}>
+                                    Domain
+                                </Typography>
+                            </TableCell>
+                            <TableCell align="right">
+                                <Typography variant={"body1"} >
+                                    {_.toLower(subdomain)}
+                                </Typography>
+                            </TableCell>
+                        </TableRow>
+                        <TableRow sx={{'td, th': {border: 0}}}>
+                            <TableCell component="th" scope="row">
+                                <Typography fontWeight={"bold"}>
+                                    Address
+                                </Typography>
+                            </TableCell>
+                            <TableCell align="right">
+                                {owner}
+                            </TableCell>
+                        </TableRow>
+                        <TableRow sx={{'td, th': {border: 0}}}>
+                            <TableCell component="th" scope="row">
+                                <Typography fontWeight={"bold"}>
+                                    Expiry
+                                </Typography>
+                            </TableCell>
+                            <TableCell align="right">
+                                {expiry}
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </WithLoader>
+            </Table>
+        </TableContainer>
     )
 }
 
@@ -240,43 +327,45 @@ export default function Domain() {
     }, [signer, tld, subdomain]);
 
     const getStage = async () => {
+        const isOwnerStage = async (subdomain: string, tld: string) => {
+            const addr = await dnsContract.getAddr(provider, `${subdomain}.${tld}`);
+            if (addr != dnsContract.EMPTY_ADDRESS) setOwner(addr);
+            return addr !== dnsContract.EMPTY_ADDRESS;
+        }
+
+        const isPendingRevealStage = async (deadline: number, remain: number, commitment: Commitment | null) => {
+            return (deadline != 0 && remain <= 0) && !commitment;
+        }
+
+        const isCommitStage = (commitment: Commitment | null) => {
+            return !commitment;
+        }
+
+        const isRevealStage = (deadline: number, remain: number) => {
+            return deadline != 0 && remain < 0
+        }
+
         if (!tld || !subdomain) return Stages.viewOnly;
-        const addr = await dnsContract.getAddr(provider, `${subdomain}.${tld}`);
-
-        // Owner
-        if (addr !== dnsContract.EMPTY_ADDRESS) {
-            setOwner(addr);
-            return Stages.owner;
-        }
-
-        // If no wallet connected, view only
         if (!signer) {
-            return Stages.viewOnly;
+            return (await isOwnerStage(subdomain, tld)) ? Stages.owner : Stages.viewOnly;
         }
-
-        const commitment = await CommitmentStore.getCommit(signer.address, tld, subdomain);
-        setSubmittedCommitment(commitment);
 
         const deadline = await dnsContract.getAuctionDeadline(provider, tld, subdomain);
         const remain = timeDiffNowSec(Number(deadline));
+        const commitment = await CommitmentStore.getCommit(signer.address, tld, subdomain);
+        setSubmittedCommitment(commitment);
 
-        // if deadline is over and no commitment => pending reveal
-        if ((Number(deadline) != 0  && remain <= 0) && !commitment) {
+        if (await isOwnerStage(subdomain, tld)) {
+            return Stages.owner;
+        } else if (await isPendingRevealStage(Number(deadline), remain, commitment)) {
             return Stages.pendingReveal;
-        }
-
-        // If no commitment, commit
-        if (!commitment) {
-            return Stages.commit;
-        }
-
-        // Reveal stage if deadline is over. Deadline 0 means auction has not started yet
-        if (Number(deadline) != 0 && remain < 0) {
+        } else if (isRevealStage(Number(deadline), remain)) {
             return Stages.reveal;
+        } else if (isCommitStage(commitment)) {
+            return Stages.commit;
+        } else {
+            return Stages.wait;
         }
-
-        // Wait stage
-        return Stages.wait
     }
 
     const onRevealStage = () => {
@@ -337,9 +426,8 @@ export default function Domain() {
         }
 
         // Handle fail bid
-        await onLostStage();
+        onLostStage();
     }
-
 
     const onBidChange = (e: any) => {
         setBid(e.target.value);
@@ -392,7 +480,7 @@ export default function Domain() {
             case Stages.lose:
                 return <LosePanel/>;
             case Stages.owner:
-                return <OwnerPanel owner={owner}/>;
+                return <OwnerPanel owner={owner!} tld={tld!} subdomain={subdomain!}/>;
         }
     }
 
@@ -416,7 +504,6 @@ export default function Domain() {
                                 <WithConnect onClick={() => connect()} pred={!!signer}>
                                     {processStage()}
                                 </WithConnect>
-
                             </Box>
                         </Box>
                     </Grid>

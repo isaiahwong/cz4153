@@ -28,9 +28,9 @@ export interface AuctionInterface extends Interface {
       | "auctionExists"
       | "auctionHighestBid"
       | "auctionHighestBidder"
-      | "commitmentExists"
       | "getAuctionDuration"
       | "hasAuctionExpired"
+      | "hasCommitment"
       | "makeCommitment"
   ): FunctionFragment;
 
@@ -51,15 +51,15 @@ export interface AuctionInterface extends Interface {
     values: [BytesLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "commitmentExists",
-    values: [AddressLike, BytesLike]
-  ): string;
-  encodeFunctionData(
     functionFragment: "getAuctionDuration",
     values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "hasAuctionExpired",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "hasCommitment",
     values: [BytesLike]
   ): string;
   encodeFunctionData(
@@ -84,15 +84,15 @@ export interface AuctionInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "commitmentExists",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "getAuctionDuration",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "hasAuctionExpired",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "hasCommitment",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -156,15 +156,15 @@ export interface Auction extends BaseContract {
     "view"
   >;
 
-  commitmentExists: TypedContractMethod<
-    [sender: AddressLike, commitment: BytesLike],
-    [boolean],
-    "view"
-  >;
-
   getAuctionDuration: TypedContractMethod<[], [bigint], "view">;
 
   hasAuctionExpired: TypedContractMethod<[label: BytesLike], [boolean], "view">;
+
+  hasCommitment: TypedContractMethod<
+    [commitment: BytesLike],
+    [boolean],
+    "view"
+  >;
 
   makeCommitment: TypedContractMethod<
     [
@@ -194,18 +194,14 @@ export interface Auction extends BaseContract {
     nameOrSignature: "auctionHighestBidder"
   ): TypedContractMethod<[label: BytesLike], [string], "view">;
   getFunction(
-    nameOrSignature: "commitmentExists"
-  ): TypedContractMethod<
-    [sender: AddressLike, commitment: BytesLike],
-    [boolean],
-    "view"
-  >;
-  getFunction(
     nameOrSignature: "getAuctionDuration"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "hasAuctionExpired"
   ): TypedContractMethod<[label: BytesLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "hasCommitment"
+  ): TypedContractMethod<[commitment: BytesLike], [boolean], "view">;
   getFunction(
     nameOrSignature: "makeCommitment"
   ): TypedContractMethod<

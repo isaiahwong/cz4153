@@ -27,6 +27,7 @@ export interface IAuctionInterface extends Interface {
       | "auctionHighestBidder"
       | "getAuctionDuration"
       | "hasAuctionExpired"
+      | "hasCommitment"
   ): FunctionFragment;
 
   encodeFunctionData(
@@ -49,6 +50,10 @@ export interface IAuctionInterface extends Interface {
     functionFragment: "hasAuctionExpired",
     values: [BytesLike]
   ): string;
+  encodeFunctionData(
+    functionFragment: "hasCommitment",
+    values: [BytesLike]
+  ): string;
 
   decodeFunctionResult(
     functionFragment: "auctionDeadline",
@@ -68,6 +73,10 @@ export interface IAuctionInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "hasAuctionExpired",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "hasCommitment",
     data: BytesLike
   ): Result;
 }
@@ -129,6 +138,12 @@ export interface IAuction extends BaseContract {
 
   hasAuctionExpired: TypedContractMethod<[label: BytesLike], [boolean], "view">;
 
+  hasCommitment: TypedContractMethod<
+    [commitment: BytesLike],
+    [boolean],
+    "view"
+  >;
+
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
@@ -148,6 +163,9 @@ export interface IAuction extends BaseContract {
   getFunction(
     nameOrSignature: "hasAuctionExpired"
   ): TypedContractMethod<[label: BytesLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "hasCommitment"
+  ): TypedContractMethod<[commitment: BytesLike], [boolean], "view">;
 
   filters: {};
 }

@@ -59,8 +59,8 @@ abstract contract Auction is IAuction {
         return auctionDuration;
     }
 
-    function commitmentExists(address sender, bytes32 commitment) public view returns (bool) {
-        return bids[sender][commitment] != 0;
+    function hasCommitment(bytes32 commitment) public view returns (bool) {
+        return bids[msg.sender][commitment] != 0;
     }
 
     function _setDuration(uint256 _duration) internal {
@@ -75,7 +75,7 @@ abstract contract Auction is IAuction {
 
     function commitBid(bytes32 label, bytes32 commitment) internal {
         // Check if bid exists
-        if (commitmentExists(msg.sender, commitment)) {
+        if (hasCommitment(commitment)) {
             revert Errors.BidExists();
         }
 
@@ -115,7 +115,7 @@ abstract contract Auction is IAuction {
         }
 
         // Check if commitment exists
-        if (!commitmentExists(msg.sender, commitment)) {
+        if (!hasCommitment(commitment)) {
             revert Errors.CommitmentDoesNotExist();
         }
 

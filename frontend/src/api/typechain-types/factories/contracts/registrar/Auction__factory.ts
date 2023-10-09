@@ -96,30 +96,6 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "sender",
-        type: "address",
-      },
-      {
-        internalType: "bytes32",
-        name: "commitment",
-        type: "bytes32",
-      },
-    ],
-    name: "commitmentExists",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [],
     name: "getAuctionDuration",
     outputs: [
@@ -141,6 +117,25 @@ const _abi = [
       },
     ],
     name: "hasAuctionExpired",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "commitment",
+        type: "bytes32",
+      },
+    ],
+    name: "hasCommitment",
     outputs: [
       {
         internalType: "bool",

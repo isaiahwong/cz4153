@@ -33,11 +33,11 @@ export default function WalletButton() {
                     {title}
                 </Typography>
             </Grid>
-            <Grid item xs={12}>
-                <Button className={style.button} color="inherit">
-                    Disconnect
-                </Button>
-            </Grid>
+            {/*<Grid item xs={12}>*/}
+            {/*    <Button className={style.button} color="inherit">*/}
+            {/*        Disconnect*/}
+            {/*    </Button>*/}
+            {/*</Grid>*/}
         </Grid>
 
     );
