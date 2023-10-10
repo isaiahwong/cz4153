@@ -17,43 +17,15 @@ import {
     SubdomainBidFailedEvent,
     SubdomainRegisteredEvent
 } from "../../api/typechain-types/contracts/registrar/Registrar";
-import ViewOnlyPanel from "../../components/domain/ViewOnlyPanel";
-import BidPanel from "../../components/domain/BidPanel";
-import RevealPanel from "../../components/domain/RevealPanel";
-import WaitPanel from '../../components/domain/WaitPanel';
-import PendingRevealPanel from "../../components/domain/PendingRevealPanel";
-import OwnerPanel from "../../components/domain/OwnerPanel";
-import Button from "@mui/material/Button";
+import ViewOnlyPanel from "../../components/panels/ViewOnlyPanel";
+import BidPanel from "../../components/panels/BidPanel";
+import RevealPanel from "../../components/panels/RevealPanel";
+import WaitPanel from '../../components/panels/WaitPanel';
+import PendingRevealPanel from "../../components/panels/PendingRevealPanel";
+import OwnerPanel from "../../components/panels/OwnerPanel";
+import LostPanel from "../../components/panels/LostPanel";
+import {routes} from "../app/App";
 
-interface LostPanelProps {
-    onNext: () => void;
-    refund: string;
-}
-
-function LostPanel(props: LostPanelProps) {
-    return (
-        <Grid container>
-            <Grid item xs={12}>
-                <Box display={"flex"} flexDirection={"column"} alignItems={"center"}>
-                    <Box mb={3}>
-                        <Typography variant={"body1"} fontWeight={"bold"}>
-                            You lost the bid. {props.refund} ETH has been refunded to your wallet.
-                        </Typography>
-                    </Box>
-                    <Button
-                        variant="contained"
-                        className={style.button}
-                        onClick={props.onNext}
-                    >
-                        <Typography variant="body1" fontWeight="bold">
-                            Continue
-                        </Typography>
-                    </Button>
-                </Box>
-            </Grid>
-        </Grid>
-    )
-}
 
 enum Stages {
     viewOnly,
@@ -66,7 +38,10 @@ enum Stages {
 }
 
 export default function Domain() {
+    // Params
     const {domain} = useParams();
+
+    // State
     const [subdomain, setSubdomain] = useState<string>("");
     const [tld, setTLD] = useState<string>("");
     const [loading, setLoading] = useState(true);
@@ -75,20 +50,21 @@ export default function Domain() {
     const [submittedCommitment, setSubmittedCommitment] = useState<Commitment | null>(null);
     const [owner, setOwner] = useState<string | null>(null);
     const [refund, setRefund] = useState<string>("0");
+    const [highestBid, setHighestBid] = useState<string>("0");
 
     const navigate = useNavigate();
     const {provider, signer, connect} = useWallet();
 
-    if (!domain) {
-        navigate('/');
-    }
 
     // Initializations
     useEffect(() => {
         // Ensure domain is valid
         const tld = domain!.split('.').pop();
         dnsContract.isValidTLD(provider, tld!).then(async (valid) => {
-            if (!valid) navigate('/');
+            if (!valid) {
+                setTimeout(() => navigate(routes.notFound), 1000);
+                return;
+            }
             const subdomain = domain!.replace(`.${tld}`, '');
 
             // Attempt to connect
@@ -103,10 +79,10 @@ export default function Domain() {
     useEffect(() => {
         if (stage !== Stages.reveal) return;
         const listeners = setInterval(async () => {
-            const registeredEvents = await dnsContract.querySubdomainRegistered(provider, tld!, subdomain!);
-            const bidFailedEvents = await dnsContract.querySubdomainBidFailed(provider, tld!, subdomain!);
+            const registeredEvents = await dnsContract.getSubdomainRegistered(provider,  tld!, undefined, subdomain!);
+            const bidFailedEvents = await dnsContract.getSubdomainBidFailed(provider, tld!, subdomain!);
             await onDomainRegistered(registeredEvents);
-            await onBidFailed(bidFailedEvents);
+            await onDomainRevealFailed(bidFailedEvents);
         }, 500);
 
         return () => clearInterval(listeners);
@@ -168,9 +144,10 @@ export default function Domain() {
         setStage(Stages.reveal);
     }
 
-    const onLostStage = (refund: string) => {
+    const onLostStage = (refund: string, highestBid: string) => {
         setStage(Stages.lose);
         setRefund(refund);
+        setHighestBid(highestBid);
     }
 
     const onOwnerStage = async (signer: JsonRpcSigner) => {
@@ -201,7 +178,7 @@ export default function Domain() {
         await onOwnerStage(signer);
     }
 
-    const onBidFailed = async (events: Array<TypedEventLog<TypedContractEvent<SubdomainBidFailedEvent.InputTuple, SubdomainBidFailedEvent.OutputTuple, SubdomainBidFailedEvent.OutputObject>>>) => {
+    const onDomainRevealFailed = async (events: Array<TypedEventLog<TypedContractEvent<SubdomainBidFailedEvent.InputTuple, SubdomainBidFailedEvent.OutputTuple, SubdomainBidFailedEvent.OutputObject>>>) => {
         const event = events.find((event) => {
             if (!event.args) return false;
 
@@ -216,7 +193,7 @@ export default function Domain() {
             return;
         }
         // Handle fail bid
-        onLostStage(ethers.formatEther(event.args.refund));
+        onLostStage(ethers.formatEther(event.args.refund), ethers.formatEther(event.args.highestBid));
     }
 
     const onBidChange = (e: any) => {
@@ -243,6 +220,7 @@ export default function Domain() {
         setStage(Stages.wait);
     }
 
+    // Callback for reveal bid
     const onReveal = async () => {
         if (!signer) {
             await connect();
@@ -255,7 +233,7 @@ export default function Domain() {
         setSubmittedCommitment(null);
     }
 
-    const processStage = () => {
+    const renderStage = () => {
         switch (stage) {
             case Stages.viewOnly:
                 return <ViewOnlyPanel/>;
@@ -268,7 +246,7 @@ export default function Domain() {
             case Stages.pendingReveal:
                 return <PendingRevealPanel/>;
             case Stages.lose:
-                return <LostPanel refund={refund} onNext={() => getStage().then(setStage)}/>;
+                return <LostPanel refund={refund} highestBid={highestBid} onNext={() => getStage().then(setStage)}/>;
             case Stages.owner:
                 return <OwnerPanel owner={owner!} tld={tld!} subdomain={subdomain!}/>;
         }
@@ -277,28 +255,28 @@ export default function Domain() {
     return (
         <>
             <Header/>
-            <WithLoader pred={loading}>
-                <Grid container className={style.content} alignContent={"center"} alignItems="center">
-                    <Grid item xs={12}>
-                        <Box className={style.wrapper}>
-                            <Typography variant="h5" fontWeight="bold">
-                                {domain}
-                            </Typography>
-                            <Box
-                                className={style.panel}
-                                display={"flex"}
-                                flexDirection={"column"}
-                                justifyContent={"center"}
-                                alignItems={"center"}
-                            >
+            <Grid container className={style.content} alignContent={"center"} alignItems="center">
+                <Grid item xs={12}>
+                    <Box className={style.wrapper}>
+                        <Typography variant="h5" fontWeight="bold">
+                            {domain}
+                        </Typography>
+                        <Box
+                            className={style.panel}
+                            display={"flex"}
+                            flexDirection={"column"}
+                            justifyContent={"center"}
+                            alignItems={"center"}
+                        >
+                            <WithLoader pred={loading}>
                                 <WithConnect onClick={() => connect()} pred={!!signer}>
-                                    {processStage()}
+                                    {renderStage()}
                                 </WithConnect>
-                            </Box>
+                            </WithLoader>
                         </Box>
-                    </Grid>
+                    </Box>
                 </Grid>
-            </WithLoader>
+            </Grid>
         </>
     );
 }
