@@ -23,17 +23,42 @@ import type {
 } from "../../common";
 
 export interface IDNSInterface extends Interface {
-  getFunction(nameOrSignature: "addr" | "setSubDomain"): FunctionFragment;
+  getFunction(
+    nameOrSignature:
+      | "addr"
+      | "available"
+      | "cname"
+      | "makeDomain"
+      | "setCName"
+      | "setSubDomain"
+  ): FunctionFragment;
 
   getEvent(nameOrSignatureOrTopic: "NewDomainOwner"): EventFragment;
 
   encodeFunctionData(functionFragment: "addr", values: [BytesLike]): string;
+  encodeFunctionData(
+    functionFragment: "available",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(functionFragment: "cname", values: [AddressLike]): string;
+  encodeFunctionData(
+    functionFragment: "makeDomain",
+    values: [BytesLike, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setCName",
+    values: [BytesLike, string, AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "setSubDomain",
     values: [BytesLike, string, AddressLike]
   ): string;
 
   decodeFunctionResult(functionFragment: "addr", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "available", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "cname", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "makeDomain", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "setCName", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setSubDomain",
     data: BytesLike
@@ -110,6 +135,22 @@ export interface IDNS extends BaseContract {
 
   addr: TypedContractMethod<[domain: BytesLike], [string], "view">;
 
+  available: TypedContractMethod<[domain: BytesLike], [boolean], "view">;
+
+  cname: TypedContractMethod<[owner: AddressLike], [string], "view">;
+
+  makeDomain: TypedContractMethod<
+    [parentDomain: BytesLike, domain: BytesLike],
+    [string],
+    "view"
+  >;
+
+  setCName: TypedContractMethod<
+    [parentDomain: BytesLike, domain: string, owner: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
   setSubDomain: TypedContractMethod<
     [parentDomain: BytesLike, domain: string, owner: AddressLike],
     [string],
@@ -123,6 +164,26 @@ export interface IDNS extends BaseContract {
   getFunction(
     nameOrSignature: "addr"
   ): TypedContractMethod<[domain: BytesLike], [string], "view">;
+  getFunction(
+    nameOrSignature: "available"
+  ): TypedContractMethod<[domain: BytesLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "cname"
+  ): TypedContractMethod<[owner: AddressLike], [string], "view">;
+  getFunction(
+    nameOrSignature: "makeDomain"
+  ): TypedContractMethod<
+    [parentDomain: BytesLike, domain: BytesLike],
+    [string],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "setCName"
+  ): TypedContractMethod<
+    [parentDomain: BytesLike, domain: string, owner: AddressLike],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "setSubDomain"
   ): TypedContractMethod<

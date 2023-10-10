@@ -4,38 +4,40 @@ pragma solidity ^0.8.9;
 import "./IAuction.sol";
 
 interface IRegistrar is IAuction {
-    event SubdomainRegistered(
+    event DomainRegistered(
         address indexed owner,
         bytes32 indexed tldHash,
-        bytes32 indexed subdomainHash,
+        bytes32 indexed domainHash,
         string tld,
-        string subdomain,
+        string domain,
         uint256 expires,
         uint256 cost
     );
 
-    event SubdomainBidFailed(
+    event DomainBidFailed(
         address indexed owner,
         bytes32 indexed tldHash,
-        bytes32 indexed subdomainHash,
+        bytes32 indexed domainHash,
         string tld,
-        string subdomain,
+        string domain,
         uint256 expires,
         uint256 refund,
         uint256 highestBid
     );
 
-    function expiry(bytes32 subdomain) external view returns (uint256);
+    function expiry(bytes32 domain) external view returns (uint256);
 
-    function commit(bytes32 subdomain, bytes32 secret) external payable returns (bytes32);
+    function commit(bytes32 domain, bytes32 secret) external payable returns (bytes32);
 
-    function revealRegister(string calldata subdomainPlainText, bytes32 secret, uint256 value) external returns (bool);
+    function revealRegister(string calldata domain, bytes32 secret, uint256 value) external returns (bool);
 
-    function hasSubdomainExpired(bytes32 subdomain) external view returns (bool);
+    function setCName(string memory domain) external;
 
-    function makeSubdomainCommitment(bytes32 subdomain, bytes32 secret, uint256 value) external view returns (bytes32);
+    function hasDomainExpired(bytes32 domain) external view returns (bool);
 
-    function hasDomainCommitment(bytes32 subdomain, bytes32 secret, uint256 value) external view returns (bool);
+    function makeDomainCommitment(bytes32 domain, bytes32 secret, uint256 value) external view returns (bytes32);
+
+    function hasDomainCommitment(bytes32 domain, bytes32 secret, uint256 value) external view returns (bool);
 
 //    function cname(bytes32 domain) external view returns (address);
 }
