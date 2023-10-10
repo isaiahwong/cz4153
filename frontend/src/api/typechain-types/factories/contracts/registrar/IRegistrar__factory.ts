@@ -54,6 +54,12 @@ const _abi = [
         name: "refund",
         type: "uint256",
       },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "highestBid",
+        type: "uint256",
+      },
     ],
     name: "SubdomainBidFailed",
     type: "event",

@@ -6,6 +6,7 @@ import {dnsContract} from "../../api/contract/contract";
 import {Grid, Typography} from "@mui/material";
 import LinearProgressWithLabel from "../common/LinearProgressWithLabel";
 import {WithPred} from "../hoc/hoc";
+import {routes} from "../../routes/app/App";
 
 export interface WaitPanelProps {
     commitment: Commitment | null;
@@ -24,7 +25,7 @@ export default function WaitPanel(props: WaitPanelProps) {
     }, []);
 
     if (!commitment) {
-        return <Navigate to={'/'}/>;
+        return <Navigate to={routes.landing}/>;
     }
 
     const getBlockTime = async () => {
@@ -59,7 +60,7 @@ export default function WaitPanel(props: WaitPanelProps) {
     }
 
     if (!commitment) {
-        return <Navigate to={'/'}/>;
+        return <Navigate to={routes.landing}/>;
     }
     return (
         <Grid container>

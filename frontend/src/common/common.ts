@@ -11,3 +11,10 @@ export async function timeDiffFromBlock(provider: BrowserProvider, future: numbe
     const now = (await provider.getBlock("latest"))!.timestamp;
     return future - Number(now);
 }
+
+export default function truncateAddress(address?: string) {
+    if (!address) {
+        return "";
+    }
+    return address.slice(0, 6) + "..." + address.slice(-4);
+}

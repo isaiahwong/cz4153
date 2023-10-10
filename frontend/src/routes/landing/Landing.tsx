@@ -15,6 +15,7 @@ import {useWallet} from "../../api/wallet/wallet";
 import Header from "../../components/header/Header";
 import {dnsContract} from "../../api/contract/contract";
 import DomainStore from "../../store/domains";
+import {routes} from "../app/App";
 
 
 export default function Landing() {
@@ -29,7 +30,7 @@ export default function Landing() {
             setSearchTerms({});
             return;
         }
-        DomainStore.getDomainsMap(selectedTld.name).then((domains) => {
+        DomainStore.getFQDNMaps(selectedTld.name).then((domains) => {
             setSearchTerms(domains);
         });
     }, [selectedTld]);
@@ -42,7 +43,7 @@ export default function Landing() {
             const available = await dnsContract.isAvailable(provider, selectedTld.name, search);
             const fqdn = `${search}.${selectedTld.name}`;
 
-            await DomainStore.setDomain({name: fqdn, available});
+            await DomainStore.setFQDN({name: fqdn, available});
             setSearchTerms({...searchTerms, [fqdn]: available})
         }, 1000);
 
@@ -53,8 +54,8 @@ export default function Landing() {
         setTLD(tld);
     }
 
-    const onChange = (e: any, v: any) => {
-        navigate(`/d/${v}`)
+    const onChange = (_: any, v: any) => {
+        navigate(routes.domain(v));
     }
 
     return (

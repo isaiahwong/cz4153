@@ -28,9 +28,8 @@ export interface DNSRegistryInterface extends Interface {
       | "addr"
       | "available"
       | "bulkResolve"
+      | "cnames"
       | "makeSubdomain"
-      | "resolver"
-      | "setResolver"
       | "setSubDomain"
   ): FunctionFragment;
 
@@ -45,14 +44,10 @@ export interface DNSRegistryInterface extends Interface {
     functionFragment: "bulkResolve",
     values: [BytesLike[]]
   ): string;
+  encodeFunctionData(functionFragment: "cnames", values: [AddressLike]): string;
   encodeFunctionData(
     functionFragment: "makeSubdomain",
     values: [BytesLike, BytesLike]
-  ): string;
-  encodeFunctionData(functionFragment: "resolver", values: [BytesLike]): string;
-  encodeFunctionData(
-    functionFragment: "setResolver",
-    values: [BytesLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "setSubDomain",
@@ -65,13 +60,9 @@ export interface DNSRegistryInterface extends Interface {
     functionFragment: "bulkResolve",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "cnames", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "makeSubdomain",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "resolver", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "setResolver",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -154,18 +145,12 @@ export interface DNSRegistry extends BaseContract {
 
   bulkResolve: TypedContractMethod<[domains: BytesLike[]], [string[]], "view">;
 
+  cnames: TypedContractMethod<[arg0: AddressLike], [string], "view">;
+
   makeSubdomain: TypedContractMethod<
     [parentDomain: BytesLike, domain: BytesLike],
     [string],
     "view"
-  >;
-
-  resolver: TypedContractMethod<[domain: BytesLike], [string], "view">;
-
-  setResolver: TypedContractMethod<
-    [domain: BytesLike, _resolver: AddressLike],
-    [void],
-    "nonpayable"
   >;
 
   setSubDomain: TypedContractMethod<
@@ -188,21 +173,14 @@ export interface DNSRegistry extends BaseContract {
     nameOrSignature: "bulkResolve"
   ): TypedContractMethod<[domains: BytesLike[]], [string[]], "view">;
   getFunction(
+    nameOrSignature: "cnames"
+  ): TypedContractMethod<[arg0: AddressLike], [string], "view">;
+  getFunction(
     nameOrSignature: "makeSubdomain"
   ): TypedContractMethod<
     [parentDomain: BytesLike, domain: BytesLike],
     [string],
     "view"
-  >;
-  getFunction(
-    nameOrSignature: "resolver"
-  ): TypedContractMethod<[domain: BytesLike], [string], "view">;
-  getFunction(
-    nameOrSignature: "setResolver"
-  ): TypedContractMethod<
-    [domain: BytesLike, _resolver: AddressLike],
-    [void],
-    "nonpayable"
   >;
   getFunction(
     nameOrSignature: "setSubDomain"

@@ -1,10 +1,14 @@
-import {useWallet} from "../../api/wallet/wallet";
 import React, {useEffect, useState} from "react";
-import {dnsContract} from "../../api/contract/contract";
-import {timeDiffFromBlock} from "../../common/common";
-import {Table, TableBody, TableCell, TableContainer, TableRow, Typography} from "@mui/material";
-import {WithLoader} from "../hoc/hoc";
 import _ from "lodash";
+import {Link} from "react-router-dom";
+
+import {Table, TableBody, TableCell, TableContainer, TableRow, Typography} from "@mui/material";
+
+import {useWallet} from "../../api/wallet/wallet";
+import {dnsContract} from "../../api/contract/contract";
+import truncateAddress, {timeDiffFromBlock} from "../../common/common";
+import {WithLoader} from "../hoc/hoc";
+import {routes} from "../../routes/app/App";
 
 interface OwnerPanelProps {
     owner: string;
@@ -36,8 +40,8 @@ export default function OwnerPanel(props: OwnerPanelProps) {
 
     return (
         <TableContainer>
-            <Table sx={{minWidth: 300}} aria-label="simple table">
-                <WithLoader pred={loading}>
+            <WithLoader pred={loading}>
+                <Table sx={{minWidth: 300}} aria-label="simple table">
                     <TableBody>
                         <TableRow sx={{'td, th': {border: 0}}}>
                             <TableCell component="th" scope="row">
@@ -56,7 +60,7 @@ export default function OwnerPanel(props: OwnerPanelProps) {
                                 </Typography>
                             </TableCell>
                             <TableCell align="right">
-                                <Typography variant={"body1"} >
+                                <Typography variant={"body1"}>
                                     {_.toLower(subdomain)}
                                 </Typography>
                             </TableCell>
@@ -68,7 +72,11 @@ export default function OwnerPanel(props: OwnerPanelProps) {
                                 </Typography>
                             </TableCell>
                             <TableCell align="right">
-                                {owner}
+                                <Link to={routes.address(owner)} style={{textDecoration: "none"}}>
+                                    <Typography fontWeight="bold">
+                                        {truncateAddress(owner)}
+                                    </Typography>
+                                </Link>
                             </TableCell>
                         </TableRow>
                         <TableRow sx={{'td, th': {border: 0}}}>
@@ -82,8 +90,8 @@ export default function OwnerPanel(props: OwnerPanelProps) {
                             </TableCell>
                         </TableRow>
                     </TableBody>
-                </WithLoader>
-            </Table>
+                </Table>
+            </WithLoader>
         </TableContainer>
     )
 }
