@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {Commitment} from "../../store/commits";
 import {useWallet} from "../../api/wallet/wallet";
 import {Navigate} from "react-router-dom";
-import {dnsContract} from "../../api/contract/contract";
+import {dnsContract} from "../../api/dns/dns";
 import {Grid, Typography} from "@mui/material";
 import LinearProgressWithLabel from "../common/LinearProgressWithLabel";
 import {WithPred} from "../hoc/hoc";
@@ -33,7 +33,7 @@ export default function WaitPanel(props: WaitPanelProps) {
     }
 
     const getDeadline = async (now: number) => {
-        const deadline = Number(await dnsContract.getAuctionDeadline(provider, commitment.tld, commitment.subdomain));
+        const deadline = Number(await dnsContract.getAuctionDeadline(provider, commitment.tld, commitment.domain));
         const duration = Number(await dnsContract.getAuctionDuration(provider, commitment.tld));
 
         let remain = deadline - now;

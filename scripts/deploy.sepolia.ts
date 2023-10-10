@@ -6,13 +6,12 @@ const AUCTION_DURATION = 1 * 60; // 1 minutes
 async function main() {
     const accounts = await ethers.getSigners();
     const dnsOwner = accounts[0];
-    const ntuRegistrarOwner = accounts[1];
 
     const dns = await deployDNS(dnsOwner);
-    const ntuRegistrar = await deployRegistrar(ntuRegistrarOwner, dns, "ntu", AUCTION_DURATION);
-    const devRegistrar = await deployRegistrar(ntuRegistrarOwner, dns, "dev", AUCTION_DURATION);
-    const comRegistrar = await deployRegistrar(ntuRegistrarOwner, dns, "com", AUCTION_DURATION);
-    const xyzRegistrar = await deployRegistrar(ntuRegistrarOwner, dns, "xyz", AUCTION_DURATION);
+    const ntuRegistrar = await deployRegistrar(dnsOwner, dns, "ntu", AUCTION_DURATION);
+    const devRegistrar = await deployRegistrar(dnsOwner, dns, "dev", AUCTION_DURATION);
+    const comRegistrar = await deployRegistrar(dnsOwner, dns, "com", AUCTION_DURATION);
+    const xyzRegistrar = await deployRegistrar(dnsOwner, dns, "xyz", AUCTION_DURATION);
 
     await writeContractAddresses(
         {

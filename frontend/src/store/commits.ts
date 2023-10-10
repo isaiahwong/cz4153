@@ -3,7 +3,7 @@ import {Store} from "./store";
 export interface Commitment {
     owner: string;
     tld: string;
-    subdomain: string;
+    domain: string;
     secret: string;
     value: string;
 }
@@ -24,12 +24,12 @@ class CommitmentStore extends Store {
         }
         return this.store.setItem(commitment.owner, {
             ...commitments,
-            [this.getKey(commitment.subdomain, commitment.tld)]: commitment
+            [this.getKey(commitment.domain, commitment.tld)]: commitment
         });
     }
 
     async deleteCommit(commitment: Commitment) {
-        const key = this.getKey(commitment.subdomain, commitment.tld);
+        const key = this.getKey(commitment.domain, commitment.tld);
         const commitments = await this.store.getItem<Record<string, Commitment>>(commitment.owner);
         if (!commitments || !(key in commitments)) {
             return

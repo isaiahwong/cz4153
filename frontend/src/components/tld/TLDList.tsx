@@ -3,11 +3,12 @@ import {Box, Grid, Typography} from "@mui/material";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import _ from "lodash";
 
-import {dnsContract} from "../../api/contract/contract";
+import {dnsContract} from "../../api/dns/dns";
 import {TLD} from "../../api/dns/dns";
 
 import style from "./TLDList.module.css";
 import {useWallet} from "../../api/wallet/wallet";
+import {WithLoader} from "../hoc/hoc";
 
 interface TLDListProps {
     onClick?: (tld?: TLD) => void;
@@ -17,12 +18,14 @@ interface TLDListProps {
 function TLDList(props: TLDListProps) {
     const [tlds, setTLDS] = useState<TLD[]>();
     const [selectedTLD, setSelectedTLD] = useState<TLD>();
+    const [loading, setLoading] = useState<boolean>(true);
     const { provider} = useWallet();
 
     useEffect(() => {
         (async () => {
             const tlds = await dnsContract.getTLDs(provider);
             setTLDS(tlds);
+            setLoading(false);
         })();
     }, []);
 
@@ -58,24 +61,26 @@ function TLDList(props: TLDListProps) {
     );
 
     const tldItems = (
-        <Grid container className={style.tld} justifyContent={"start"}>
-            <Grid item xs={12}>
-                <Typography variant="h5" fontWeight="bold">
-                    SELECT TOP LEVEL DOMAIN
-                </Typography>
-            </Grid>
-            <Grid container spacing={2}>
-                {tlds?.map((tld, i) => (
-                    <Grid key={i} item xs={3} onClick={() => onClick(tld)}>
-                        <Box className={style.item} flexDirection={"column"} justifyContent={"center"} display={"flex"}>
-                            <Typography variant="h6" fontWeight="bold">
-                                {_.toUpper(tld.name)}
-                            </Typography>
-                        </Box>
-                    </Grid>
-                ))}
-            </Grid>
-        </Grid>
+        <Box className={style.tld} display={"flex"} flexDirection={"column"} alignItems={"center"}>
+            <WithLoader loading={loading}>
+                <Box mb={2}>
+                    <Typography variant="h5" fontWeight="bold">
+                        SELECT TOP LEVEL DOMAIN
+                    </Typography>
+                </Box>
+                <Grid container spacing={2}>
+                    {tlds?.map((tld, i) => (
+                        <Grid key={i} item xs={3} onClick={() => onClick(tld)}>
+                            <Box className={style.item} flexDirection={"column"} justifyContent={"center"} display={"flex"}>
+                                <Typography variant="h6" fontWeight="bold">
+                                    {_.toUpper(tld.name)}
+                                </Typography>
+                            </Box>
+                        </Grid>
+                    ))}
+                </Grid>
+            </WithLoader>
+        </Box>
     )
 
     return !!selectedTLD ? tldSelected : tldItems;

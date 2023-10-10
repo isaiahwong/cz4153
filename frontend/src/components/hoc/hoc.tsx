@@ -18,8 +18,8 @@ export function WithPred(props: { pred: boolean, children: any }) {
     );
 }
 
-export function WithLoader(props: { pred: boolean, children: any }) {
-    if (!props.pred) {
+export function WithLoader(props: { loading: boolean, children: any }) {
+    if (!props.loading) {
         return props.children;
     }
     return (

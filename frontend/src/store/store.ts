@@ -10,4 +10,8 @@ export abstract class Store {
             name,
         })
     }
+
+    clear() {
+        return this.store.clear();
+    }
 }

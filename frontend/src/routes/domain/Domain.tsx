@@ -1,31 +1,28 @@
 import React, {useEffect, useState} from 'react';
-import {useNavigate, useParams} from "react-router-dom";
+import {Navigate, useNavigate, useParams} from "react-router-dom";
 import {Box, Grid, Typography} from '@mui/material';
-import {ethers, JsonRpcSigner} from "ethers";
+import {ethers} from "ethers";
 
 import Header from "../../components/header/Header";
-import {dnsContract} from "../../api/contract/contract";
+import {dnsContract} from "../../api/dns/dns";
 import {useWallet} from "../../api/wallet/wallet";
 import {WithConnect, WithLoader} from "../../components/hoc/hoc";
 
 import CommitmentStore, {Commitment} from "../../store/commits";
 
-import style from "./Domain.module.css";
 import {randomSecret, timeDiffFromBlock} from "../../common/common";
 import {TypedContractEvent, TypedEventLog} from "../../api/typechain-types/common";
-import {
-    DomainBidFailedEvent,
-    DomainRegisteredEvent
-} from "../../api/typechain-types/contracts/registrar/Registrar";
+import {DomainBidFailedEvent, DomainRegisteredEvent} from "../../api/typechain-types/contracts/registrar/Registrar";
 import ViewOnlyPanel from "../../components/panels/ViewOnlyPanel";
 import BidPanel from "../../components/panels/BidPanel";
 import RevealPanel from "../../components/panels/RevealPanel";
 import WaitPanel from '../../components/panels/WaitPanel';
 import PendingRevealPanel from "../../components/panels/PendingRevealPanel";
-import OwnerPanel from "../../components/panels/OwnerPanel";
+import OwnerDomainPanel from "../../components/panels/OwnerDomainPanel";
 import LostPanel from "../../components/panels/LostPanel";
 import {routes} from "../app/App";
 
+import style from "./Domain.module.css";
 
 enum Stages {
     viewOnly,
@@ -39,10 +36,10 @@ enum Stages {
 
 export default function Domain() {
     // Params
-    const {domain} = useParams();
+    const {domain: fqdn } = useParams();
 
     // State
-    const [subdomain, setSubdomain] = useState<string>("");
+    const [domain, setDomain] = useState<string>("");
     const [tld, setTLD] = useState<string>("");
     const [loading, setLoading] = useState(true);
     const [bid, setBid] = useState(0.003);
@@ -58,20 +55,22 @@ export default function Domain() {
 
     // Initializations
     useEffect(() => {
+        if (!fqdn) return;
+
         // Ensure domain is valid
-        const tld = domain!.split('.').pop();
+        const tld = fqdn!.split('.').pop();
         dnsContract.isValidTLD(provider, tld!).then(async (valid) => {
             if (!valid) {
                 setTimeout(() => navigate(routes.notFound), 1000);
                 return;
             }
-            const subdomain = domain!.replace(`.${tld}`, '');
+            const domain = fqdn!.replace(`.${tld}`, '');
 
             // Attempt to connect
             await connect();
 
             setTLD(tld!);
-            setSubdomain(subdomain);
+            setDomain(domain);
             // dnsContract.onRegisteredDomains(provider, tld!, subdomain, onDomainRegistered);
         })
     }, []);
@@ -79,27 +78,27 @@ export default function Domain() {
     useEffect(() => {
         if (stage !== Stages.reveal) return;
         const listeners = setInterval(async () => {
-            const registeredEvents = await dnsContract.getSubdomainRegistered(provider,  tld!, undefined, subdomain!);
-            const bidFailedEvents = await dnsContract.getSubdomainBidFailed(provider, tld!, subdomain!);
+            const registeredEvents = await dnsContract.getDomainRegistered(provider, tld!, undefined, domain!);
+            const bidFailedEvents = await dnsContract.getDomainBidFailed(provider, tld!, domain!);
             await onDomainRegistered(registeredEvents);
             await onDomainRevealFailed(bidFailedEvents);
         }, 500);
 
         return () => clearInterval(listeners);
-    }, [tld, subdomain, stage]);
+    }, [tld, domain, stage]);
 
     useEffect(() => {
-        if (!signer || !tld || !subdomain) return;
+        if (!signer || !tld || !domain) return;
 
         getStage().then((stage) => {
             setLoading(false);
             setStage(stage);
         });
-    }, [signer, tld, subdomain]);
+    }, [signer, tld, domain]);
 
     const getStage = async () => {
-        const isOwnerStage = async (subdomain: string, tld: string) => {
-            const addr = await dnsContract.getAddr(provider, `${subdomain}.${tld}`);
+        const isOwnerStage = async (domain: string, tld: string) => {
+            const addr = await dnsContract.getAddr(provider, `${domain}.${tld}`);
             if (addr != dnsContract.EMPTY_ADDRESS) setOwner(addr);
             return addr !== dnsContract.EMPTY_ADDRESS;
         }
@@ -116,17 +115,17 @@ export default function Domain() {
             return deadline != 0 && remain < 0
         }
 
-        if (!tld || !subdomain) return Stages.viewOnly;
+        if (!tld || !domain) return Stages.viewOnly;
         if (!signer) {
-            return (await isOwnerStage(subdomain, tld)) ? Stages.owner : Stages.viewOnly;
+            return (await isOwnerStage(domain, tld)) ? Stages.owner : Stages.viewOnly;
         }
 
-        const deadline = await dnsContract.getAuctionDeadline(provider, tld, subdomain);
+        const deadline = await dnsContract.getAuctionDeadline(provider, tld, domain);
         const auctionTimeRemain = await timeDiffFromBlock(provider, Number(deadline));
-        const commitment = await CommitmentStore.getCommit(signer.address, tld, subdomain);
+        const commitment = await CommitmentStore.getCommit(signer.address, tld, domain);
         setSubmittedCommitment(commitment);
 
-        if (await isOwnerStage(subdomain, tld)) {
+        if (await isOwnerStage(domain, tld)) {
             return Stages.owner;
         } else if (await isPendingRevealStage(Number(deadline), auctionTimeRemain, commitment)) {
             return Stages.pendingReveal;
@@ -150,9 +149,9 @@ export default function Domain() {
         setHighestBid(highestBid);
     }
 
-    const onOwnerStage = async (signer: JsonRpcSigner) => {
-        if (!signer || !subdomain || !tld) return;
-        const addr = await dnsContract.getAddr(provider, `${subdomain}.${tld}`);
+    const onOwnerStage = async () => {
+        if (!domain || !tld) return;
+        const addr = await dnsContract.getAddr(provider, `${domain}.${tld}`);
         if (addr !== dnsContract.EMPTY_ADDRESS) {
             setStage(Stages.owner);
             setOwner(addr);
@@ -160,7 +159,7 @@ export default function Domain() {
         }
 
         setTimeout(() => {
-            onOwnerStage(signer);
+            onOwnerStage();
         }, 100);
     }
 
@@ -175,7 +174,7 @@ export default function Domain() {
 
         if (!signer || !event) return;
 
-        await onOwnerStage(signer);
+        await onOwnerStage();
     }
 
     const onDomainRevealFailed = async (events: Array<TypedEventLog<TypedContractEvent<DomainBidFailedEvent.InputTuple, DomainBidFailedEvent.OutputTuple, DomainBidFailedEvent.OutputObject>>>) => {
@@ -209,12 +208,12 @@ export default function Domain() {
         const commitment = {
             owner: signer?.address!,
             tld: tld!,
-            subdomain: subdomain!,
+            domain: domain!,
             secret: randomSecret(),
             value: bid.toString()
         }
 
-        await dnsContract.commit(provider, signer, commitment.secret, tld!, subdomain!, commitment.value)
+        await dnsContract.commit(provider, signer, commitment.secret, tld!, domain!, commitment.value)
         await CommitmentStore.addCommit(commitment);
         setSubmittedCommitment(commitment);
         setStage(Stages.wait);
@@ -228,7 +227,7 @@ export default function Domain() {
         }
 
         if (!submittedCommitment) return;
-        await dnsContract.reveal(provider, signer, submittedCommitment.secret, tld!, subdomain!, submittedCommitment.value)
+        await dnsContract.reveal(provider, signer, submittedCommitment.secret, tld!, domain!, submittedCommitment.value)
         await CommitmentStore.deleteCommit(submittedCommitment);
         setSubmittedCommitment(null);
     }
@@ -244,13 +243,16 @@ export default function Domain() {
             case Stages.reveal:
                 return <RevealPanel commitment={submittedCommitment} onClick={onReveal}/>;
             case Stages.pendingReveal:
-                return <PendingRevealPanel/>;
+                return <PendingRevealPanel onOwner={onOwnerStage}/>;
             case Stages.lose:
                 return <LostPanel refund={refund} highestBid={highestBid} onNext={() => getStage().then(setStage)}/>;
             case Stages.owner:
-                return <OwnerPanel owner={owner!} tld={tld!} subdomain={subdomain!}/>;
+                return <OwnerDomainPanel owner={owner!} tld={tld!} domain={domain!}/>;
         }
     }
+
+    if (!fqdn) <Navigate to={routes.notFound}/>;
+
 
     return (
         <>
@@ -259,7 +261,7 @@ export default function Domain() {
                 <Grid item xs={12}>
                     <Box className={style.wrapper}>
                         <Typography variant="h5" fontWeight="bold">
-                            {domain}
+                            {fqdn}
                         </Typography>
                         <Box
                             className={style.panel}
@@ -268,7 +270,7 @@ export default function Domain() {
                             justifyContent={"center"}
                             alignItems={"center"}
                         >
-                            <WithLoader pred={loading}>
+                            <WithLoader loading={loading}>
                                 <WithConnect onClick={() => connect()} pred={!!signer}>
                                     {renderStage()}
                                 </WithConnect>
