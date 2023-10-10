@@ -73,7 +73,6 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         return hasCommitment(makeCommitment(msg.sender, getSubdomainCurrentVersion(subdomain), secret, value));
     }
 
-
     /**
      * @dev canCommit returns true when either the domain has expired or an ongoing auction has happening
      */
@@ -120,7 +119,16 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
 
         // Return if bid was unsuccessful
         if (!bidSuccess) {
-            emit SubdomainBidFailed(msg.sender, keccak256(abi.encodePacked(name())), subdomainHash, name(), subdomainPlainText, expiries[subdomainHash], refund);
+            emit SubdomainBidFailed(
+                msg.sender,
+                keccak256(abi.encodePacked(name())),
+                subdomainHash,
+                name(),
+                subdomainPlainText,
+                expiries[subdomainHash],
+                refund,
+                auctionHighestBid(getSubdomainCurrentVersion(subdomainHash))
+            );
             return bidSuccess;
         }
 

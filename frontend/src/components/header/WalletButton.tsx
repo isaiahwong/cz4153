@@ -6,13 +6,8 @@ import _ from 'lodash';
 
 import style from "./WalletButton.module.css";
 import {useWallet} from "../../api/wallet/wallet";
+import truncateAddress from "../../common/common";
 
-function truncateAddress(address?: string) {
-    if (!address) {
-        return "";
-    }
-    return address.slice(0, 6) + "..." + address.slice(-4);
-}
 
 export default function WalletButton() {
     const {signer, network, connect} = useWallet();

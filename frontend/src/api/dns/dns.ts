@@ -1,6 +1,5 @@
 import {DNSRegistry__factory, IRegistrar__factory} from "../typechain-types";
-import {ContractEventPayload, ethers, JsonRpcSigner, namehash} from "ethers";
-import {dnsContract} from "../contract/contract";
+import {ethers, JsonRpcSigner, namehash} from "ethers";
 
 export interface TLD {
     name: string;
@@ -82,11 +81,10 @@ export class DNSContract {
         const dnsRegistry = DNSRegistry__factory.connect(this.address, provider);
         const filter = dnsRegistry.filters.NewDomainOwner(this.EMPTY_BYTES32);
 
-        const events = (await dnsRegistry.queryFilter(filter,)).map<TLD>(e => ({
-            name: e.args[2],
-            owner: e.args[3]
+        return (await dnsRegistry.queryFilter(filter,)).map<TLD>(e => ({
+            name: e.args.domainPlainText,
+            owner: e.args.owner,
         }));
-        return events;
     }
 
     async getAuctionDuration(provider: any, tld: string) {
@@ -109,21 +107,21 @@ export class DNSContract {
         return registrar.connect(signer).hasDomainCommitment(subdomainHash, secret, ethers.parseEther(value));
     }
 
-    async querySubdomainRegistered(provider: any, tld: string, subdomain: string) {
-        const registrar = await this.getRegistrar(provider, tld);
-        const tldHash =ethers.keccak256(ethers.toUtf8Bytes(tld));
-        const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
-
-        const filter = registrar.filters.SubdomainRegistered(undefined, tldHash, subdomainHash);
-        return await registrar.queryFilter(filter);
-    }
-
-    async querySubdomainBidFailed(provider: any, tld: string, subdomain: string) {
+    async getSubdomainBidFailed(provider: any, tld: string, subdomain: string) {
         const registrar = await this.getRegistrar(provider, tld);
         const tldHash =ethers.keccak256(ethers.toUtf8Bytes(tld));
         const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
 
         const filter = registrar.filters.SubdomainBidFailed(undefined, tldHash, subdomainHash);
+        return await registrar.queryFilter(filter);
+    }
+
+    async getSubdomainRegistered(provider: any, tld: string, owner: string | undefined, subdomain: string | undefined) {
+        const registrar = await this.getRegistrar(provider, tld);
+        const tldHash =ethers.keccak256(ethers.toUtf8Bytes(tld));
+        const subdomainHash =  (subdomain && ethers.keccak256(ethers.toUtf8Bytes(subdomain))) || undefined;
+
+        const filter = registrar.filters.SubdomainRegistered(owner, tldHash, subdomainHash);
         return await registrar.queryFilter(filter);
     }
 

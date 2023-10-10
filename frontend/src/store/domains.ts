@@ -1,46 +1,47 @@
 import {Store} from "./store";
 
-export interface Domain {
+export interface FQDN {
     name: string;
     available: boolean;
 }
 
-class DomainStore extends Store {
+// Full Qualified Domain Name
+class FQDNStore extends Store {
     constructor(name: string) {
         super(name);
     }
 
-    async setDomain(domain: Domain) {
-        return this.store.setItem(domain.name, domain.available);
+    async setFQDN(fqdn: FQDN) {
+        return this.store.setItem(fqdn.name, fqdn.available);
     }
 
-    async getDomain(domain: string): Promise<Domain> {
-        const avail = await this.store.getItem<boolean>(domain);
+    async getFqdn(fqdn: string): Promise<FQDN> {
+        const avail = await this.store.getItem<boolean>(fqdn);
         if (avail === null) {
             return {
-                name: domain,
+                name: fqdn,
                 available: true
             }
         }
         return {
-            name: domain,
+            name: fqdn,
             available: avail
         }
     }
 
 
-    async getDomains() {
+    async getFQDNs() {
         const domains = []
         const domainNames = await this.store.keys();
 
         for (const domainName of domainNames) {
-            domains.push(await this.getDomain(domainName));
+            domains.push(await this.getFqdn(domainName));
         }
 
         return domains;
     }
 
-    async getDomainsMap(tld: string) {
+    async getFQDNMaps(tld: string) {
         const domains: Record<string, boolean> = {}
         const domainNames = await this.store.keys();
 
@@ -48,11 +49,11 @@ class DomainStore extends Store {
             if (domainName.split(".").pop() !== tld) {
                 continue;
             }
-            domains[domainName] = (await this.getDomain(domainName)).available;
+            domains[domainName] = (await this.getFqdn(domainName)).available;
         }
 
         return domains;
     }
 }
 
-export default new DomainStore("domain");
+export default new FQDNStore("domain");

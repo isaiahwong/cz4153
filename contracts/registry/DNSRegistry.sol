@@ -5,13 +5,14 @@ import "./IDNS.sol";
 import "hardhat/console.sol";
 
 contract DNSRegistry is IDNS {
-    struct Registrar {
+    struct Record {
         address owner;
-        address resolver;
     }
 
     // Stores a mapping of domains to registrar owners
-    mapping(bytes32 => Registrar) registrars;
+    mapping(bytes32 => Record) registrars;
+
+    mapping(address => bytes32) public cnames;
 
     modifier auth(bytes32 domain) {
         require(registrars[domain].owner == msg.sender);
@@ -39,13 +40,7 @@ contract DNSRegistry is IDNS {
         return subdomain;
     }
 
-    function setResolver(bytes32 domain, address _resolver) public auth(domain) {
-        registrars[domain].resolver = _resolver;
-    }
-
-    function resolver(bytes32 domain) public view returns (address) {
-        return registrars[domain].resolver;
-    }
+//    function setC
 
     function addr(bytes32 domain) public view override returns (address) {
         return registrars[domain].owner;
