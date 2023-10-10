@@ -92,14 +92,14 @@ it("should fail to register owned domains", async () => {
 it("should register multiple domains and list all domains owned", async () => {
     const bids = [
         {
-            subdomain: "scse",
-            subdomainHash: ethers.keccak256(ethers.toUtf8Bytes("scse")),
+            domain: "scse",
+            domainHash: ethers.keccak256(ethers.toUtf8Bytes("scse")),
             secret: ethers.keccak256(ethers.toUtf8Bytes(randomSecret())),
             value: ethers.parseEther("0.01"),
         },
         {
-            subdomain: "nbs",
-            subdomainHash: ethers.keccak256(ethers.toUtf8Bytes("nbs")),
+            domain: "nbs",
+            domainHash: ethers.keccak256(ethers.toUtf8Bytes("nbs")),
             secret: ethers.keccak256(ethers.toUtf8Bytes(randomSecret())),
             value: ethers.parseEther("0.01"),
         },
@@ -108,7 +108,7 @@ it("should register multiple domains and list all domains owned", async () => {
 
     // Execute commits
     const commits = Object.values(bids).map(bid =>
-        registrar.connect(buyer3).commit(bid.subdomainHash, bid.secret, {value: bid.value}),
+        registrar.connect(buyer3).commit(bid.domainHash, bid.secret, {value: bid.value}),
     );
     await Promise.all(commits);
 
@@ -117,11 +117,11 @@ it("should register multiple domains and list all domains owned", async () => {
 
     // Reveal
     const reveals = Object.values(bids).map(bid =>
-        registrar.connect(buyer3).revealRegister(bid.subdomain, bid.secret, bid.value),
+        registrar.connect(buyer3).revealRegister(bid.domain, bid.secret, bid.value),
     );
     await Promise.all(reveals);
 
-    const registerFilter = registrar.filters.SubdomainRegistered(buyer3)
+    const registerFilter = registrar.filters.DomainRegistered(buyer3)
     const events = await registrar.queryFilter(registerFilter);
 
     // Filter out expired domains
@@ -134,6 +134,6 @@ it("should register multiple domains and list all domains owned", async () => {
 
     // Ensure domains are listed in events
     bids.forEach((bid, i) => {
-        expect(domains[i].subdomain).equal(bid.subdomain);
+        expect(domains[i].domain).equal(bid.domain);
     });
 });

@@ -61,7 +61,7 @@ export class DNSContract {
     async isExpired(provider: any, tld: string, subdomain: string) {
         const registrar = await this.getRegistrar(provider, tld);
         const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
-        return registrar.hasSubdomainExpired(subdomainHash);
+        return registrar.hasDomainExpired(subdomainHash);
     }
 
     async commit(provider: any, signer: JsonRpcSigner, secret: string, tld: string, subdomain: string, value: string) {
@@ -112,7 +112,7 @@ export class DNSContract {
         const tldHash =ethers.keccak256(ethers.toUtf8Bytes(tld));
         const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
 
-        const filter = registrar.filters.SubdomainBidFailed(undefined, tldHash, subdomainHash);
+        const filter = registrar.filters.DomainBidFailed(undefined, tldHash, subdomainHash);
         return await registrar.queryFilter(filter);
     }
 
@@ -121,7 +121,7 @@ export class DNSContract {
         const tldHash =ethers.keccak256(ethers.toUtf8Bytes(tld));
         const subdomainHash =  (subdomain && ethers.keccak256(ethers.toUtf8Bytes(subdomain))) || undefined;
 
-        const filter = registrar.filters.SubdomainRegistered(owner, tldHash, subdomainHash);
+        const filter = registrar.filters.DomainRegistered(owner, tldHash, subdomainHash);
         return await registrar.queryFilter(filter);
     }
 
@@ -131,7 +131,7 @@ export class DNSContract {
         const tldHash =ethers.keccak256(ethers.toUtf8Bytes(tld));
         const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
 
-        const filter = registrar.filters.SubdomainRegistered(undefined, tldHash, subdomainHash);
+        const filter = registrar.filters.DomainRegistered(undefined, tldHash, subdomainHash);
         await registrar.on(filter, callback);
     }
 
@@ -140,7 +140,7 @@ export class DNSContract {
         const tldHash =ethers.keccak256(ethers.toUtf8Bytes(tld));
         const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
 
-        const filter = registrar.filters.SubdomainRegistered(undefined, tldHash, subdomainHash);
+        const filter = registrar.filters.DomainRegistered(undefined, tldHash, subdomainHash);
         await registrar.off(filter, callback);
     }
 }

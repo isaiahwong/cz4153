@@ -27,7 +27,7 @@ const _abi = [
       {
         indexed: true,
         internalType: "bytes32",
-        name: "subdomainHash",
+        name: "domainHash",
         type: "bytes32",
       },
       {
@@ -39,7 +39,7 @@ const _abi = [
       {
         indexed: false,
         internalType: "string",
-        name: "subdomain",
+        name: "domain",
         type: "string",
       },
       {
@@ -61,7 +61,7 @@ const _abi = [
         type: "uint256",
       },
     ],
-    name: "SubdomainBidFailed",
+    name: "DomainBidFailed",
     type: "event",
   },
   {
@@ -82,7 +82,7 @@ const _abi = [
       {
         indexed: true,
         internalType: "bytes32",
-        name: "subdomainHash",
+        name: "domainHash",
         type: "bytes32",
       },
       {
@@ -94,7 +94,7 @@ const _abi = [
       {
         indexed: false,
         internalType: "string",
-        name: "subdomain",
+        name: "domain",
         type: "string",
       },
       {
@@ -110,7 +110,7 @@ const _abi = [
         type: "uint256",
       },
     ],
-    name: "SubdomainRegistered",
+    name: "DomainRegistered",
     type: "event",
   },
   {
@@ -174,7 +174,7 @@ const _abi = [
     inputs: [
       {
         internalType: "bytes32",
-        name: "subdomain",
+        name: "domain",
         type: "bytes32",
       },
       {
@@ -198,7 +198,7 @@ const _abi = [
     inputs: [
       {
         internalType: "bytes32",
-        name: "subdomain",
+        name: "domain",
         type: "bytes32",
       },
     ],
@@ -268,7 +268,7 @@ const _abi = [
     inputs: [
       {
         internalType: "bytes32",
-        name: "subdomain",
+        name: "domain",
         type: "bytes32",
       },
       {
@@ -297,11 +297,11 @@ const _abi = [
     inputs: [
       {
         internalType: "bytes32",
-        name: "subdomain",
+        name: "domain",
         type: "bytes32",
       },
     ],
-    name: "hasSubdomainExpired",
+    name: "hasDomainExpired",
     outputs: [
       {
         internalType: "bool",
@@ -316,7 +316,7 @@ const _abi = [
     inputs: [
       {
         internalType: "bytes32",
-        name: "subdomain",
+        name: "domain",
         type: "bytes32",
       },
       {
@@ -330,7 +330,7 @@ const _abi = [
         type: "uint256",
       },
     ],
-    name: "makeSubdomainCommitment",
+    name: "makeDomainCommitment",
     outputs: [
       {
         internalType: "bytes32",
@@ -345,7 +345,7 @@ const _abi = [
     inputs: [
       {
         internalType: "string",
-        name: "subdomainPlainText",
+        name: "domain",
         type: "string",
       },
       {
@@ -367,6 +367,19 @@ const _abi = [
         type: "bool",
       },
     ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "string",
+        name: "domain",
+        type: "string",
+      },
+    ],
+    name: "setCName",
+    outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },

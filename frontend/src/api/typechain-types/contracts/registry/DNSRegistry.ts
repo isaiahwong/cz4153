@@ -28,8 +28,10 @@ export interface DNSRegistryInterface extends Interface {
       | "addr"
       | "available"
       | "bulkResolve"
+      | "cname"
       | "cnames"
-      | "makeSubdomain"
+      | "makeDomain"
+      | "setCName"
       | "setSubDomain"
   ): FunctionFragment;
 
@@ -44,10 +46,15 @@ export interface DNSRegistryInterface extends Interface {
     functionFragment: "bulkResolve",
     values: [BytesLike[]]
   ): string;
+  encodeFunctionData(functionFragment: "cname", values: [AddressLike]): string;
   encodeFunctionData(functionFragment: "cnames", values: [AddressLike]): string;
   encodeFunctionData(
-    functionFragment: "makeSubdomain",
+    functionFragment: "makeDomain",
     values: [BytesLike, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setCName",
+    values: [BytesLike, string, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "setSubDomain",
@@ -60,11 +67,10 @@ export interface DNSRegistryInterface extends Interface {
     functionFragment: "bulkResolve",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "cname", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "cnames", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "makeSubdomain",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "makeDomain", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "setCName", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setSubDomain",
     data: BytesLike
@@ -145,12 +151,20 @@ export interface DNSRegistry extends BaseContract {
 
   bulkResolve: TypedContractMethod<[domains: BytesLike[]], [string[]], "view">;
 
+  cname: TypedContractMethod<[owner: AddressLike], [string], "view">;
+
   cnames: TypedContractMethod<[arg0: AddressLike], [string], "view">;
 
-  makeSubdomain: TypedContractMethod<
+  makeDomain: TypedContractMethod<
     [parentDomain: BytesLike, domain: BytesLike],
     [string],
     "view"
+  >;
+
+  setCName: TypedContractMethod<
+    [parentDomain: BytesLike, domain: string, owner: AddressLike],
+    [void],
+    "nonpayable"
   >;
 
   setSubDomain: TypedContractMethod<
@@ -173,14 +187,24 @@ export interface DNSRegistry extends BaseContract {
     nameOrSignature: "bulkResolve"
   ): TypedContractMethod<[domains: BytesLike[]], [string[]], "view">;
   getFunction(
+    nameOrSignature: "cname"
+  ): TypedContractMethod<[owner: AddressLike], [string], "view">;
+  getFunction(
     nameOrSignature: "cnames"
   ): TypedContractMethod<[arg0: AddressLike], [string], "view">;
   getFunction(
-    nameOrSignature: "makeSubdomain"
+    nameOrSignature: "makeDomain"
   ): TypedContractMethod<
     [parentDomain: BytesLike, domain: BytesLike],
     [string],
     "view"
+  >;
+  getFunction(
+    nameOrSignature: "setCName"
+  ): TypedContractMethod<
+    [parentDomain: BytesLike, domain: string, owner: AddressLike],
+    [void],
+    "nonpayable"
   >;
   getFunction(
     nameOrSignature: "setSubDomain"

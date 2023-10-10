@@ -14,8 +14,8 @@ import style from "./Domain.module.css";
 import {randomSecret, timeDiffFromBlock} from "../../common/common";
 import {TypedContractEvent, TypedEventLog} from "../../api/typechain-types/common";
 import {
-    SubdomainBidFailedEvent,
-    SubdomainRegisteredEvent
+    DomainBidFailedEvent,
+    DomainRegisteredEvent
 } from "../../api/typechain-types/contracts/registrar/Registrar";
 import ViewOnlyPanel from "../../components/panels/ViewOnlyPanel";
 import BidPanel from "../../components/panels/BidPanel";
@@ -164,7 +164,7 @@ export default function Domain() {
         }, 100);
     }
 
-    const onDomainRegistered = async (events: Array<TypedEventLog<TypedContractEvent<SubdomainRegisteredEvent.InputTuple, SubdomainRegisteredEvent.OutputTuple, SubdomainRegisteredEvent.OutputObject>>>) => {
+    const onDomainRegistered = async (events: Array<TypedEventLog<TypedContractEvent<DomainRegisteredEvent.InputTuple, DomainRegisteredEvent.OutputTuple, DomainRegisteredEvent.OutputObject>>>) => {
         const event = events.find((event) => {
             if (!event.args) return false;
 
@@ -178,7 +178,7 @@ export default function Domain() {
         await onOwnerStage(signer);
     }
 
-    const onDomainRevealFailed = async (events: Array<TypedEventLog<TypedContractEvent<SubdomainBidFailedEvent.InputTuple, SubdomainBidFailedEvent.OutputTuple, SubdomainBidFailedEvent.OutputObject>>>) => {
+    const onDomainRevealFailed = async (events: Array<TypedEventLog<TypedContractEvent<DomainBidFailedEvent.InputTuple, DomainBidFailedEvent.OutputTuple, DomainBidFailedEvent.OutputObject>>>) => {
         const event = events.find((event) => {
             if (!event.args) return false;
 
