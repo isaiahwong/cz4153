@@ -15,5 +15,13 @@ interface IDNS {
         address owner
     ) external returns (bytes32);
 
+    function makeDomain(bytes32 parentDomain, bytes32 domain) external pure returns (bytes32);
+
+    function setCName(bytes32 parentDomain, string memory domain, address owner) external;
+
     function addr(bytes32 domain) external view returns (address);
+
+    function cname(address owner) external view returns (string memory);
+
+    function available(bytes32 domain) external view returns (bool);
 }

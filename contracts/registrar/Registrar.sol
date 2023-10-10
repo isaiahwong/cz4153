@@ -20,17 +20,17 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
     uint256 private TENURE = 365 days;
     uint256 private GRACE_PERIOD = 90 days;
 
-    // subdomain to expiry times
+    // domain to expiry times
     mapping(bytes32 => uint256) private expiries;
 
-    // subdomain to monotonic increasing version
+    // domain to monotonic increasing version
     mapping(bytes32 => uint256) private versions;
 
     // authorized addresses
     mapping(address => bool) private authorized;
 
-    modifier auth() {
-        require(authorized[msg.sender]);
+    modifier auth(bytes32 domain) {
+        require(isAuthorized(domain));
         _;
     }
 
@@ -45,103 +45,120 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         dns = IDNS(_dns);
     }
 
-    function auctionDeadline(bytes32 subdomain) public override (IAuction, Auction) view virtual returns (uint256) {
-        return Auction.auctionDeadline(getSubdomainCurrentVersion(subdomain));
+    function isAuthorized(bytes32 domain) public view returns (bool) {
+        if (authorized[msg.sender]) {
+            return true;
+        }
+
+        if (hasDomainExpired(domain)) {
+            return false;
+        }
+
+        return dns.addr(dns.makeDomain(tld, domain)) == msg.sender;
+    }
+
+    function auctionDeadline(bytes32 domain) public override (IAuction, Auction) view virtual returns (uint256) {
+        return Auction.auctionDeadline(getDomainCurrentVersion(domain));
     }
 
     function getTLD() public view returns (bytes32) {
         return tld;
     }
 
-    function expiry(bytes32 subdomain) public view returns (uint256) {
-        return expiries[subdomain];
+    function expiry(bytes32 domain) public view returns (uint256) {
+        return expiries[domain];
     }
 
-    function hasSubdomainExpired(bytes32 subdomain) public view returns (bool) {
-        return expiries[subdomain] + GRACE_PERIOD < block.timestamp;
+    function hasDomainExpired(bytes32 domain) public view returns (bool) {
+        return expiries[domain] + GRACE_PERIOD < block.timestamp;
     }
 
-    function getSubdomainCurrentVersion(bytes32 subdomain) public view returns (bytes32) {
-        return keccak256(abi.encodePacked(subdomain, versions[subdomain]));
+    function getDomainCurrentVersion(bytes32 domain) public view returns (bytes32) {
+        return keccak256(abi.encodePacked(domain, versions[domain]));
     }
 
-    function makeSubdomainCommitment(bytes32 subdomain, bytes32 secret, uint256 value) public view returns (bytes32) {
-        return makeCommitment(msg.sender, getSubdomainCurrentVersion(subdomain), secret, value);
+    function makeDomainCommitment(bytes32 domain, bytes32 secret, uint256 value) public view returns (bytes32) {
+        return makeCommitment(msg.sender, getDomainCurrentVersion(domain), secret, value);
     }
 
-    function hasDomainCommitment(bytes32 subdomain, bytes32 secret, uint256 value) public view returns (bool) {
-        return hasCommitment(makeCommitment(msg.sender, getSubdomainCurrentVersion(subdomain), secret, value));
+    function hasDomainCommitment(bytes32 domain, bytes32 secret, uint256 value) public view returns (bool) {
+        return hasCommitment(makeCommitment(msg.sender, getDomainCurrentVersion(domain), secret, value));
     }
+
+    function setCName(string memory domain) external auth(keccak256(abi.encodePacked(domain))) {
+        dns.setCName(tld, domain, msg.sender);
+    }
+
 
     /**
      * @dev canCommit returns true when either the domain has expired or an ongoing auction has happening
      */
-    function canCommit(bytes32 subdomain) public view returns (bool) {
-        return hasSubdomainExpired(subdomain) || !hasAuctionExpired(getSubdomainCurrentVersion(subdomain));
+    function canCommit(bytes32 domain) public view returns (bool) {
+        return hasDomainExpired(domain) || !hasAuctionExpired(getDomainCurrentVersion(domain));
     }
 
     /**
-     * @dev commit commits a subdomain to an auction.
+     * @dev commit commits a domain to an auction.
      * When the first commit happens, a new expiry time is set.
-     * This is to ensure that in the event where a subdomain is not revealed, it will
+     * This is to ensure that in the event where a domain is not revealed, it will
      * still be available for renewal.
      */
-    function commit(bytes32 subdomain, bytes32 secret) public payable returns (bytes32) {
+    function commit(bytes32 domain, bytes32 secret) public payable returns (bytes32) {
         // Check if the name is available
-        if (!canCommit(subdomain)) {
+        if (!canCommit(domain)) {
             revert Errors.DomainNotExpired();
         }
 
         // Set new expiry time if it expired
-        if (hasSubdomainExpired(subdomain)) {
+        if (hasDomainExpired(domain)) {
             // Increment version
-            versions[subdomain] += 1;
+            versions[domain] += 1;
 
             // Set expiry time to duration of auction
-            expiries[subdomain] = block.timestamp + TENURE + getAuctionDuration();
+            expiries[domain] = block.timestamp + TENURE + getAuctionDuration();
         }
 
-        bytes32 commitment = makeSubdomainCommitment(subdomain, secret, msg.value);
+        bytes32 commitment = makeDomainCommitment(domain, secret, msg.value);
 
         // Commit the bid
-        commitBid(getSubdomainCurrentVersion(subdomain), commitment);
+        commitBid(getDomainCurrentVersion(domain), commitment);
         return commitment;
     }
 
-    function revealRegister(string calldata subdomainPlainText, bytes32 secret, uint256 value) public returns (bool) {
-        bytes32 subdomainHash = keccak256(abi.encodePacked(subdomainPlainText));
+    function revealRegister(string calldata domain, bytes32 secret, uint256 value) public returns (bool) {
+        bytes32 domainHash = keccak256(abi.encodePacked(domain));
 
         (bool bidSuccess, uint256 refund) = revealAuction(
-            getSubdomainCurrentVersion(subdomainHash),
+            getDomainCurrentVersion(domainHash),
             secret,
             value
         );
 
         // Return if bid was unsuccessful
         if (!bidSuccess) {
-            emit SubdomainBidFailed(
+            emit DomainBidFailed(
                 msg.sender,
                 keccak256(abi.encodePacked(name())),
-                subdomainHash,
+                domainHash,
                 name(),
-                subdomainPlainText,
-                expiries[subdomainHash],
+                domain,
+                expiries[domainHash],
                 refund,
-                auctionHighestBid(getSubdomainCurrentVersion(subdomainHash))
+                auctionHighestBid(getDomainCurrentVersion(domainHash))
             );
             return bidSuccess;
         }
 
-        uint256 id = uint256(subdomainHash);
+        uint256 id = uint256(domainHash);
 
-        // Burn subdomain if exists prior
+        // Burn domain if exists prior
         if (_exists(id)) {
             _burn(id);
         }
         _mint(msg.sender, id);
-        dns.setSubDomain(tld, subdomainPlainText, msg.sender);
+        dns.setSubDomain(tld, domain, msg.sender);
 
-        emit SubdomainRegistered(msg.sender, keccak256(abi.encodePacked(name())), subdomainHash, name(), subdomainPlainText, expiries[subdomainHash], auctionHighestBid(getSubdomainCurrentVersion(subdomainHash)));
+        emit DomainRegistered(msg.sender, keccak256(abi.encodePacked(name())), domainHash, name(), domain, expiries[domainHash], auctionHighestBid(getDomainCurrentVersion(domainHash)));
 
         return bidSuccess;
     }

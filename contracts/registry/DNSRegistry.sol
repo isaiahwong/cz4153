@@ -12,7 +12,7 @@ contract DNSRegistry is IDNS {
     // Stores a mapping of domains to registrar owners
     mapping(bytes32 => Record) registrars;
 
-    mapping(address => bytes32) public cnames;
+    mapping(address => string) public cnames;
 
     modifier auth(bytes32 domain) {
         require(registrars[domain].owner == msg.sender);
@@ -24,7 +24,7 @@ contract DNSRegistry is IDNS {
         registrars[0x0].owner = msg.sender;
     }
 
-    function makeSubdomain(bytes32 parentDomain, bytes32 domain) public pure returns (bytes32) {
+    function makeDomain(bytes32 parentDomain, bytes32 domain) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(parentDomain, domain));
     }
 
@@ -34,13 +34,22 @@ contract DNSRegistry is IDNS {
         address owner
     ) public auth(parentDomain) override returns (bytes32) {
         bytes32 domainHash = keccak256(abi.encodePacked(domain));
-        bytes32 subdomain = makeSubdomain(parentDomain, domainHash);
-        registrars[subdomain].owner = owner;
+        bytes32 fqdn = makeDomain(parentDomain, domainHash);
+        registrars[fqdn].owner = owner;
         emit NewDomainOwner(parentDomain, domainHash, domain, owner);
-        return subdomain;
+        return fqdn;
     }
 
-//    function setC
+    function setCName(bytes32 parentDomain, string memory domain, address owner) public auth(parentDomain) {
+        bytes32 domainHash = keccak256(abi.encodePacked(domain));
+        bytes32 fqdn = makeDomain(parentDomain, domainHash);
+        require(registrars[fqdn].owner == msg.sender);
+        cnames[owner] = domain;
+    }
+
+    function cname(address owner) public view returns (string memory) {
+        return cnames[owner];
+    }
 
     function addr(bytes32 domain) public view override returns (address) {
         return registrars[domain].owner;

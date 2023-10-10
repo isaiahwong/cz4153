@@ -60,6 +60,91 @@ const _abi = [
     inputs: [
       {
         internalType: "bytes32",
+        name: "domain",
+        type: "bytes32",
+      },
+    ],
+    name: "available",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      },
+    ],
+    name: "cname",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "parentDomain",
+        type: "bytes32",
+      },
+      {
+        internalType: "bytes32",
+        name: "domain",
+        type: "bytes32",
+      },
+    ],
+    name: "makeDomain",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "pure",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "parentDomain",
+        type: "bytes32",
+      },
+      {
+        internalType: "string",
+        name: "domain",
+        type: "string",
+      },
+      {
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      },
+    ],
+    name: "setCName",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
         name: "parentDomain",
         type: "bytes32",
       },

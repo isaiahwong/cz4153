@@ -35,13 +35,14 @@ export interface IRegistrarInterface extends Interface {
       | "hasAuctionExpired"
       | "hasCommitment"
       | "hasDomainCommitment"
-      | "hasSubdomainExpired"
-      | "makeSubdomainCommitment"
+      | "hasDomainExpired"
+      | "makeDomainCommitment"
       | "revealRegister"
+      | "setCName"
   ): FunctionFragment;
 
   getEvent(
-    nameOrSignatureOrTopic: "SubdomainBidFailed" | "SubdomainRegistered"
+    nameOrSignatureOrTopic: "DomainBidFailed" | "DomainRegistered"
   ): EventFragment;
 
   encodeFunctionData(
@@ -78,17 +79,18 @@ export interface IRegistrarInterface extends Interface {
     values: [BytesLike, BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "hasSubdomainExpired",
+    functionFragment: "hasDomainExpired",
     values: [BytesLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "makeSubdomainCommitment",
+    functionFragment: "makeDomainCommitment",
     values: [BytesLike, BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "revealRegister",
     values: [string, BytesLike, BigNumberish]
   ): string;
+  encodeFunctionData(functionFragment: "setCName", values: [string]): string;
 
   decodeFunctionResult(
     functionFragment: "auctionDeadline",
@@ -121,26 +123,27 @@ export interface IRegistrarInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "hasSubdomainExpired",
+    functionFragment: "hasDomainExpired",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "makeSubdomainCommitment",
+    functionFragment: "makeDomainCommitment",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "revealRegister",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "setCName", data: BytesLike): Result;
 }
 
-export namespace SubdomainBidFailedEvent {
+export namespace DomainBidFailedEvent {
   export type InputTuple = [
     owner: AddressLike,
     tldHash: BytesLike,
-    subdomainHash: BytesLike,
+    domainHash: BytesLike,
     tld: string,
-    subdomain: string,
+    domain: string,
     expires: BigNumberish,
     refund: BigNumberish,
     highestBid: BigNumberish
@@ -148,9 +151,9 @@ export namespace SubdomainBidFailedEvent {
   export type OutputTuple = [
     owner: string,
     tldHash: string,
-    subdomainHash: string,
+    domainHash: string,
     tld: string,
-    subdomain: string,
+    domain: string,
     expires: bigint,
     refund: bigint,
     highestBid: bigint
@@ -158,9 +161,9 @@ export namespace SubdomainBidFailedEvent {
   export interface OutputObject {
     owner: string;
     tldHash: string;
-    subdomainHash: string;
+    domainHash: string;
     tld: string;
-    subdomain: string;
+    domain: string;
     expires: bigint;
     refund: bigint;
     highestBid: bigint;
@@ -171,31 +174,31 @@ export namespace SubdomainBidFailedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace SubdomainRegisteredEvent {
+export namespace DomainRegisteredEvent {
   export type InputTuple = [
     owner: AddressLike,
     tldHash: BytesLike,
-    subdomainHash: BytesLike,
+    domainHash: BytesLike,
     tld: string,
-    subdomain: string,
+    domain: string,
     expires: BigNumberish,
     cost: BigNumberish
   ];
   export type OutputTuple = [
     owner: string,
     tldHash: string,
-    subdomainHash: string,
+    domainHash: string,
     tld: string,
-    subdomain: string,
+    domain: string,
     expires: bigint,
     cost: bigint
   ];
   export interface OutputObject {
     owner: string;
     tldHash: string;
-    subdomainHash: string;
+    domainHash: string;
     tld: string;
-    subdomain: string;
+    domain: string;
     expires: bigint;
     cost: bigint;
   }
@@ -259,12 +262,12 @@ export interface IRegistrar extends BaseContract {
   >;
 
   commit: TypedContractMethod<
-    [subdomain: BytesLike, secret: BytesLike],
+    [domain: BytesLike, secret: BytesLike],
     [string],
     "payable"
   >;
 
-  expiry: TypedContractMethod<[subdomain: BytesLike], [bigint], "view">;
+  expiry: TypedContractMethod<[domain: BytesLike], [bigint], "view">;
 
   getAuctionDuration: TypedContractMethod<[], [bigint], "view">;
 
@@ -277,28 +280,26 @@ export interface IRegistrar extends BaseContract {
   >;
 
   hasDomainCommitment: TypedContractMethod<
-    [subdomain: BytesLike, secret: BytesLike, value: BigNumberish],
+    [domain: BytesLike, secret: BytesLike, value: BigNumberish],
     [boolean],
     "view"
   >;
 
-  hasSubdomainExpired: TypedContractMethod<
-    [subdomain: BytesLike],
-    [boolean],
-    "view"
-  >;
+  hasDomainExpired: TypedContractMethod<[domain: BytesLike], [boolean], "view">;
 
-  makeSubdomainCommitment: TypedContractMethod<
-    [subdomain: BytesLike, secret: BytesLike, value: BigNumberish],
+  makeDomainCommitment: TypedContractMethod<
+    [domain: BytesLike, secret: BytesLike, value: BigNumberish],
     [string],
     "view"
   >;
 
   revealRegister: TypedContractMethod<
-    [subdomainPlainText: string, secret: BytesLike, value: BigNumberish],
+    [domain: string, secret: BytesLike, value: BigNumberish],
     [boolean],
     "nonpayable"
   >;
+
+  setCName: TypedContractMethod<[domain: string], [void], "nonpayable">;
 
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
@@ -316,13 +317,13 @@ export interface IRegistrar extends BaseContract {
   getFunction(
     nameOrSignature: "commit"
   ): TypedContractMethod<
-    [subdomain: BytesLike, secret: BytesLike],
+    [domain: BytesLike, secret: BytesLike],
     [string],
     "payable"
   >;
   getFunction(
     nameOrSignature: "expiry"
-  ): TypedContractMethod<[subdomain: BytesLike], [bigint], "view">;
+  ): TypedContractMethod<[domain: BytesLike], [bigint], "view">;
   getFunction(
     nameOrSignature: "getAuctionDuration"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -335,64 +336,67 @@ export interface IRegistrar extends BaseContract {
   getFunction(
     nameOrSignature: "hasDomainCommitment"
   ): TypedContractMethod<
-    [subdomain: BytesLike, secret: BytesLike, value: BigNumberish],
+    [domain: BytesLike, secret: BytesLike, value: BigNumberish],
     [boolean],
     "view"
   >;
   getFunction(
-    nameOrSignature: "hasSubdomainExpired"
-  ): TypedContractMethod<[subdomain: BytesLike], [boolean], "view">;
+    nameOrSignature: "hasDomainExpired"
+  ): TypedContractMethod<[domain: BytesLike], [boolean], "view">;
   getFunction(
-    nameOrSignature: "makeSubdomainCommitment"
+    nameOrSignature: "makeDomainCommitment"
   ): TypedContractMethod<
-    [subdomain: BytesLike, secret: BytesLike, value: BigNumberish],
+    [domain: BytesLike, secret: BytesLike, value: BigNumberish],
     [string],
     "view"
   >;
   getFunction(
     nameOrSignature: "revealRegister"
   ): TypedContractMethod<
-    [subdomainPlainText: string, secret: BytesLike, value: BigNumberish],
+    [domain: string, secret: BytesLike, value: BigNumberish],
     [boolean],
     "nonpayable"
   >;
+  getFunction(
+    nameOrSignature: "setCName"
+  ): TypedContractMethod<[domain: string], [void], "nonpayable">;
 
   getEvent(
-    key: "SubdomainBidFailed"
+    key: "DomainBidFailed"
   ): TypedContractEvent<
-    SubdomainBidFailedEvent.InputTuple,
-    SubdomainBidFailedEvent.OutputTuple,
-    SubdomainBidFailedEvent.OutputObject
+    DomainBidFailedEvent.InputTuple,
+    DomainBidFailedEvent.OutputTuple,
+    DomainBidFailedEvent.OutputObject
   >;
   getEvent(
-    key: "SubdomainRegistered"
+    key: "DomainRegistered"
   ): TypedContractEvent<
-    SubdomainRegisteredEvent.InputTuple,
-    SubdomainRegisteredEvent.OutputTuple,
-    SubdomainRegisteredEvent.OutputObject
+    DomainRegisteredEvent.InputTuple,
+    DomainRegisteredEvent.OutputTuple,
+    DomainRegisteredEvent.OutputObject
   >;
 
   filters: {
-    "SubdomainBidFailed(address,bytes32,bytes32,string,string,uint256,uint256,uint256)": TypedContractEvent<
-      SubdomainBidFailedEvent.InputTuple,
-      SubdomainBidFailedEvent.OutputTuple,
-      SubdomainBidFailedEvent.OutputObject
+    "DomainBidFailed(address,bytes32,bytes32,string,string,uint256,uint256,uint256)": TypedContractEvent<
+      DomainBidFailedEvent.InputTuple,
+      DomainBidFailedEvent.OutputTuple,
+      DomainBidFailedEvent.OutputObject
     >;
-    SubdomainBidFailed: TypedContractEvent<
-      SubdomainBidFailedEvent.InputTuple,
-      SubdomainBidFailedEvent.OutputTuple,
-      SubdomainBidFailedEvent.OutputObject
+    DomainBidFailed: TypedContractEvent<
+      DomainBidFailedEvent.InputTuple,
+      DomainBidFailedEvent.OutputTuple,
+      DomainBidFailedEvent.OutputObject
     >;
 
-    "SubdomainRegistered(address,bytes32,bytes32,string,string,uint256,uint256)": TypedContractEvent<
-      SubdomainRegisteredEvent.InputTuple,
-      SubdomainRegisteredEvent.OutputTuple,
-      SubdomainRegisteredEvent.OutputObject
+    "DomainRegistered(address,bytes32,bytes32,string,string,uint256,uint256)": TypedContractEvent<
+      DomainRegisteredEvent.InputTuple,
+      DomainRegisteredEvent.OutputTuple,
+      DomainRegisteredEvent.OutputObject
     >;
-    SubdomainRegistered: TypedContractEvent<
-      SubdomainRegisteredEvent.InputTuple,
-      SubdomainRegisteredEvent.OutputTuple,
-      SubdomainRegisteredEvent.OutputObject
+    DomainRegistered: TypedContractEvent<
+      DomainRegisteredEvent.InputTuple,
+      DomainRegisteredEvent.OutputTuple,
+      DomainRegisteredEvent.OutputObject
     >;
   };
 }

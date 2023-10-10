@@ -47,7 +47,7 @@ export function Address() {
             .then((args) => args.filter((arg) =>
                 arg.owner == address && arg.expires > BigInt(Math.round(Date.now() / 1000))
             ))
-            .then((args) => args.map<Domain>((arg) => ({name: arg.subdomain, tld: arg.tld, expires: Number(arg.expires)})));
+            .then((args) => args.map<Domain>((arg) => ({name: arg.domain, tld: arg.tld, expires: Number(arg.expires)})));
         setDomains(domains);
         setLoading(false);
     }
