@@ -1,8 +1,15 @@
 import {Box, Grid, Typography} from "@mui/material";
 import {Loader} from "../hoc/hoc";
-import React from "react";
+import React, {useEffect} from "react";
 
-export default function PendingRevealPanel() {
+interface PendingRevealPanelProps {
+    onOwner: () => void;
+}
+
+export default function PendingRevealPanel(props: PendingRevealPanelProps) {
+    useEffect(() => {
+        props.onOwner();
+    }, []);
     return (
         <Grid container>
             <Grid item xs={12}>

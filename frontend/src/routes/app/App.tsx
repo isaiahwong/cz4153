@@ -1,5 +1,5 @@
-import React from 'react';
-import {Route, Routes} from "react-router-dom";
+import React, {useEffect} from 'react';
+import {Route, Routes, useNavigate} from "react-router-dom";
 import Landing from '../landing/Landing';
 import NeedWallet from '../wallet/NeedWallet';
 
@@ -7,9 +7,12 @@ import './App.css';
 import NotFound from "../error/NotFound";
 import PrivateRoute from "../../components/hoc/Auth";
 import Domain from "../domain/Domain";
-import {listenToEvents} from "../../api/wallet/wallet";
+import {isValidChain, listenToEvents, useWallet} from "../../api/wallet/wallet";
 import {createTheme, ThemeProvider} from "@mui/material";
 import {Address} from "../address/Address";
+import ChainNotSupported from "../error/ChainNotSupported";
+import {setDNSAddr} from "../../api/dns/dns";
+import {WithLoader} from "../../components/hoc/hoc";
 
 listenToEvents();
 
@@ -38,24 +41,46 @@ export const routes: Record<string, any> = {
     "addressRoot": "/address/:address",
     "address": (address: string) => `/address/${address}`,
     "needWallet": "/need-wallet",
+    "chainNotSupported": "/chain-not-supported",
     "notFound": "/not-found"
 }
 
 export default function App() {
-    return (
-        <ThemeProvider theme={theme}>
-            <div className="App">
-                <Routes>
-                    <Route path={routes.landing} element={<PrivateRoute/>}>
-                        <Route index path="" element={<Landing/>}/>
-                        <Route path={routes.addressRoot} element={<Address/>}/>
-                        <Route path={routes.domainRoot} element={<Domain/>}/>
-                    </Route>
-                    <Route path={routes.needWallet} element={<NeedWallet/>}/>
-                    <Route path="*" element={<NotFound/>}/>
-                </Routes>
-            </div>
-        </ThemeProvider>
+    const {provider} = useWallet();
 
+    const [loading, setLoading] = React.useState(true);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        init();
+    }, []);
+
+    const init = async () => {
+        const net = await provider.getNetwork();
+        await setDNSAddr(Number(net.chainId));
+        setLoading(false);
+
+        if (!isValidChain(Number(net.chainId))) {
+            navigate(routes.chainNotSupported);
+        }
+    }
+
+    return (
+        <WithLoader loading={loading}>
+            <ThemeProvider theme={theme}>
+                <div className="App">
+                    <Routes>
+                        <Route path={routes.landing} element={<PrivateRoute/>}>
+                            <Route index path="" element={<Landing/>}/>
+                            <Route path={routes.addressRoot} element={<Address/>}/>
+                            <Route path={routes.domainRoot} element={<Domain/>}/>
+                        </Route>
+                        <Route path={routes.chainNotSupported} element={<ChainNotSupported />}/>
+                        <Route path={routes.needWallet} element={<NeedWallet/>}/>
+                        <Route path="*" element={<NotFound/>}/>
+                    </Routes>
+                </div>
+            </ThemeProvider>
+        </WithLoader>
     );
 }

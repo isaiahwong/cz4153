@@ -1,10 +1,5 @@
-import {Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography} from "@mui/material";
-import {WithLoader} from "../hoc/hoc";
-import _ from "lodash";
-import {Link} from "react-router-dom";
-import {routes} from "../../routes/app/App";
-import truncateAddress from "../../common/common";
 import React from "react";
+import {Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography} from "@mui/material";
 
 
 export interface Domain {
@@ -42,8 +37,8 @@ export default function DomainPanel(props: DomainPanelProps) {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {domains.map((domain) => (
-                        <TableRow sx={{'td, th': {border: 0}}}>
+                    {domains.map((domain, i) => (
+                        <TableRow key={i} sx={{'td, th': {border: 0}}}>
                             <TableCell component="th" scope="row">
                                 <Typography fontWeight={"bold"}>
                                     {domain.name}

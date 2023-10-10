@@ -1,9 +1,9 @@
+import React from "react";
 import {Commitment} from "../../store/commits";
 import {Box, Grid, Typography} from "@mui/material";
 import {WithLoader, WithPred} from "../hoc/hoc";
 import Button from "@mui/material/Button";
 import style from "../../routes/domain/Domain.module.css";
-import React from "react";
 
 interface RevealPanelProps {
     onClick: () => void;
@@ -24,7 +24,7 @@ export default function RevealPanel(props: RevealPanelProps) {
                             </Typography>
                         </Box>
                     </WithPred>
-                    <WithLoader pred={!commitment}>
+                    <WithLoader loading={!commitment}>
                         <Button
                             variant="contained"
                             className={style.button}

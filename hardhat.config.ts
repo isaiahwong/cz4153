@@ -5,18 +5,17 @@ import "@typechain/hardhat";
 
 dotenv.config();
 
-const {SEPOLIA_URL, PRIVATE_KEY} = process.env;
-
+const {SEPOLIA_URL, DEPLOYER_PRIVATE_KEY} = process.env;
 
 const dynamicConfig = {
     sepolia: {
         url: SEPOLIA_URL,
         timeout: 30000,
-        accounts: [`0x${PRIVATE_KEY}`]
+        accounts: [`0x${DEPLOYER_PRIVATE_KEY}`]
     },
 }
 
-if (!PRIVATE_KEY) {
+if (!DEPLOYER_PRIVATE_KEY) {
     // @ts-ignore
     delete dynamicConfig.sepolia;
 }

@@ -1,5 +1,9 @@
-import {useEffect, useState} from "react";
-import  {ethers, parseEther, BrowserProvider, JsonRpcSigner, Network} from "ethers";
+import {useState} from "react";
+import {BrowserProvider, JsonRpcSigner, Network} from "ethers";
+import {dnsContract, Chain} from "../dns/dns";
+import {routes} from "../../routes/app/App";
+import CommitmentStore from "../../store/commits";
+import FQDNStore from "../../store/domains";
 
 declare global {
     interface Window {
@@ -7,11 +11,11 @@ declare global {
     }
 }
 
-type ExtensionForProvider = {
+export type ExtensionForProvider = {
     on: (event: string, callback: (...params: any) => void) => void;
 };
 
-type GenericProvider = BrowserProvider & ExtensionForProvider;
+export type GenericProvider = BrowserProvider & ExtensionForProvider;
 
 interface ProviderRpcError extends Error {
     message: string;
@@ -21,15 +25,23 @@ interface ProviderRpcError extends Error {
 
 const setupProvider = () => {
     if (!window.ethereum) throw Error('Could not find wallet extension');
-    const newProvider = new BrowserProvider(window.ethereum);
-
-    return newProvider
+    return new BrowserProvider(window.ethereum);
 }
+
+export const isValidChain = (chain: number) => chain === Chain.local.valueOf() || chain === Chain.sepolia.valueOf();
 
 export const listenToEvents = () => {
     if (!window.ethereum) return;
-    (window.ethereum as GenericProvider).on('chainChanged', async (net: number) => {
-        window.location.reload();
+    (window.ethereum as GenericProvider).on('chainChanged', async (chain: number) => {
+        chain = parseInt(chain.toString());
+        if (isValidChain(chain)) {
+            window.location.replace(routes.landing);
+            // reset stores
+            await CommitmentStore.clear();
+            await FQDNStore.clear();
+            return;
+        }
+        window.location.replace(routes.chainNotSupported);
     });
     (window.ethereum as GenericProvider).on('accountsChanged', (error: ProviderRpcError) => {
         window.location.reload();
@@ -63,4 +75,4 @@ function useWallet() {
     }
 }
 
-export { useWallet }
+export {useWallet}

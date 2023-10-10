@@ -13,7 +13,7 @@ import {TLD} from '../../api/dns/dns';
 import {WithPred} from "../../components/hoc/hoc";
 import {useWallet} from "../../api/wallet/wallet";
 import Header from "../../components/header/Header";
-import {dnsContract} from "../../api/contract/contract";
+import {dnsContract} from "../../api/dns/dns";
 import DomainStore from "../../store/domains";
 import {routes} from "../app/App";
 
