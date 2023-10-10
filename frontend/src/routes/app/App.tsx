@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {Route, Routes} from "react-router-dom";
+import {Route, Routes, useNavigate} from "react-router-dom";
 import Landing from '../landing/Landing';
 import NeedWallet from '../wallet/NeedWallet';
 
@@ -7,7 +7,7 @@ import './App.css';
 import NotFound from "../error/NotFound";
 import PrivateRoute from "../../components/hoc/Auth";
 import Domain from "../domain/Domain";
-import {listenToEvents, useWallet} from "../../api/wallet/wallet";
+import {isValidChain, listenToEvents, useWallet} from "../../api/wallet/wallet";
 import {createTheme, ThemeProvider} from "@mui/material";
 import {Address} from "../address/Address";
 import ChainNotSupported from "../error/ChainNotSupported";
@@ -49,6 +49,7 @@ export default function App() {
     const {provider} = useWallet();
 
     const [loading, setLoading] = React.useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         init();
@@ -58,6 +59,10 @@ export default function App() {
         const net = await provider.getNetwork();
         await setDNSAddr(Number(net.chainId));
         setLoading(false);
+
+        if (!isValidChain(Number(net.chainId))) {
+            navigate(routes.chainNotSupported);
+        }
     }
 
     return (

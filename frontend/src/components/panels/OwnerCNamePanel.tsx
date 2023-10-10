@@ -74,6 +74,7 @@ export default function OwnerCNamePanel(props: OwnerCNamePanelProps) {
 
         const [name, tld] = selectedDomain.split(".");
         await dnsContract.setCName(provider, signer, tld, name);
+        setLoading(true);
         await pollCName(false);
     }
 
@@ -86,7 +87,6 @@ export default function OwnerCNamePanel(props: OwnerCNamePanelProps) {
             return;
         }
 
-        setLoading(true);
         setInterval(() => pollCName(false), 1000);
     }
 

@@ -28,11 +28,13 @@ const setupProvider = () => {
     return new BrowserProvider(window.ethereum);
 }
 
+export const isValidChain = (chain: number) => chain === Chain.local.valueOf() || chain === Chain.sepolia.valueOf();
+
 export const listenToEvents = () => {
     if (!window.ethereum) return;
-    (window.ethereum as GenericProvider).on('chainChanged', async (net: number) => {
-        net = parseInt(net.toString());
-        if (net === Chain.local.valueOf() || net === Chain.sepolia.valueOf()) {
+    (window.ethereum as GenericProvider).on('chainChanged', async (chain: number) => {
+        chain = parseInt(chain.toString());
+        if (isValidChain(chain)) {
             window.location.replace(routes.landing);
             // reset stores
             await CommitmentStore.clear();
