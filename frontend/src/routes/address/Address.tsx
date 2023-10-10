@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import {Navigate, useParams} from "react-router-dom";
 import {Box, Grid, Typography} from "@mui/material";
 import {ethers} from "ethers";
@@ -6,23 +6,14 @@ import Header from "../../components/header/Header";
 
 import style from "./Address.module.css";
 import {routes} from "../app/App";
-import {dnsContract} from "../../api/contract/contract";
+import {dnsContract} from "../../api/dns/dns";
 import {useWallet} from "../../api/wallet/wallet";
 import {WithLoader} from "../../components/hoc/hoc";
 import DomainPanel, {Domain} from "../../components/panels/DomainsPanel";
+import OwnerCNamePanel from "../../components/panels/OwnerCNamePanel";
 
-const CName = () => {
-    return (
-        <Box borderBottom={"1px solid black"}>
-            <Typography variant={"h5"} fontWeight={"bold"}>
-                CNAME
-            </Typography>
-            <Typography variant={"body1"}>
-                Set your canonical domain to your address
-            </Typography>
-        </Box>
-    )
-}
+
+
 
 export function Address() {
     const {address} = useParams();
@@ -36,11 +27,13 @@ export function Address() {
     }, []);
 
     const getOwnersDomains = async () => {
+        if (!address) return;
+
         const tlds = await dnsContract.getTLDs(provider);
 
         const domains = await Promise.all(
             tlds.map((tld) =>
-                dnsContract.getSubdomainRegistered(provider, tld.name, address, undefined)
+                dnsContract.getDomainRegistered(provider, tld.name, address, undefined)
             ))
             .then((results) => results.flatMap((events) => events))
             .then((events) => events.map((event) => event.args))
@@ -48,6 +41,7 @@ export function Address() {
                 arg.owner == address && arg.expires > BigInt(Math.round(Date.now() / 1000))
             ))
             .then((args) => args.map<Domain>((arg) => ({name: arg.domain, tld: arg.tld, expires: Number(arg.expires)})));
+
         setDomains(domains);
         setLoading(false);
     }
@@ -70,13 +64,13 @@ export function Address() {
                             flexDirection={"column"}
                             alignItems={"left"}
                         >
-                            <Box mb={4}>
+                            <Box mb={3}>
                                 <Typography variant="h6" fontWeight="bold" className={style.highlight}>
                                     {address}
                                 </Typography>
                             </Box>
-                            <WithLoader pred={loading}>
-                                {/*<CName/>*/}
+                            <OwnerCNamePanel address={address} domains={domains} />
+                            <WithLoader loading={loading}>
                                 <DomainPanel domains={domains}/>
                             </WithLoader>
                         </Box>

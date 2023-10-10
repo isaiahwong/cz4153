@@ -25,7 +25,7 @@ before(async () => {
     registrarOwner = accounts[1];
     buyer1 = accounts[2];
     buyer2 = accounts[3];
-    buyer3 = accounts[3];
+    buyer3 = accounts[4];
 
     // Deploy DNS
     dns = await deployDNS(dnsOwner);
@@ -105,7 +105,6 @@ it("should register multiple domains and list all domains owned", async () => {
         },
     ];
 
-
     // Execute commits
     const commits = Object.values(bids).map(bid =>
         registrar.connect(buyer3).commit(bid.domainHash, bid.secret, {value: bid.value}),
@@ -136,4 +135,15 @@ it("should register multiple domains and list all domains owned", async () => {
     bids.forEach((bid, i) => {
         expect(domains[i].domain).equal(bid.domain);
     });
+});
+
+it("should allow setting of cname", async () => {
+    await registrar.connect(buyer3).setCName("scse");
+    expect(await dns.cname(buyer3.address)).equal("scse.ntu");
+});
+
+it("should not allow setting of cname of not owner", async () => {
+    await expectFailure(
+        registrar.connect(buyer2).setCName("scse")
+    );
 });

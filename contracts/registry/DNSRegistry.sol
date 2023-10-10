@@ -2,6 +2,7 @@
 pragma solidity ^0.8.9;
 
 import "./IDNS.sol";
+import "./Errors.sol";
 import "hardhat/console.sol";
 
 contract DNSRegistry is IDNS {
@@ -41,9 +42,6 @@ contract DNSRegistry is IDNS {
     }
 
     function setCName(bytes32 parentDomain, string memory domain, address owner) public auth(parentDomain) {
-        bytes32 domainHash = keccak256(abi.encodePacked(domain));
-        bytes32 fqdn = makeDomain(parentDomain, domainHash);
-        require(registrars[fqdn].owner == msg.sender);
         cnames[owner] = domain;
     }
 

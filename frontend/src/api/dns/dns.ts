@@ -1,5 +1,8 @@
 import {DNSRegistry__factory, IRegistrar__factory} from "../typechain-types";
 import {ethers, JsonRpcSigner, namehash} from "ethers";
+import localAddress from "../addresses.local.json";
+import sepoliaAddress from "../addresses.sepolia.json";
+
 
 export interface TLD {
     name: string;
@@ -8,13 +11,26 @@ export interface TLD {
 
 type DomainRegisteredCB = ((event: any, a1: any, a2: any) => void);
 
+export enum Chain {
+    local = 31337,
+    sepolia = 11155111,
+}
+
 export class DNSContract {
-    readonly address: string;
+    private address: string;
     readonly EMPTY_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
     readonly EMPTY_ADDRESS = '0x0000000000000000000000000000000000000000';
 
-    constructor(address: string, provider?: any) {
+    constructor(address: string) {
         this.address = address;
+    }
+
+    async changeAddress(chain: number) {
+        if (chain === Chain.sepolia.valueOf()) {
+            this.address = sepoliaAddress.dns;
+        } else {
+            this.address = localAddress.dns;
+        }
     }
 
     removeTLD(tld: string, domain: string) {
@@ -23,8 +39,8 @@ export class DNSContract {
 
     async getExpiry(provider: any, tld: string, subdomain: string) {
         const registrar = await this.getRegistrar(provider, tld);
-        const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
-        return registrar.expiry(subdomainHash);
+        const domainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
+        return registrar.expiry(domainHash);
     }
 
     async isAvailable(provider: any, tld: string, subdomain: string) {
@@ -58,17 +74,27 @@ export class DNSContract {
         return dnsRegistry.addr(namehash(tld))
     }
 
-    async isExpired(provider: any, tld: string, subdomain: string) {
+    async isExpired(provider: any, tld: string, domain: string) {
         const registrar = await this.getRegistrar(provider, tld);
-        const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
-        return registrar.hasDomainExpired(subdomainHash);
+        const domainHash = ethers.keccak256(ethers.toUtf8Bytes(domain));
+        return registrar.hasDomainExpired(domainHash);
+    }
+    
+    async setCName(provider: any, signer: JsonRpcSigner, tld: string, domain: string) {
+        const registrar = await this.getRegistrar(provider, tld);
+        await registrar.connect(signer).setCName(domain);
+    }
+
+    cname(provider: any, address: string) {
+        const dnsRegistry = DNSRegistry__factory.connect(this.address, provider);
+        return dnsRegistry.cname(address);
     }
 
     async commit(provider: any, signer: JsonRpcSigner, secret: string, tld: string, subdomain: string, value: string) {
         const registrar = await this.getRegistrar(provider, tld);        secret = ethers.keccak256(ethers.toUtf8Bytes(secret));
-        const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
+        const domainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
 
-        await registrar.connect(signer).commit(subdomainHash, secret, {value: ethers.parseEther(value)});
+        await registrar.connect(signer).commit(domainHash, secret, {value: ethers.parseEther(value)});
     }
 
     async reveal(provider: any, signer: JsonRpcSigner, secret: string, tld: string, subdomain: string, value: string) {
@@ -94,34 +120,34 @@ export class DNSContract {
 
     async getAuctionDeadline(provider: any, tld: string, subdomain: string) {
         const registrar = await this.getRegistrar(provider, tld);
-        const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
+        const domainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
 
-        return registrar.auctionDeadline(subdomainHash);
+        return registrar.auctionDeadline(domainHash);
     }
 
     async hasCommitment(provider: any, signer: JsonRpcSigner, secret: string, tld: string, subdomain: string, value: string) {
         const registrar = await this.getRegistrar(provider, tld);
         secret = ethers.keccak256(ethers.toUtf8Bytes(secret));
-        const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
+        const domainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
 
-        return registrar.connect(signer).hasDomainCommitment(subdomainHash, secret, ethers.parseEther(value));
+        return registrar.connect(signer).hasDomainCommitment(domainHash, secret, ethers.parseEther(value));
     }
 
-    async getSubdomainBidFailed(provider: any, tld: string, subdomain: string) {
+    async getDomainBidFailed(provider: any, tld: string, subdomain: string) {
         const registrar = await this.getRegistrar(provider, tld);
         const tldHash =ethers.keccak256(ethers.toUtf8Bytes(tld));
-        const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
+        const domainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
 
-        const filter = registrar.filters.DomainBidFailed(undefined, tldHash, subdomainHash);
+        const filter = registrar.filters.DomainBidFailed(undefined, tldHash, domainHash);
         return await registrar.queryFilter(filter);
     }
 
-    async getSubdomainRegistered(provider: any, tld: string, owner: string | undefined, subdomain: string | undefined) {
+    async getDomainRegistered(provider: any, tld: string, owner: string | undefined, subdomain: string | undefined) {
         const registrar = await this.getRegistrar(provider, tld);
         const tldHash =ethers.keccak256(ethers.toUtf8Bytes(tld));
-        const subdomainHash =  (subdomain && ethers.keccak256(ethers.toUtf8Bytes(subdomain))) || undefined;
+        const domainHash =  (subdomain && ethers.keccak256(ethers.toUtf8Bytes(subdomain))) || undefined;
 
-        const filter = registrar.filters.DomainRegistered(owner, tldHash, subdomainHash);
+        const filter = registrar.filters.DomainRegistered(owner, tldHash, domainHash);
         return await registrar.queryFilter(filter);
     }
 
@@ -129,18 +155,24 @@ export class DNSContract {
     async onRegisteredDomains(provider: any, tld: string, subdomain: string, callback: DomainRegisteredCB) {
         const registrar = await this.getRegistrar(provider, tld);
         const tldHash =ethers.keccak256(ethers.toUtf8Bytes(tld));
-        const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
+        const domainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
 
-        const filter = registrar.filters.DomainRegistered(undefined, tldHash, subdomainHash);
+        const filter = registrar.filters.DomainRegistered(undefined, tldHash, domainHash);
         await registrar.on(filter, callback);
     }
 
     async offRegisteredDomains(provider: any, tld: string, subdomain: string, callback: DomainRegisteredCB) {
         const registrar = await this.getRegistrar(provider, tld);
         const tldHash =ethers.keccak256(ethers.toUtf8Bytes(tld));
-        const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
+        const domainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
 
-        const filter = registrar.filters.DomainRegistered(undefined, tldHash, subdomainHash);
+        const filter = registrar.filters.DomainRegistered(undefined, tldHash, domainHash);
         await registrar.off(filter, callback);
     }
+}
+
+export const dnsContract = new DNSContract(localAddress.dns);
+
+export const setDNSAddr = (chain: number) => {
+    return dnsContract.changeAddress(chain);
 }

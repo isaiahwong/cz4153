@@ -5,7 +5,7 @@ import {Link} from "react-router-dom";
 import {Table, TableBody, TableCell, TableContainer, TableRow, Typography} from "@mui/material";
 
 import {useWallet} from "../../api/wallet/wallet";
-import {dnsContract} from "../../api/contract/contract";
+import {dnsContract} from "../../api/dns/dns";
 import truncateAddress, {timeDiffFromBlock} from "../../common/common";
 import {WithLoader} from "../hoc/hoc";
 import {routes} from "../../routes/app/App";
@@ -13,11 +13,11 @@ import {routes} from "../../routes/app/App";
 interface OwnerPanelProps {
     owner: string;
     tld: string;
-    subdomain: string;
+    domain: string;
 }
 
-export default function OwnerPanel(props: OwnerPanelProps) {
-    const {owner, tld, subdomain} = props;
+export default function OwnerDomainPanel(props: OwnerPanelProps) {
+    const {owner, tld, domain} = props;
     const {provider} = useWallet();
     const [loading, setLoading] = useState(true);
     const [expiry, setExpiry] = useState("");
@@ -27,7 +27,7 @@ export default function OwnerPanel(props: OwnerPanelProps) {
     }, []);
 
     const getExpiry = async () => {
-        const expiry = Number(await dnsContract.getExpiry(provider, tld, subdomain));
+        const expiry = Number(await dnsContract.getExpiry(provider, tld, domain));
         if (await timeDiffFromBlock(provider, expiry) < 0) {
             setExpiry("Expired");
         } else {
@@ -40,7 +40,7 @@ export default function OwnerPanel(props: OwnerPanelProps) {
 
     return (
         <TableContainer>
-            <WithLoader pred={loading}>
+            <WithLoader loading={loading}>
                 <Table sx={{minWidth: 300}} aria-label="simple table">
                     <TableBody>
                         <TableRow sx={{'td, th': {border: 0}}}>
@@ -61,7 +61,7 @@ export default function OwnerPanel(props: OwnerPanelProps) {
                             </TableCell>
                             <TableCell align="right">
                                 <Typography variant={"body1"}>
-                                    {_.toLower(subdomain)}
+                                    {_.toLower(domain)}
                                 </Typography>
                             </TableCell>
                         </TableRow>

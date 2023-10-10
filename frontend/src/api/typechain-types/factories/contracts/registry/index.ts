@@ -2,4 +2,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export { DNSRegistry__factory } from "./DNSRegistry__factory";
+export { Errors__factory } from "./Errors__factory";
 export { IDNS__factory } from "./IDNS__factory";

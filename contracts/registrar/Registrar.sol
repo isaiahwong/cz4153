@@ -53,7 +53,6 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         if (hasDomainExpired(domain)) {
             return false;
         }
-
         return dns.addr(dns.makeDomain(tld, domain)) == msg.sender;
     }
 
@@ -86,9 +85,8 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
     }
 
     function setCName(string memory domain) external auth(keccak256(abi.encodePacked(domain))) {
-        dns.setCName(tld, domain, msg.sender);
+        dns.setCName(tld, string(abi.encodePacked(domain, ".", name())), msg.sender);
     }
-
 
     /**
      * @dev canCommit returns true when either the domain has expired or an ongoing auction has happening
