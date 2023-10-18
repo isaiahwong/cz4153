@@ -5,12 +5,12 @@ import {
     AutocompleteRenderInputParams,
     Box,
     Grid,
-    TextField
+    TextField, Typography
 } from '@mui/material';
 import style from "./Landing.module.css";
 import TLDList from "../../components/tld/TLDList";
 import {TLD} from '../../api/dns/dns';
-import {WithPred} from "../../components/hoc/hoc";
+import {WithLoader, WithPred} from "../../components/hoc/hoc";
 import {useWallet} from "../../api/wallet/wallet";
 import Header from "../../components/header/Header";
 import {dnsContract} from "../../api/dns/dns";
@@ -19,40 +19,54 @@ import {routes} from "../app/App";
 
 
 export default function Landing() {
-    const [selectedTld, setTLD] = useState<TLD>();
+    const [tlds, setTLDS] = useState<TLD[]>();
+    // const [selectedTld, setTLD] = useState<TLD>();
     const [searchDomain, setSearchDomain] = useState('')
     const [searchTerms, setSearchTerms] = useState<Record<string, boolean>>({})
+    const [loading, setLoading] = useState<boolean>(true);
     const navigate = useNavigate();
     const { provider} = useWallet();
 
     useEffect(() => {
-        if (!selectedTld) {
+        (async () => {
+            const tlds = await dnsContract.getTLDs(provider);
+            setTLDS(tlds);
+            setLoading(false);
+        })();
+    }, []);
+
+    useEffect(() => {
+        if (!tlds) {
             setSearchTerms({});
             return;
         }
-        DomainStore.getFQDNMaps(selectedTld.name).then((domains) => {
-            setSearchTerms(domains);
-        });
-    }, [selectedTld]);
+        (async () => {
+            const domains = await Promise.all(tlds.map((tld) => DomainStore.getFQDNMaps(tld.name)))
+            setSearchTerms(Object.assign({}, ...domains));
+        })();
+    }, [tlds]);
 
     useEffect(() => {
         const delay = setTimeout(async () => {
-            if (!selectedTld || !searchDomain) return;
+            if (!tlds || !searchDomain) return;
+            const search = searchDomain.split('.').splice(-1).join('');
+            const request: Record<string, boolean> = {};
 
-            const search = dnsContract.removeTLD(selectedTld.name, searchDomain);
-            const available = await dnsContract.isAvailable(provider, selectedTld.name, search);
-            const fqdn = `${search}.${selectedTld.name}`;
+            for (let tld of tlds) {
+                const fqdn = `${search}.${tld.name}`;
+                request[fqdn] = (await dnsContract.isAvailable(provider, tld.name, search));
+                await DomainStore.setFQDN({name: fqdn, available: request[fqdn]});
+            }
 
-            await DomainStore.setFQDN({name: fqdn, available});
-            setSearchTerms({...searchTerms, [fqdn]: available})
+            setSearchTerms({...searchTerms, ...request})
         }, 1000);
 
         return () => clearTimeout(delay)
     }, [searchDomain])
 
-    const onTLDSelected = (tld?: TLD) => {
-        setTLD(tld);
-    }
+    // const onTLDSelected = (tld?: TLD) => {
+    //     setTLD(tld);
+    // }
 
     const onChange = (_: any, v: any) => {
         navigate(routes.domain(v));
@@ -64,8 +78,11 @@ export default function Landing() {
             <Grid container className={style.content} alignContent={"center"} alignItems="center">
                 <Grid item xs={12}>
                     <Box className={style.panel}>
-                        <TLDList onClick={onTLDSelected}/>
-                        <WithPred pred={!!selectedTld}>
+                        {/*<TLDList onClick={onTLDSelected}/>*/}
+                        <Typography variant={"h4"} fontWeight={"900"}>
+                            Start Searching for a domain
+                        </Typography>
+                        <WithLoader loading={loading}>
                             <Box mt={4}>
                                 <Autocomplete
                                     className={style.search}
@@ -94,15 +111,21 @@ export default function Landing() {
                                     renderInput={
                                         (params: AutocompleteRenderInputParams) => {
                                             return <TextField
-                                                onChange={(e) => setSearchDomain(e.target.value)}
-                                                label="Search for DNS"
                                                 {...params}
+                                                className={style.search_input}
+                                                onChange={(e) => setSearchDomain(e.target.value)}
+                                                sx={{"& fieldset": { border: 'none' }}} // Removes border
+                                                placeholder={"Search for a DNS"}
+                                                InputLabelProps={{
+                                                    shrink: true,
+
+                                                }}
                                             />
                                         }
                                     }
                                 />
                             </Box>
-                        </WithPred>
+                        </WithLoader>
                     </Box>
                 </Grid>
             </Grid>

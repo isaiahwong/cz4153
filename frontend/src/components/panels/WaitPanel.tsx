@@ -75,7 +75,6 @@ export default function WaitPanel(props: WaitPanelProps) {
                         Auction ends in {remain}s
                     </Typography>
                 </WithPred>
-
                 <LinearProgressWithLabel value={progress}/>
             </Grid>
         </Grid>

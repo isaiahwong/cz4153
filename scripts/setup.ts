@@ -45,5 +45,6 @@ export async function deployRegistrar(
         tld,
         registrar.target,
     );
+
     return registrar;
 }
