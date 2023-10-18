@@ -5,9 +5,8 @@
 }
 
 .panel {
-    border: 1px solid rgb(232, 232, 232);
-    background-color: white;
-    max-width: 600px;
+    /*border: 1px solid rgb(232, 232, 232);*/
+    max-width: 800px;
     margin: 0 auto;
     border-radius: 10px;
     padding: 20px;
@@ -15,7 +14,24 @@
 }
 
 .search {
+    background-color: white;
     max-width: 800px;
     margin: 0 auto;
     width: 100%;
+    border-radius: 10px;
+}
+
+.search_input {
+    border: 0 !important;
+}
+
+.search_input input {
+    border: 0 !important;
+    height: 50px;
+    font-weight: bold !important;
+}
+
+.search_input input::placeholder {
+    font-weight: bold !important;
+    font-size: 1.2rem;
 }

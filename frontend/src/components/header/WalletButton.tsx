@@ -10,9 +10,12 @@ import truncateAddress from "../../common/common";
 
 
 export default function WalletButton() {
+    const normalizeNetworkName = (name: string) => {
+        if (name.toLowerCase() === "unknown") return "Localhost";
+        return name;
+    }
     const {signer, network, connect} = useWallet();
-
-    const title = `${_.capitalize(network?.name)} (${truncateAddress(signer?.address)})`;
+    const title = `${normalizeNetworkName(_.capitalize(network?.name))} (${truncateAddress(signer?.address)})`;
     const connected = signer !== undefined;
 
     useEffect(() => {

@@ -6,6 +6,7 @@
   "main": "index.js",
   "scripts": {
     "compile": "SKIP_LOAD=true hardhat clean && SKIP_LOAD=true hardhat compile",
+    "node": "npx hardhat node",
     "deploy": "hardhat run --network localhost scripts/deploy.local.ts",
     "deploy:sepolia": "hardhat run --network sepolia scripts/deploy.sepolia.ts",
     "test": "npx hardhat test"
