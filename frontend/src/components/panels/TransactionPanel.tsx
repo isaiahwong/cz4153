@@ -108,8 +108,8 @@ export default function TransactionPanel() {
 
     useEffect(() => {
         if (!signer) return;
-        setLoading(false);
-    }, [signer]);
+        if (!paramDomain) setLoading(false);
+    }, [signer, paramDomain]);
 
     useEffect(() => {
         const delay = setTimeout(async () => {
@@ -120,7 +120,7 @@ export default function TransactionPanel() {
             request[searchDomain] = await dnsContract.getAddr(provider, searchDomain);
 
             setSearchTerms({...request})
-            onChange(null, searchDomain);
+            setLoading(false);
         }, 1000);
 
         return () => clearTimeout(delay)
@@ -148,8 +148,7 @@ export default function TransactionPanel() {
     }
 
     const onSubmit = async () => {
-        if (!signer || errorSearch) return;
-
+        if (!signer) return;
         if (!searchDomain || !searchTerms[searchDomain] || searchTerms[searchDomain] == dnsContract.EMPTY_ADDRESS) {
             setErrorSearch('Domain does not exist');
             return;
