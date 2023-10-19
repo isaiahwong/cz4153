@@ -116,7 +116,6 @@ export default function TransactionPanel() {
             searchDomain.charAt(searchDomain.length - 1) !== ".")
         )
       ) {
-        console.log("here");
         return;
       }
 

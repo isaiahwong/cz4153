@@ -34,19 +34,6 @@ export default function Landing() {
   }, []);
 
   useEffect(() => {
-    if (!tlds) {
-      setSearchTerms({});
-      return;
-    }
-    (async () => {
-      const domains = await Promise.all(
-        tlds.map((tld) => DomainStore.getFQDNMaps(tld.name))
-      );
-      setSearchTerms(Object.assign({}, ...domains));
-    })();
-  }, [tlds]);
-
-  useEffect(() => {
     const delay = setTimeout(async () => {
       if (!tlds || !searchDomain) return;
 
@@ -58,7 +45,6 @@ export default function Landing() {
             searchDomain.charAt(searchDomain.length - 1) !== ".")
         )
       ) {
-        console.log("here");
         return;
       }
 
@@ -74,7 +60,7 @@ export default function Landing() {
         await DomainStore.setFQDN({ name: fqdn, available: request[fqdn] });
       }
 
-      setSearchTerms({ ...searchTerms, ...request });
+      setSearchTerms(request);
     }, 1000);
 
     return () => clearTimeout(delay);
@@ -84,7 +70,9 @@ export default function Landing() {
     navigate(routes.domain(v));
   };
 
-  const [autoCompleteOpen, setAutoCompleteOpen] = useState(false);
+  const handleClose = () => {
+    setSearchTerms({});
+  };
 
   return (
     <>
@@ -107,20 +95,8 @@ export default function Landing() {
                   className={style.search}
                   id="free-solo-demo"
                   onChange={onChange}
-                  open={autoCompleteOpen}
-                  onInputChange={(event, value, reason) => {
-                    switch (reason) {
-                      case "input":
-                        setAutoCompleteOpen(!!value);
-                        break;
-                      case "reset":
-                      case "clear":
-                        setAutoCompleteOpen(false);
-                        break;
-                      default:
-                        console.log(reason);
-                    }
-                  }}
+                  onClose={handleClose}
+                  loading
                   options={Object.keys(searchTerms)}
                   renderOption={(props: any, option: string) => {
                     return (
