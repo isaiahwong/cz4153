@@ -1,5 +1,5 @@
 import React, {useEffect} from "react";
-import {Navigate, useParams} from "react-router-dom";
+import {createSearchParams, Navigate, useNavigate, useParams} from "react-router-dom";
 import {Box, Grid, Typography} from "@mui/material";
 import {ethers} from "ethers";
 import Header from "../../components/header/Header";
@@ -11,11 +11,13 @@ import {useWallet} from "../../api/wallet/wallet";
 import {WithLoader} from "../../components/hoc/hoc";
 import DomainPanel, {Domain} from "../../components/panels/DomainsPanel";
 import OwnerCNamePanel from "../../components/panels/OwnerCNamePanel";
+import Button from "@mui/material/Button";
 
 
 export function Address() {
     const {address} = useParams();
-    const {provider} = useWallet();
+    const {provider, signer} = useWallet();
+    const navigate = useNavigate();
 
     const [domains, setDomains] = React.useState<Domain[]>([]);
     const [loading, setLoading] = React.useState(true);
@@ -48,6 +50,15 @@ export function Address() {
         setLoading(false);
     }
 
+    const onSendEther = () => {
+        if (!address || (signer && signer.address == address)) {
+            return;
+        }
+        navigate({
+            pathname: routes.sendEther,
+            search: createSearchParams({send: address}).toString()
+        });
+    }
 
     // Validate address
     if (!ethers.isAddress(address)) {
@@ -66,7 +77,7 @@ export function Address() {
                             flexDirection={"column"}
                             alignItems={"left"}
                         >
-                            <Box mb={3}>
+                            <Box mb={3} display={"flex"} justifyContent={"space-between"}>
                                 <Typography variant="h6" fontWeight="bold" className={style.highlight}>
                                     {address}
                                 </Typography>

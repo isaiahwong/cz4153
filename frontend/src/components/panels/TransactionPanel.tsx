@@ -16,6 +16,7 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import style from "./TransactionPanel.module.css";
 import {dnsContract} from "../../api/dns/dns";
 import Button from "@mui/material/Button";
+import {useSearchParams} from "react-router-dom";
 
 const SuccessPanel = (amount: number, to: string, domain: string, onClick: () => void) => {
     if (!amount || !to || !domain) {
@@ -84,10 +85,13 @@ const SuccessPanel = (amount: number, to: string, domain: string, onClick: () =>
 
 export default function TransactionPanel() {
     const {provider, signer, connect} = useWallet();
+    const [searchParams, setSearchParams] = useSearchParams();
+
     const [loading, setLoading] = useState<boolean>(true);
     const [txSubmitted, setTxSubmitted] = useState<boolean>(true);
     const [showSuccess, setShowSuccess] = useState<boolean>(true);
 
+    const [paramDomain, setParamDomain] = useState<string>('');
     const [searchDomain, setSearchDomain] = useState('')
     const [etherAmount, setEtherAmount] = useState(0.001)
     const [searchTerms, setSearchTerms] = useState<Record<string, string>>({})
@@ -95,6 +99,11 @@ export default function TransactionPanel() {
 
     useEffect(() => {
         if (!signer) connect();
+        const domain = searchParams.get('send');
+        if (domain) {
+            setParamDomain(domain);
+            setSearchDomain(domain);
+        }
     }, []);
 
     useEffect(() => {
@@ -111,6 +120,7 @@ export default function TransactionPanel() {
             request[searchDomain] = await dnsContract.getAddr(provider, searchDomain);
 
             setSearchTerms({...request})
+            onChange(null, searchDomain);
         }, 1000);
 
         return () => clearTimeout(delay)
@@ -133,6 +143,8 @@ export default function TransactionPanel() {
         setSearchDomain('');
         setEtherAmount(0.001);
         setSearchTerms({});
+        setSearchParams({});
+        setParamDomain('');
     }
 
     const onSubmit = async () => {
@@ -165,6 +177,7 @@ export default function TransactionPanel() {
                             className={style.search}
                             onChange={onChange}
                             id="free-solo-demo"
+                            defaultValue={paramDomain}
                             options={Object.keys(searchTerms)}
                             renderOption={(props: any, option: string) => {
                                 return (
