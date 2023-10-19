@@ -144,7 +144,7 @@ export class DNSContract {
 
     async getDomainRegistered(provider: any, tld: string, owner: string | undefined, subdomain: string | undefined) {
         const registrar = await this.getRegistrar(provider, tld);
-        const tldHash =ethers.keccak256(ethers.toUtf8Bytes(tld));
+        const tldHash = ethers.keccak256(ethers.toUtf8Bytes(tld));
         const domainHash =  (subdomain && ethers.keccak256(ethers.toUtf8Bytes(subdomain))) || undefined;
 
         const filter = registrar.filters.DomainRegistered(owner, tldHash, domainHash);

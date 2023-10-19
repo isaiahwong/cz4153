@@ -28,6 +28,13 @@ export default function Header() {
                         <Box display={"flex"} alignItems={"center"}>
                             <Box mr={"20px"}>
                                 <Typography fontWeight={"bold"}>
+                                    <Link to={routes.domains} style={linkStyle}>
+                                        All Domains
+                                    </Link>
+                                </Typography>
+                            </Box>
+                            <Box mr={"20px"}>
+                                <Typography fontWeight={"bold"}>
                                     <Link to={routes.sendEther} style={linkStyle}>
                                         Send Ether
                                     </Link>
