@@ -4,8 +4,11 @@ import Box from '@mui/material/Box';
 import WalletButton from "./WalletButton";
 import {Toolbar, Typography} from "@mui/material";
 
-import style from "./Header.module.css";
 import {Link} from "react-router-dom";
+import style from "./Header.module.css";
+import {routes} from "../../routes/app/App";
+
+const linkStyle = {textDecoration: "none", color: "white"};
 
 export default function Header() {
     return (
@@ -13,16 +16,26 @@ export default function Header() {
             <AppBar className={style.header} position="static">
                 <Toolbar>
                     <Box display={"flex"} flexDirection={"row"} justifyContent={"space-between"} width={"100%"}>
-                        <Link to={"/"} style={{textDecoration: "none", color: "white"}}>
+                        <Link to={"/"} style={linkStyle}>
                             <Typography
                                 variant="h6"
                                 component="div"
+                                fontWeight={"bold"}
                             >
                                 DNS
                             </Typography>
                         </Link>
-                        <Box >
-                            <WalletButton/>
+                        <Box display={"flex"} alignItems={"center"}>
+                            <Box mr={"20px"}>
+                                <Typography fontWeight={"bold"}>
+                                    <Link to={routes.sendEther} style={linkStyle}>
+                                        Send Ether
+                                    </Link>
+                                </Typography>
+                            </Box>
+                            <Box className={style.item}>
+                                <WalletButton/>
+                            </Box>
                         </Box>
                     </Box>
                 </Toolbar>

@@ -1,7 +1,7 @@
 import React, {useEffect} from 'react';
 import {Route, Routes, useNavigate} from "react-router-dom";
 import Landing from '../landing/Landing';
-import NeedWallet from '../wallet/NeedWallet';
+import NeedWallet from '../error/NeedWallet';
 
 import './App.css';
 import NotFound from "../error/NotFound";
@@ -13,6 +13,7 @@ import {Address} from "../address/Address";
 import ChainNotSupported from "../error/ChainNotSupported";
 import {setDNSAddr} from "../../api/dns/dns";
 import {WithLoader} from "../../components/hoc/hoc";
+import SendEther from "../ether/SendEther";
 
 listenToEvents();
 
@@ -41,6 +42,7 @@ export const routes: Record<string, any> = {
     "addressRoot": "/address/:address",
     "address": (address: string) => `/address/${address}`,
     "needWallet": "/need-wallet",
+    "sendEther": "/send-ether",
     "chainNotSupported": "/chain-not-supported",
     "notFound": "/not-found"
 }
@@ -74,8 +76,9 @@ export default function App() {
                             <Route index path="" element={<Landing/>}/>
                             <Route path={routes.addressRoot} element={<Address/>}/>
                             <Route path={routes.domainRoot} element={<Domain/>}/>
+                            <Route path={routes.sendEther} element={<SendEther/>}/>
                         </Route>
-                        <Route path={routes.chainNotSupported} element={<ChainNotSupported />}/>
+                        <Route path={routes.chainNotSupported} element={<ChainNotSupported/>}/>
                         <Route path={routes.needWallet} element={<NeedWallet/>}/>
                         <Route path="*" element={<NotFound/>}/>
                     </Routes>

@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Box, FormControl, MenuItem, Select, Typography} from "@mui/material";
+import {Box, CircularProgress, FormControl, MenuItem, Select, Typography} from "@mui/material";
 import LoadingButton from '@mui/lab/LoadingButton';
 import {useWallet} from "../../api/wallet/wallet";
 import {Domain} from "./DomainsPanel";
@@ -18,7 +18,7 @@ interface CNameProps {
 }
 
 const CName = (props: CNameProps) => {
-    const { cname } = props;
+    const {cname} = props;
 
     if (!cname) {
         return <></>;
@@ -44,20 +44,22 @@ interface OwnerCNamePanelProps {
 export default function OwnerCNamePanel(props: OwnerCNamePanelProps) {
     const {provider, connect, signer} = useWallet();
     const [cname, setCName] = React.useState<string>("");
-    const [loadOwnerPanel, setLoadOwnerPanel] = useState(true);
+    const [loadOwnerPanel, setLoadOwnerPanel] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selectedDomain, setSelectedDomain] = useState("");
     const {domains} = props;
 
     useEffect(() => {
         init();
-    }, []);
+    }, [props.address]);
 
     useEffect(() => {
-        if (!signer) return;
-        if (signer.address != props.address) return;
-        setLoadOwnerPanel(false);
-    }, [signer]);
+        if (!signer || signer.address != props.address || !domains.length) {
+            setLoadOwnerPanel(false);
+            return;
+        }
+        setLoadOwnerPanel(true);
+    }, [signer, props.address, domains]);
 
     const init = async () => {
         if (!signer) await connect();
@@ -94,10 +96,11 @@ export default function OwnerCNamePanel(props: OwnerCNamePanelProps) {
 
     return (
         <>
-            <CName cname={cname} />
-            <WithPred pred={!loadOwnerPanel}>
+            <CName cname={cname}/>
+            <WithPred pred={loadOwnerPanel}>
                 <Box style={style} display={"flex"} flexDirection={"column"} justifyContent={"end"} alignItems={"end"}>
-                    <Box display={"flex"} flexDirection={"row"} mb={2} alignItems={"center"} justifyContent={"space-between"} style={{width: "100%"}}>
+                    <Box display={"flex"} flexDirection={"row"} mb={2} alignItems={"center"}
+                         justifyContent={"space-between"} style={{width: "100%"}}>
                         <Typography variant={"body1"} fontWeight={"bold"}>
                             Set your canonical name
                         </Typography>
@@ -120,7 +123,8 @@ export default function OwnerCNamePanel(props: OwnerCNamePanelProps) {
                         loading={loading}
                         variant="contained"
                         onClick={setCanonicalName}
-                        style={{width: "140px", borderRadius: "20px",  backgroundColor: "#5105FF"}}
+                        loadingIndicator={<CircularProgress style={{color: "white"}} size={16}/>}
+                        style={{width: "140px", borderRadius: "20px", backgroundColor: "#5105FF"}}
                     >
                         <Typography variant="body1" fontWeight="bold">
                             Set CName

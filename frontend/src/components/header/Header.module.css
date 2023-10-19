@@ -1,3 +1,13 @@
 .header {
     background-color: #5105FF !important;
 }
+
+.item {
+    max-width: 250px;
+    min-width: 150px;
+    padding: 10px 15px;
+    color: black;
+    background-color: white;
+    text-align: center;
+    border-radius: 30px;
+}

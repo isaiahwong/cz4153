@@ -205,6 +205,8 @@ export default function Domain() {
             return;
         }
 
+        if (bid < 0.003) return;
+
         const commitment = {
             owner: signer?.address!,
             tld: tld!,

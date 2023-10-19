@@ -2,7 +2,6 @@ import {Box, Grid, Typography} from "@mui/material";
 import Button from "@mui/material/Button";
 import style from "../../routes/domain/Domain.module.css";
 import React, {useEffect} from "react";
-import {useWallet} from "../../api/wallet/wallet";
 
 interface LostPanelProps {
     onNext: () => void;
