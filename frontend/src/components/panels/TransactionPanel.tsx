@@ -153,7 +153,7 @@ export default function TransactionPanel() {
             setErrorSearch('Domain does not exist');
             return;
         }
-
+        setTxSubmitted(false);
         const tx = await signer.sendTransaction({
             to: searchTerms[searchDomain],
             value: ethers.parseEther(etherAmount.toString())
