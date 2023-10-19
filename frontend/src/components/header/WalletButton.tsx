@@ -4,9 +4,11 @@ import {Grid} from "@mui/material";
 import Typography from "@mui/material/Typography";
 import _ from 'lodash';
 
-import style from "./WalletButton.module.css";
 import {useWallet} from "../../api/wallet/wallet";
 import truncateAddress from "../../common/common";
+import { Link } from "react-router-dom";
+import {routes} from "../../routes/app/App";
+import style from "./WalletButton.module.css";
 
 
 export default function WalletButton() {
@@ -27,15 +29,12 @@ export default function WalletButton() {
     const connectedButton = (
         <Grid alignContent={"flex-start"}>
             <Grid item xs={12}>
-                <Typography fontSize={14} component="div" sx={{flexGrow: 1}}>
-                    {title}
-                </Typography>
+                <Link to={routes.address(signer?.address)} className={style.header}>
+                    <Typography fontSize={14} component="div" sx={{flexGrow: 1}}>
+                        {title}
+                    </Typography>
+                </Link>
             </Grid>
-            {/*<Grid item xs={12}>*/}
-            {/*    <Button className={style.button} color="inherit">*/}
-            {/*        Disconnect*/}
-            {/*    </Button>*/}
-            {/*</Grid>*/}
         </Grid>
 
     );

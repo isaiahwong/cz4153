@@ -1,19 +1,11 @@
 import React, {useEffect, useState} from 'react';
-import { useNavigate } from "react-router-dom";
-import {
-    Autocomplete,
-    AutocompleteRenderInputParams,
-    Box,
-    Grid,
-    TextField, Typography
-} from '@mui/material';
+import {useNavigate} from "react-router-dom";
+import {Autocomplete, AutocompleteRenderInputParams, Box, Grid, TextField, Typography} from '@mui/material';
 import style from "./Landing.module.css";
-import TLDList from "../../components/tld/TLDList";
-import {TLD} from '../../api/dns/dns';
-import {WithLoader, WithPred} from "../../components/hoc/hoc";
+import {dnsContract, TLD} from '../../api/dns/dns';
+import {WithLoader} from "../../components/hoc/hoc";
 import {useWallet} from "../../api/wallet/wallet";
 import Header from "../../components/header/Header";
-import {dnsContract} from "../../api/dns/dns";
 import DomainStore from "../../store/domains";
 import {routes} from "../app/App";
 
@@ -25,7 +17,7 @@ export default function Landing() {
     const [searchTerms, setSearchTerms] = useState<Record<string, boolean>>({})
     const [loading, setLoading] = useState<boolean>(true);
     const navigate = useNavigate();
-    const { provider} = useWallet();
+    const {provider} = useWallet();
 
     useEffect(() => {
         (async () => {
@@ -64,9 +56,6 @@ export default function Landing() {
         return () => clearTimeout(delay)
     }, [searchDomain])
 
-    // const onTLDSelected = (tld?: TLD) => {
-    //     setTLD(tld);
-    // }
 
     const onChange = (_: any, v: any) => {
         navigate(routes.domain(v));
@@ -98,10 +87,10 @@ export default function Landing() {
                                                     justifyContent="space-between"
                                                     alignItems="center"
                                                 >
-                                                    <Grid item >
+                                                    <Grid item>
                                                         {option}
                                                     </Grid>
-                                                    <Grid item >
+                                                    <Grid item>
                                                         {searchTerms[option] ? "Available" : "Taken"}
                                                     </Grid>
                                                 </Grid>
@@ -114,7 +103,7 @@ export default function Landing() {
                                                 {...params}
                                                 className={style.search_input}
                                                 onChange={(e) => setSearchDomain(e.target.value)}
-                                                sx={{"& fieldset": { border: 'none' }}} // Removes border
+                                                sx={{"& fieldset": {border: 'none'}}} // Removes border
                                                 placeholder={"Search for a DNS"}
                                                 InputLabelProps={{
                                                     shrink: true,

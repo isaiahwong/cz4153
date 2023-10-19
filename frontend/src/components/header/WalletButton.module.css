@@ -1,10 +1,14 @@
 .wallet_wrapper {
     width: 100%;
-    max-width: 200px;
-    padding: 10px;
+    white-space: nowrap;
     text-align: left;
 }
 
 .button {
     border: white 1px solid;
+}
+
+.header {
+    color: black;
+    text-decoration: none;
 }

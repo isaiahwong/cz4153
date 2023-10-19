@@ -1,0 +1,15 @@
+.panel {
+    width: 100%;
+}
+
+.red {
+    color: #e35959;
+}
+
+.green {
+    color: #1bb66d;
+}
+
+.button {
+    background-color: #5105FF!important;
+}

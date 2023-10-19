@@ -69,9 +69,9 @@ export class DNSContract {
         return !(await dnsRegistry.available(namehash));
     }
 
-    async getAddr(provider: any, tld: string) {
+    async getAddr(provider: any, domain: string) {
         const dnsRegistry = DNSRegistry__factory.connect(this.address, provider);
-        return dnsRegistry.addr(namehash(tld))
+        return dnsRegistry.addr(namehash(domain))
     }
 
     async isExpired(provider: any, tld: string, domain: string) {
