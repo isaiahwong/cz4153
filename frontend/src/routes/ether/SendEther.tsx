@@ -1,10 +1,8 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import Header from "../../components/header/Header";
-import {useWallet} from "../../api/wallet/wallet";
 
 import style from "./SendEther.module.css";
 import {Box, Grid, TextField, Typography} from "@mui/material";
-import {WithConnect, WithLoader} from "../../components/hoc/hoc";
 import TransactionPanel from "../../components/panels/TransactionPanel";
 
 export default function SendEther() {

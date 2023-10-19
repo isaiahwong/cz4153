@@ -6,11 +6,11 @@ import {dnsContract} from "../../api/dns/dns";
 import {useWallet} from "../../api/wallet/wallet";
 
 import style from "./DomainList.module.css";
-import {Box, Grid,} from "@mui/material";
+import {Box, Grid, Typography,} from "@mui/material";
 import {WithLoader} from "../../components/hoc/hoc";
 
 export default function DomainList() {
-    const {provider} = useWallet();
+    const {provider, signer} = useWallet();
     const [domains, setDomains] = React.useState<Domain[]>([]);
     const [loading, setLoading] = React.useState(true);
 
@@ -19,7 +19,6 @@ export default function DomainList() {
     }, []);
 
     const getOwnersDomains = async () => {
-
         const tlds = await dnsContract.getTLDs(provider);
         const domains = await Promise.all(
             tlds.map((tld) =>
@@ -46,6 +45,9 @@ export default function DomainList() {
             <Grid container className={style.content} alignContent={"center"} alignItems="center">
                 <Grid item xs={12}>
                     <Box className={style.wrapper}>
+                        <Typography variant={"h5"} fontWeight={"900"}>
+                            All Registered Domains
+                        </Typography>
                         <Box
                             className={style.panel}
                             display={"flex"}
