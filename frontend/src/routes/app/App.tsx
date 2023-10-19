@@ -13,6 +13,7 @@ import {Address} from "../address/Address";
 import ChainNotSupported from "../error/ChainNotSupported";
 import {setDNSAddr} from "../../api/dns/dns";
 import {WithLoader} from "../../components/hoc/hoc";
+import DomainList from "../domain/DomainList";
 import SendEther from "../ether/SendEther";
 
 listenToEvents();
@@ -44,6 +45,7 @@ export const routes: Record<string, any> = {
     "needWallet": "/need-wallet",
     "sendEther": "/send-ether",
     "chainNotSupported": "/chain-not-supported",
+    "domains": "/domains",
     "notFound": "/not-found"
 }
 
@@ -76,6 +78,7 @@ export default function App() {
                             <Route index path="" element={<Landing/>}/>
                             <Route path={routes.addressRoot} element={<Address/>}/>
                             <Route path={routes.domainRoot} element={<Domain/>}/>
+                            <Route path={routes.domains} element={<DomainList/>}/>
                             <Route path={routes.sendEther} element={<SendEther/>}/>
                         </Route>
                         <Route path={routes.chainNotSupported} element={<ChainNotSupported/>}/>
