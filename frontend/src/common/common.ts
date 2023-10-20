@@ -18,3 +18,9 @@ export default function truncateAddress(address?: string) {
     }
     return address.slice(0, 6) + "..." + address.slice(-4);
 }
+
+export function tryAlert(e: any) {
+    if (!(e instanceof Error)) return;
+    if (e.message.includes("insufficient")) alert("Insufficient funds");
+    return;
+}

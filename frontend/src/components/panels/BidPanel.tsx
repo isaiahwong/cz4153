@@ -1,18 +1,20 @@
-import {Box, TextField, Typography} from "@mui/material";
+import {Box, CircularProgress, TextField, Typography} from "@mui/material";
 import style from "../../routes/domain/Domain.module.css";
 import Button from "@mui/material/Button";
 import React from "react";
+import LoadingButton from "@mui/lab/LoadingButton";
 
 interface BidPanelProps {
     bid: number;
     onBidChange: (e: any) => void;
     onClick: () => void;
+    loading?: boolean;
 }
 
 export default function BidPanel(props: BidPanelProps) {
-    const {bid, onBidChange} = props;
+    const {bid, onBidChange, loading} = props;
     return (
-        <>
+        <Box textAlign={"right"} width={"100%"}>
             <TextField
                 className={style.field}
                 type="number"
@@ -26,16 +28,18 @@ export default function BidPanel(props: BidPanelProps) {
             />
 
             <Box mt={2}>
-                <Button
+                <LoadingButton
+                    loading={loading}
                     variant="contained"
-                    className={style.button}
                     onClick={props.onClick}
+                    loadingIndicator={<CircularProgress style={{color: "white"}} size={16}/>}
+                    style={{width: "140px", borderRadius: "20px", backgroundColor: "#5105FF"}}
                 >
                     <Typography variant="body1" fontWeight="bold">
                         COMMIT
                     </Typography>
-                </Button>
+                </LoadingButton>
             </Box>
-        </>
+        </Box>
     )
 }

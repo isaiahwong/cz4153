@@ -18,35 +18,57 @@ class CommitmentStore extends Store {
     }
 
     async addCommit(commitment: Commitment) {
-        let commitments = await this.store.getItem<Record<string, Commitment>>(commitment.owner);
+        let commitments = await this.store.getItem<Record<string, Commitment[]>>(commitment.owner);
         if (!commitments) {
             commitments = {};
         }
+        const key = this.getKey(commitment.domain, commitment.tld);
+
+        if (!(key in commitments)) commitments[key] = [];
+
         return this.store.setItem(commitment.owner, {
             ...commitments,
-            [this.getKey(commitment.domain, commitment.tld)]: commitment
+            [key]: [...commitments[key], commitment],
         });
     }
 
-    async deleteCommit(commitment: Commitment) {
-        const key = this.getKey(commitment.domain, commitment.tld);
-        const commitments = await this.store.getItem<Record<string, Commitment>>(commitment.owner);
+    async deleteCommitment(owner: string, tld: string, domain: string) {
+        const key = this.getKey(domain, tld);
+        const commitments = await this.store.getItem<Record<string, Commitment>>(owner);
         if (!commitments || !(key in commitments)) {
             return
         }
         delete commitments[key];
-        return this.store.setItem(commitment.owner, commitments);
+        return this.store.setItem(owner, commitments);
     }
 
-    async getCommit(owner: string, tld: string, subdomain: string) {
-        const key = this.getKey(subdomain, tld);
-        const commitments = await this.store.getItem<Record<string, Commitment>>(owner);
+    async getCommitments(owner: string, tld: string, domain: string) {
+        const key = this.getKey(domain, tld);
+        const commitments = await this.store.getItem<Record<string, Commitment[]>>(owner);
         if (!commitments || !(key in commitments)) {
-            return null
+            return []
         }
 
         return commitments[key];
     }
+
+    async getHighestCommitment(owner: string, tld: string, domain: string) {
+        const commitments = await this.getCommitments(owner, tld, domain);
+        if (commitments.length === 0) return null;
+        return commitments.reduce((prev, current) => {
+            return prev.value > current.value ? prev : current;
+        });
+    }
+
+    // async getCommit(owner: string, tld: string, subdomain: string) {
+    //     const key = this.getKey(subdomain, tld);
+    //     const commitments = await this.store.getItem<Record<string, Commitment>>(owner);
+    //     if (!commitments || !(key in commitments)) {
+    //         return null
+    //     }
+    //
+    //     return commitments[key];
+    // }
 
 }
 

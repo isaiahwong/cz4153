@@ -123,6 +123,12 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         return commitment;
     }
 
+    function batchRevealRegister(RevealType[] calldata commitments) public {
+        for (uint256 i = 0; i < commitments.length; i++) {
+            revealRegister(commitments[i].domain, commitments[i].secret, commitments[i].value);
+        }
+    }
+
     function revealRegister(string calldata domain, bytes32 secret, uint256 value) public returns (bool) {
         bytes32 domainHash = keccak256(abi.encodePacked(domain));
 
@@ -155,7 +161,6 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         }
         _mint(msg.sender, id);
         dns.setSubDomain(tld, domain, msg.sender);
-
         emit DomainRegistered(msg.sender, keccak256(abi.encodePacked(name())), domainHash, name(), domain, expiries[domainHash], auctionHighestBid(getDomainCurrentVersion(domainHash)));
 
         return bidSuccess;

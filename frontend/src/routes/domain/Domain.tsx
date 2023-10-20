@@ -10,7 +10,7 @@ import {WithConnect, WithLoader} from "../../components/hoc/hoc";
 
 import CommitmentStore, {Commitment} from "../../store/commits";
 
-import {randomSecret, timeDiffFromBlock} from "../../common/common";
+import {randomSecret, timeDiffFromBlock, tryAlert} from "../../common/common";
 import {TypedContractEvent, TypedEventLog} from "../../api/typechain-types/common";
 import {DomainBidFailedEvent, DomainRegisteredEvent} from "../../api/typechain-types/contracts/registrar/Registrar";
 import ViewOnlyPanel from "../../components/panels/ViewOnlyPanel";
@@ -36,22 +36,22 @@ enum Stages {
 
 export default function Domain() {
     // Params
-    const {domain: fqdn } = useParams();
+    const {domain: fqdn} = useParams();
 
     // State
     const [domain, setDomain] = useState<string>("");
     const [tld, setTLD] = useState<string>("");
     const [loading, setLoading] = useState(true);
+    const [txLoading, setTxLoading] = useState(false);
     const [bid, setBid] = useState(0.003);
     const [stage, setStage] = useState<Stages>(Stages.commit);
-    const [submittedCommitment, setSubmittedCommitment] = useState<Commitment | null>(null);
+    const [submittedCommitments, setSubmittedCommitments] = useState<Commitment[]>([]);
     const [owner, setOwner] = useState<string | null>(null);
     const [refund, setRefund] = useState<string>("0");
     const [highestBid, setHighestBid] = useState<string>("0");
 
     const navigate = useNavigate();
     const {provider, signer, connect} = useWallet();
-
 
     // Initializations
     useEffect(() => {
@@ -80,6 +80,7 @@ export default function Domain() {
         const listeners = setInterval(async () => {
             const registeredEvents = await dnsContract.getDomainRegistered(provider, tld!, undefined, domain!);
             const bidFailedEvents = await dnsContract.getDomainBidFailed(provider, tld!, domain!);
+
             await onDomainRegistered(registeredEvents);
             await onDomainRevealFailed(bidFailedEvents);
         }, 500);
@@ -96,6 +97,7 @@ export default function Domain() {
         });
     }, [signer, tld, domain]);
 
+    // Get current Stage of bidding process
     const getStage = async () => {
         const isOwnerStage = async (domain: string, tld: string) => {
             const addr = await dnsContract.getAddr(provider, `${domain}.${tld}`);
@@ -103,12 +105,12 @@ export default function Domain() {
             return addr !== dnsContract.EMPTY_ADDRESS;
         }
 
-        const isPendingRevealStage = async (deadline: number, auctionTimeRemain: number, commitment: Commitment | null) => {
-            return (deadline != 0 && auctionTimeRemain <= 0) && !commitment;
+        const isPendingRevealStage = async (deadline: number, auctionTimeRemain: number, commitment: Commitment[]) => {
+            return (deadline != 0 && auctionTimeRemain <= 0) && commitments.length == 0;
         }
 
-        const isCommitStage = (commitment: Commitment | null) => {
-            return !commitment;
+        const isCommitStage = (commitment: Commitment[]) => {
+            return commitments.length == 0;
         }
 
         const isRevealStage = (deadline: number, remain: number) => {
@@ -122,16 +124,16 @@ export default function Domain() {
 
         const deadline = await dnsContract.getAuctionDeadline(provider, tld, domain);
         const auctionTimeRemain = await timeDiffFromBlock(provider, Number(deadline));
-        const commitment = await CommitmentStore.getCommit(signer.address, tld, domain);
-        setSubmittedCommitment(commitment);
+        const commitments = await CommitmentStore.getCommitments(signer.address, tld, domain);
+        setSubmittedCommitments(commitments);
 
         if (await isOwnerStage(domain, tld)) {
             return Stages.owner;
-        } else if (await isPendingRevealStage(Number(deadline), auctionTimeRemain, commitment)) {
+        } else if (await isPendingRevealStage(Number(deadline), auctionTimeRemain, commitments)) {
             return Stages.pendingReveal;
         } else if (isRevealStage(Number(deadline), auctionTimeRemain)) {
             return Stages.reveal;
-        } else if (isCommitStage(commitment)) {
+        } else if (isCommitStage(commitments)) {
             return Stages.commit;
         } else {
             return Stages.wait;
@@ -157,7 +159,6 @@ export default function Domain() {
             setOwner(addr);
             return;
         }
-
         setTimeout(() => {
             onOwnerStage();
         }, 100);
@@ -191,8 +192,13 @@ export default function Domain() {
         if (signer.address !== event.args.owner) {
             return;
         }
-        // Handle fail bid
-        onLostStage(ethers.formatEther(event.args.refund), ethers.formatEther(event.args.highestBid));
+        const commitment = await CommitmentStore.getHighestCommitment(signer.address, tld, domain);
+        if (!commitment) return;
+
+        if (commitment.value === ethers.formatEther(event.args.refund)) {
+            // Handle fail bid
+            onLostStage(ethers.formatEther(event.args.refund), ethers.formatEther(event.args.highestBid));
+        }
     }
 
     const onBidChange = (e: any) => {
@@ -214,11 +220,17 @@ export default function Domain() {
             secret: randomSecret(),
             value: bid.toString()
         }
-
-        await dnsContract.commit(provider, signer, commitment.secret, tld!, domain!, commitment.value)
-        await CommitmentStore.addCommit(commitment);
-        setSubmittedCommitment(commitment);
-        setStage(Stages.wait);
+        try {
+            setTxLoading(true);
+            const tx = await dnsContract.commit(provider, signer, commitment.secret, tld!, domain!, commitment.value)
+            await tx.wait();
+            await CommitmentStore.addCommit(commitment);
+            setSubmittedCommitments([...submittedCommitments, commitment])
+            setStage(Stages.wait);
+        } catch (e) {
+            tryAlert(e);
+        }
+        setTxLoading(false);
     }
 
     // Callback for reveal bid
@@ -228,10 +240,19 @@ export default function Domain() {
             return;
         }
 
-        if (!submittedCommitment) return;
-        await dnsContract.reveal(provider, signer, submittedCommitment.secret, tld!, domain!, submittedCommitment.value)
-        await CommitmentStore.deleteCommit(submittedCommitment);
-        setSubmittedCommitment(null);
+        if (submittedCommitments.length == 0) return;
+        try {
+            setTxLoading(true);
+            const tx = (submittedCommitments.length == 1)
+                ? await dnsContract.reveal(provider, signer, submittedCommitments[0].secret, tld, domain, submittedCommitments[0].value)
+                : await dnsContract.batchReveal(provider, signer, submittedCommitments);
+            await tx.wait();
+        } catch (e) {
+            tryAlert(e);
+        }
+        setTxLoading(false);
+        await CommitmentStore.deleteCommitment(signer.address, tld, domain);
+        setSubmittedCommitments([]);
     }
 
     const renderStage = () => {
@@ -239,11 +260,12 @@ export default function Domain() {
             case Stages.viewOnly:
                 return <ViewOnlyPanel/>;
             case Stages.commit:
-                return <BidPanel bid={bid} onBidChange={onBidChange} onClick={onCommit}/>;
+                return <BidPanel loading={txLoading} bid={bid} onBidChange={onBidChange} onClick={onCommit}/>;
             case Stages.wait:
-                return <WaitPanel commitment={submittedCommitment} onAuctionEnded={onRevealStage}/>;
+                return <WaitPanel commitments={submittedCommitments} onAuctionEnded={onRevealStage} bid={bid}
+                                  txLoading={txLoading} onBidChange={onBidChange} onClick={onCommit}/>;
             case Stages.reveal:
-                return <RevealPanel commitment={submittedCommitment} onClick={onReveal}/>;
+                return <RevealPanel loading={txLoading} commitments={submittedCommitments} onClick={onReveal}/>;
             case Stages.pendingReveal:
                 return <PendingRevealPanel onOwner={onOwnerStage}/>;
             case Stages.lose:
@@ -253,8 +275,7 @@ export default function Domain() {
         }
     }
 
-    if (!fqdn) <Navigate to={routes.notFound}/>;
-
+    if (!fqdn) return <Navigate to={routes.notFound}/>;
 
     return (
         <>

@@ -132,7 +132,6 @@ describe("TestAuction", () => {
         await auction.connect(buyer2).reveal(label2, secret2, value2);
         const buyer2AfterRefundBalance = await ethers.provider.getBalance(buyer2.address);
 
-
         expect(await auction.auctionHighestBidder(label1)).equal(buyer1.address);
 
         // Expect auction to have only the highest bid amount

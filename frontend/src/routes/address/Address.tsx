@@ -30,7 +30,6 @@ export function Address() {
         if (!address) return;
 
         const tlds = await dnsContract.getTLDs(provider);
-
         const domains = await Promise.all(
             tlds.map((tld) =>
                 dnsContract.getDomainRegistered(provider, tld.name, address, undefined)
@@ -48,16 +47,6 @@ export function Address() {
             })).sort((a, b) => a.tld > b.tld ? 1 : -1));
         setDomains(domains);
         setLoading(false);
-    }
-
-    const onSendEther = () => {
-        if (!address || (signer && signer.address == address)) {
-            return;
-        }
-        navigate({
-            pathname: routes.sendEther,
-            search: createSearchParams({send: address}).toString()
-        });
     }
 
     // Validate address

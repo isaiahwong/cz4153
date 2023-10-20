@@ -23,6 +23,20 @@ import type {
   TypedContractMethod,
 } from "../../common";
 
+export declare namespace IRegistrar {
+  export type RevealTypeStruct = {
+    domain: string;
+    secret: BytesLike;
+    value: BigNumberish;
+  };
+
+  export type RevealTypeStructOutput = [
+    domain: string,
+    secret: string,
+    value: bigint
+  ] & { domain: string; secret: string; value: bigint };
+}
+
 export interface RegistrarInterface extends Interface {
   getFunction(
     nameOrSignature:
@@ -32,6 +46,7 @@ export interface RegistrarInterface extends Interface {
       | "auctionHighestBid"
       | "auctionHighestBidder"
       | "balanceOf"
+      | "batchRevealRegister"
       | "canCommit"
       | "commit"
       | "expiry"
@@ -96,6 +111,10 @@ export interface RegistrarInterface extends Interface {
   encodeFunctionData(
     functionFragment: "balanceOf",
     values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "batchRevealRegister",
+    values: [IRegistrar.RevealTypeStruct[]]
   ): string;
   encodeFunctionData(
     functionFragment: "canCommit",
@@ -214,6 +233,10 @@ export interface RegistrarInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "batchRevealRegister",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "canCommit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "commit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "expiry", data: BytesLike): Result;
@@ -507,6 +530,12 @@ export interface Registrar extends BaseContract {
 
   balanceOf: TypedContractMethod<[owner: AddressLike], [bigint], "view">;
 
+  batchRevealRegister: TypedContractMethod<
+    [commitments: IRegistrar.RevealTypeStruct[]],
+    [void],
+    "nonpayable"
+  >;
+
   canCommit: TypedContractMethod<[domain: BytesLike], [boolean], "view">;
 
   commit: TypedContractMethod<
@@ -657,6 +686,13 @@ export interface Registrar extends BaseContract {
   getFunction(
     nameOrSignature: "balanceOf"
   ): TypedContractMethod<[owner: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "batchRevealRegister"
+  ): TypedContractMethod<
+    [commitments: IRegistrar.RevealTypeStruct[]],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "canCommit"
   ): TypedContractMethod<[domain: BytesLike], [boolean], "view">;

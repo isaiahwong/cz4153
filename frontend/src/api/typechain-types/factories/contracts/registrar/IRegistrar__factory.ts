@@ -173,6 +173,36 @@ const _abi = [
   {
     inputs: [
       {
+        components: [
+          {
+            internalType: "string",
+            name: "domain",
+            type: "string",
+          },
+          {
+            internalType: "bytes32",
+            name: "secret",
+            type: "bytes32",
+          },
+          {
+            internalType: "uint256",
+            name: "value",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct IRegistrar.RevealType[]",
+        name: "commitments",
+        type: "tuple[]",
+      },
+    ],
+    name: "batchRevealRegister",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "bytes32",
         name: "domain",
         type: "bytes32",
