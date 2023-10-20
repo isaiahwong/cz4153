@@ -1,5 +1,13 @@
-import React, {useEffect} from "react";
-import {Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography} from "@mui/material";
+import React, { useEffect } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
 import truncateAddress from "../../common/common";
 import {routes} from "../../routes/app/App";
 import {createSearchParams, Link, useNavigate} from "react-router-dom";
@@ -10,53 +18,20 @@ import {Domain} from "../../api/dns/dns";
 
 
 export interface DomainPanelProps {
-    domains: Domain[];
-    showOwner?: boolean;
+  domains: Domain[];
+  showOwner?: boolean;
 }
 
 export default function DomainPanel(props: DomainPanelProps) {
-    const {domains} = props;
-    const navigate = useNavigate();
-    const {signer, connect} = useWallet();
+  const { domains } = props;
+  const navigate = useNavigate();
+  const { signer, connect } = useWallet();
 
-    useEffect(() => {
-        if (!signer) connect();
-    }, []);
+  useEffect(() => {
+    if (!signer) connect();
+  }, []);
 
-    if (!domains) {
-        return (
-            <>
-                <Typography>
-                    No domains registered
-                </Typography>
-            </>
-        )
-    }
-
-    const onSendEther = (domain: string) => {
-        navigate({
-            pathname: routes.sendEther,
-            search: createSearchParams({send: domain}).toString()
-        });
-    }
-
-    const sendEther = (domain: Domain) => {
-        if (!domain.owner || (signer && signer.address == domain.owner)) {
-            return <></>
-        }
-        return (
-            <Button
-                variant="contained"
-                className={style.button}
-                onClick={() => onSendEther(`${domain.name}.${domain.tld}`)}
-            >
-                <Typography variant="body1" fontWeight="bold">
-                    Send Ether
-                </Typography>
-            </Button>
-        );
-    }
-
+  if (!domains) {
     return (
         <TableContainer>
             <Table sx={{minWidth: 300}} aria-label="simple table">

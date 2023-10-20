@@ -1,4 +1,4 @@
-import {Store} from "./store";
+import { Store } from "./store";
 
 export interface Commitment {
     owner: string;
@@ -10,12 +10,60 @@ export interface Commitment {
 }
 
 class CommitmentStore extends Store {
-    constructor(name: string) {
-        super(name);
+  constructor(name: string) {
+    super(name);
+  }
+
+  getKey(subdomain: string, tld: string) {
+    return `${subdomain}.${tld}`;
+  }
+
+  async addCommit(commitment: Commitment) {
+    let commitments = await this.store.getItem<Record<string, Commitment>>(
+      commitment.owner
+    );
+    if (!commitments) {
+      commitments = {};
+    }
+    return this.store.setItem(commitment.owner, {
+      ...commitments,
+      [this.getKey(commitment.domain, commitment.tld)]: commitment,
+    });
+  }
+
+  async deleteCommit(commitment: Commitment) {
+    const key = this.getKey(commitment.domain, commitment.tld);
+    const commitments = await this.store.getItem<Record<string, Commitment>>(
+      commitment.owner
+    );
+    if (!commitments || !(key in commitments)) {
+      return;
+    }
+    delete commitments[key];
+    return this.store.setItem(commitment.owner, commitments);
+  }
+
+  async getCommit(owner: string, tld: string, subdomain: string) {
+    const key = this.getKey(subdomain, tld);
+    const commitments = await this.store.getItem<Record<string, Commitment>>(
+      owner
+    );
+    if (!commitments || !(key in commitments)) {
+      return null;
     }
 
-    getKey(subdomain: string, tld: string) {
-        return `${subdomain}.${tld}`;
+    return commitments[key];
+  }
+
+  // yexinadded
+  async getAllUserCommits(
+    owner: string
+  ): Promise<Array<{ tld: string; subdomain: string }>> {
+    const commitments = await this.store.getItem<Record<string, Commitment>>(
+      owner
+    );
+    if (!commitments) {
+      return [];
     }
 
     getHighKey(subdomain: string, tld: string) {
