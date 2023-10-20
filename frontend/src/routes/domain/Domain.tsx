@@ -189,16 +189,15 @@ export default function Domain() {
 
         if (!signer || !event) return;
 
-        if (signer.address !== event.args.owner) {
-            return;
-        }
-        const commitment = await CommitmentStore.getHighestCommitment(signer.address, tld, domain);
-        if (!commitment) return;
+        const highestCommitment = await CommitmentStore.getHighestCommitment(signer.address, tld, domain);
+        if (!highestCommitment) return;
 
-        if (commitment.value === ethers.formatEther(event.args.refund)) {
+        if (highestCommitment.value === ethers.formatEther(event.args.refund)) {
             // Handle fail bid
             onLostStage(ethers.formatEther(event.args.refund), ethers.formatEther(event.args.highestBid));
         }
+
+        await CommitmentStore.deleteHighestCommitment(signer.address, tld, domain);
     }
 
     const onBidChange = (e: any) => {
@@ -247,12 +246,13 @@ export default function Domain() {
                 ? await dnsContract.reveal(provider, signer, submittedCommitments[0].secret, tld, domain, submittedCommitments[0].value)
                 : await dnsContract.batchReveal(provider, signer, submittedCommitments);
             await tx.wait();
+            await CommitmentStore.storeHighestCommitment(signer.address, tld, domain);
+            await CommitmentStore.deleteCommitment(signer.address, tld, domain);
+            setSubmittedCommitments([]);
         } catch (e) {
             tryAlert(e);
         }
         setTxLoading(false);
-        await CommitmentStore.deleteCommitment(signer.address, tld, domain);
-        setSubmittedCommitments([]);
     }
 
     const renderStage = () => {

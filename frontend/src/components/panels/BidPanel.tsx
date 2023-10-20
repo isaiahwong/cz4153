@@ -19,6 +19,7 @@ export default function BidPanel(props: BidPanelProps) {
                 className={style.field}
                 type="number"
                 label="Enter Bid"
+                defaultValue={0.003}
                 onChange={onBidChange}
                 error={bid < 0.003}
                 helperText={bid < 0.003 ? "Bid must be at least 0.003 ETH" : ""}
