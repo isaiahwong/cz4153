@@ -22,5 +22,6 @@ export default function truncateAddress(address?: string) {
 export function tryAlert(e: any) {
     if (!(e instanceof Error)) return;
     if (e.message.includes("insufficient")) alert("Insufficient funds");
+    if (e.message.includes("nonce")) alert("Nonce too high. Try resetting it");
     return;
 }
