@@ -3,28 +3,39 @@ import {Commitment} from "../../store/commits";
 import {useWallet} from "../../api/wallet/wallet";
 import {Navigate} from "react-router-dom";
 import {dnsContract} from "../../api/dns/dns";
-import {Grid, Typography} from "@mui/material";
+import {
+    Box,
+    Divider,
+    Grid,
+    Typography
+} from "@mui/material";
 import LinearProgressWithLabel from "../common/LinearProgressWithLabel";
 import {WithPred} from "../hoc/hoc";
 import {routes} from "../../routes/app/App";
+import BidPanel from "./BidPanel";
+import CommittedBidsPanel from "./CommittedBidsPanel";
 
 export interface WaitPanelProps {
-    commitment: Commitment | null;
+    commitments: Commitment[];
     onAuctionEnded: () => void;
+    bid: number;
+    onBidChange: (e: any) => void;
+    onClick: () => void;
+    txLoading?: boolean;
 }
 
 export default function WaitPanel(props: WaitPanelProps) {
-    const {commitment, onAuctionEnded} = props;
+    const {commitments, onAuctionEnded} = props;
     const {provider} = useWallet();
     const [progress, setProgress] = useState(0);
     const [remain, setRemain] = useState(0);
     const [deadline, setDeadline] = useState(0);
     useEffect(() => {
-        if (!commitment) return;
+        if (!commitments) return;
         getBlockTime().then(getDeadline);
     }, []);
 
-    if (!commitment) {
+    if (commitments.length == 0) {
         return <Navigate to={routes.landing}/>;
     }
 
@@ -33,6 +44,9 @@ export default function WaitPanel(props: WaitPanelProps) {
     }
 
     const getDeadline = async (now: number) => {
+        if (commitments.length == 0) return;
+        // Get first commitment in list
+        const commitment = commitments[0];
         const deadline = Number(await dnsContract.getAuctionDeadline(provider, commitment.tld, commitment.domain));
         const duration = Number(await dnsContract.getAuctionDuration(provider, commitment.tld));
 
@@ -59,7 +73,7 @@ export default function WaitPanel(props: WaitPanelProps) {
         setTimeout(() => getDeadline(now + 1), 1000);
     }
 
-    if (!commitment) {
+    if (commitments.length == 0) {
         return <Navigate to={routes.landing}/>;
     }
     return (
@@ -76,6 +90,13 @@ export default function WaitPanel(props: WaitPanelProps) {
                     </Typography>
                 </WithPred>
                 <LinearProgressWithLabel value={progress}/>
+                <Box mt={2} mb={2}>
+                    <BidPanel loading={props.txLoading} bid={props.bid} onBidChange={props.onBidChange} onClick={props.onClick}/>
+                </Box>
+                <Divider/>
+                <Box mt={2}>
+                    <CommittedBidsPanel commitments={commitments}/>
+                </Box>
             </Grid>
         </Grid>
     )

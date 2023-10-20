@@ -23,12 +23,27 @@ import type {
   TypedContractMethod,
 } from "../../common";
 
+export declare namespace IRegistrar {
+  export type RevealTypeStruct = {
+    domain: string;
+    secret: BytesLike;
+    value: BigNumberish;
+  };
+
+  export type RevealTypeStructOutput = [
+    domain: string,
+    secret: string,
+    value: bigint
+  ] & { domain: string; secret: string; value: bigint };
+}
+
 export interface IRegistrarInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "auctionDeadline"
       | "auctionHighestBid"
       | "auctionHighestBidder"
+      | "batchRevealRegister"
       | "commit"
       | "expiry"
       | "getAuctionDuration"
@@ -56,6 +71,10 @@ export interface IRegistrarInterface extends Interface {
   encodeFunctionData(
     functionFragment: "auctionHighestBidder",
     values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "batchRevealRegister",
+    values: [IRegistrar.RevealTypeStruct[]]
   ): string;
   encodeFunctionData(
     functionFragment: "commit",
@@ -102,6 +121,10 @@ export interface IRegistrarInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "auctionHighestBidder",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "batchRevealRegister",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "commit", data: BytesLike): Result;
@@ -261,6 +284,12 @@ export interface IRegistrar extends BaseContract {
     "view"
   >;
 
+  batchRevealRegister: TypedContractMethod<
+    [commitments: IRegistrar.RevealTypeStruct[]],
+    [void],
+    "nonpayable"
+  >;
+
   commit: TypedContractMethod<
     [domain: BytesLike, secret: BytesLike],
     [string],
@@ -314,6 +343,13 @@ export interface IRegistrar extends BaseContract {
   getFunction(
     nameOrSignature: "auctionHighestBidder"
   ): TypedContractMethod<[label: BytesLike], [string], "view">;
+  getFunction(
+    nameOrSignature: "batchRevealRegister"
+  ): TypedContractMethod<
+    [commitments: IRegistrar.RevealTypeStruct[]],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "commit"
   ): TypedContractMethod<

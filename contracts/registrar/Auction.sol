@@ -11,6 +11,7 @@ abstract contract Auction is IAuction {
         address maxBidder;
         uint256 maxBid;
         uint256 end;
+        bytes32 maxCommitment;
     }
 
     mapping(address => mapping(bytes32 => uint256)) internal bids;
@@ -100,6 +101,7 @@ abstract contract Auction is IAuction {
         if (msg.value > auctions[label].maxBid) {
             auctions[label].maxBidder = msg.sender;
             auctions[label].maxBid = msg.value;
+            auctions[label].maxCommitment = commitment;
         }
     }
 
@@ -124,7 +126,7 @@ abstract contract Auction is IAuction {
         uint256 refund = 0;
 
         // Refund if not max bidder
-        if (auctions[label].maxBidder != msg.sender) {
+        if (auctions[label].maxCommitment != commitment) {
             refund =  bids[msg.sender][commitment];
             (bool success,) = msg.sender.call{value:refund}("");
             require(success, "Refund failed");
@@ -133,6 +135,6 @@ abstract contract Auction is IAuction {
         // Delete commitment
         delete bids[msg.sender][commitment];
 
-        return (auctions[label].maxBidder == msg.sender, refund);
+        return (auctions[label].maxCommitment == commitment, refund);
     }
 }

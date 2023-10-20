@@ -30,12 +30,14 @@ export function Address() {
         if (!address) return;
 
         const tlds = await dnsContract.getTLDs(provider);
-
         const domains = await Promise.all(
             tlds.map((tld) =>
                 dnsContract.getDomainRegistered(provider, tld.name, address, undefined)
             ))
-            .then((results) => results.flatMap((events) => events))
+            .then((results) => results.flatMap((events) => {
+                console.log(events)
+                return events
+            }))
             .then((events) => events.map((event) => event.args))
             .then((args) => args.filter((arg) =>
                 arg.owner == address && arg.expires > BigInt(Math.round(Date.now() / 1000))
