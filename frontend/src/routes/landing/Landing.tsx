@@ -109,7 +109,11 @@ export default function Landing() {
                         >
                           <Grid item>{option}</Grid>
                           <Grid item>
-                            {searchTerms[option] ? "Available" : "Taken"}
+                            {
+                              searchTerms[option]
+                                ? <Typography className={style.green} fontWeight={"bold"}>Available</Typography>
+                                : <Typography className={style.red} fontWeight={"bold"}>Taken</Typography>
+                            }
                           </Grid>
                         </Grid>
                       </li>

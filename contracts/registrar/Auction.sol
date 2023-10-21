@@ -105,7 +105,7 @@ abstract contract Auction is IAuction {
         }
     }
 
-    function revealAuction(bytes32 label, bytes32 secret, uint256 value) internal returns (bool, uint256) {
+    function revealAuction(bytes32 label, bytes32 secret, uint256 value) internal returns (bool, uint256, bytes32) {
         bytes32 commitment = makeCommitment(msg.sender, label, secret, value);
 
         // Check if auction exists
@@ -135,6 +135,6 @@ abstract contract Auction is IAuction {
         // Delete commitment
         delete bids[msg.sender][commitment];
 
-        return (auctions[label].maxCommitment == commitment, refund);
+        return (auctions[label].maxCommitment == commitment, refund, auctions[label].maxCommitment);
     }
 }

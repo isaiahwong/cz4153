@@ -60,6 +60,12 @@ const _abi = [
         name: "highestBid",
         type: "uint256",
       },
+      {
+        indexed: false,
+        internalType: "bytes32",
+        name: "highestCommitment",
+        type: "bytes32",
+      },
     ],
     name: "DomainBidFailed",
     type: "event",
@@ -180,9 +186,9 @@ const _abi = [
             type: "string",
           },
           {
-            internalType: "bytes32",
+            internalType: "string",
             name: "secret",
-            type: "bytes32",
+            type: "string",
           },
           {
             internalType: "uint256",
@@ -260,6 +266,25 @@ const _abi = [
     inputs: [
       {
         internalType: "bytes32",
+        name: "domain",
+        type: "bytes32",
+      },
+    ],
+    name: "getDomainCurrentVersion",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
         name: "label",
         type: "bytes32",
       },
@@ -284,35 +309,6 @@ const _abi = [
       },
     ],
     name: "hasCommitment",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "bytes32",
-        name: "domain",
-        type: "bytes32",
-      },
-      {
-        internalType: "bytes32",
-        name: "secret",
-        type: "bytes32",
-      },
-      {
-        internalType: "uint256",
-        name: "value",
-        type: "uint256",
-      },
-    ],
-    name: "hasDomainCommitment",
     outputs: [
       {
         internalType: "bool",
@@ -379,9 +375,9 @@ const _abi = [
         type: "string",
       },
       {
-        internalType: "bytes32",
+        internalType: "string",
         name: "secret",
-        type: "bytes32",
+        type: "string",
       },
       {
         internalType: "uint256",

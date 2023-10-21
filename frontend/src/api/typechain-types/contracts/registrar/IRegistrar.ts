@@ -26,7 +26,7 @@ import type {
 export declare namespace IRegistrar {
   export type RevealTypeStruct = {
     domain: string;
-    secret: BytesLike;
+    secret: string;
     value: BigNumberish;
   };
 
@@ -47,9 +47,9 @@ export interface IRegistrarInterface extends Interface {
       | "commit"
       | "expiry"
       | "getAuctionDuration"
+      | "getDomainCurrentVersion"
       | "hasAuctionExpired"
       | "hasCommitment"
-      | "hasDomainCommitment"
       | "hasDomainExpired"
       | "makeDomainCommitment"
       | "revealRegister"
@@ -86,16 +86,16 @@ export interface IRegistrarInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "getDomainCurrentVersion",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "hasAuctionExpired",
     values: [BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "hasCommitment",
     values: [BytesLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "hasDomainCommitment",
-    values: [BytesLike, BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "hasDomainExpired",
@@ -107,7 +107,7 @@ export interface IRegistrarInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "revealRegister",
-    values: [string, BytesLike, BigNumberish]
+    values: [string, string, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "setCName", values: [string]): string;
 
@@ -134,15 +134,15 @@ export interface IRegistrarInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "getDomainCurrentVersion",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "hasAuctionExpired",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "hasCommitment",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "hasDomainCommitment",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -169,7 +169,8 @@ export namespace DomainBidFailedEvent {
     domain: string,
     expires: BigNumberish,
     refund: BigNumberish,
-    highestBid: BigNumberish
+    highestBid: BigNumberish,
+    highestCommitment: BytesLike
   ];
   export type OutputTuple = [
     owner: string,
@@ -179,7 +180,8 @@ export namespace DomainBidFailedEvent {
     domain: string,
     expires: bigint,
     refund: bigint,
-    highestBid: bigint
+    highestBid: bigint,
+    highestCommitment: string
   ];
   export interface OutputObject {
     owner: string;
@@ -190,6 +192,7 @@ export namespace DomainBidFailedEvent {
     expires: bigint;
     refund: bigint;
     highestBid: bigint;
+    highestCommitment: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -300,16 +303,16 @@ export interface IRegistrar extends BaseContract {
 
   getAuctionDuration: TypedContractMethod<[], [bigint], "view">;
 
+  getDomainCurrentVersion: TypedContractMethod<
+    [domain: BytesLike],
+    [string],
+    "view"
+  >;
+
   hasAuctionExpired: TypedContractMethod<[label: BytesLike], [boolean], "view">;
 
   hasCommitment: TypedContractMethod<
     [commitment: BytesLike],
-    [boolean],
-    "view"
-  >;
-
-  hasDomainCommitment: TypedContractMethod<
-    [domain: BytesLike, secret: BytesLike, value: BigNumberish],
     [boolean],
     "view"
   >;
@@ -323,7 +326,7 @@ export interface IRegistrar extends BaseContract {
   >;
 
   revealRegister: TypedContractMethod<
-    [domain: string, secret: BytesLike, value: BigNumberish],
+    [domain: string, secret: string, value: BigNumberish],
     [boolean],
     "nonpayable"
   >;
@@ -364,18 +367,14 @@ export interface IRegistrar extends BaseContract {
     nameOrSignature: "getAuctionDuration"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
+    nameOrSignature: "getDomainCurrentVersion"
+  ): TypedContractMethod<[domain: BytesLike], [string], "view">;
+  getFunction(
     nameOrSignature: "hasAuctionExpired"
   ): TypedContractMethod<[label: BytesLike], [boolean], "view">;
   getFunction(
     nameOrSignature: "hasCommitment"
   ): TypedContractMethod<[commitment: BytesLike], [boolean], "view">;
-  getFunction(
-    nameOrSignature: "hasDomainCommitment"
-  ): TypedContractMethod<
-    [domain: BytesLike, secret: BytesLike, value: BigNumberish],
-    [boolean],
-    "view"
-  >;
   getFunction(
     nameOrSignature: "hasDomainExpired"
   ): TypedContractMethod<[domain: BytesLike], [boolean], "view">;
@@ -389,7 +388,7 @@ export interface IRegistrar extends BaseContract {
   getFunction(
     nameOrSignature: "revealRegister"
   ): TypedContractMethod<
-    [domain: string, secret: BytesLike, value: BigNumberish],
+    [domain: string, secret: string, value: BigNumberish],
     [boolean],
     "nonpayable"
   >;
@@ -413,7 +412,7 @@ export interface IRegistrar extends BaseContract {
   >;
 
   filters: {
-    "DomainBidFailed(address,bytes32,bytes32,string,string,uint256,uint256,uint256)": TypedContractEvent<
+    "DomainBidFailed(address,bytes32,bytes32,string,string,uint256,uint256,uint256,bytes32)": TypedContractEvent<
       DomainBidFailedEvent.InputTuple,
       DomainBidFailedEvent.OutputTuple,
       DomainBidFailedEvent.OutputObject

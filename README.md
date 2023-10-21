@@ -27,7 +27,7 @@ $ npm run test
 
 # Sepolia Address
 ```
-"dns": "0x42049fB477C5F9EfbfA82342c800922839a662Aa",
+  "dns": "0x42049fB477C5F9EfbfA82342c800922839a662Aa",
   "ntuRegistrar": "0xCd1Cb9909e441E9c40986e1CBBF02eF862bb7B68",
   "devRegistrar": "0x282F019A3F94a1De5A013625efbe3Ed26b0bc863",
   "comRegistrar": "0xc51804989F397435f23aE44bFED2A8bc8611e6ef",
