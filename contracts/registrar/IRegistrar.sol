@@ -6,7 +6,7 @@ import "./IAuction.sol";
 interface IRegistrar is IAuction {
     struct RevealType {
         string domain;
-        bytes32 secret;
+        string secret;
         uint256 value;
     }
 
@@ -28,7 +28,8 @@ interface IRegistrar is IAuction {
         string domain,
         uint256 expires,
         uint256 refund,
-        uint256 highestBid
+        uint256 highestBid,
+        bytes32 highestCommitment
     );
 
     function expiry(bytes32 domain) external view returns (uint256);
@@ -37,15 +38,13 @@ interface IRegistrar is IAuction {
 
     function batchRevealRegister(RevealType[] calldata commitments) external;
 
-    function revealRegister(string calldata domain, bytes32 secret, uint256 value) external returns (bool);
+    function revealRegister(string calldata domain, string calldata secret, uint256 value) external returns (bool);
 
     function setCName(string memory domain) external;
 
     function hasDomainExpired(bytes32 domain) external view returns (bool);
 
+    function getDomainCurrentVersion(bytes32 domain) external view returns (bytes32);
+
     function makeDomainCommitment(bytes32 domain, bytes32 secret, uint256 value) external view returns (bytes32);
-
-    function hasDomainCommitment(bytes32 domain, bytes32 secret, uint256 value) external view returns (bool);
-
-//    function cname(bytes32 domain) external view returns (address);
 }

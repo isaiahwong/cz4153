@@ -114,7 +114,7 @@ export default function Domain() {
         }
 
         const isRevealStage = (deadline: number, remain: number) => {
-            return deadline != 0 && remain < 0
+            return deadline != 0 && remain < 0 && commitments.length > 0;
         }
 
         if (!tld || !domain) return Stages.viewOnly;
@@ -127,12 +127,12 @@ export default function Domain() {
         const commitments = await CommitmentStore.getCommitments(signer.address, tld, domain);
         setSubmittedCommitments(commitments);
 
-        if (await isOwnerStage(domain, tld)) {
-            return Stages.owner;
+        if (isRevealStage(Number(deadline), auctionTimeRemain)) {
+            return Stages.reveal;
         } else if (await isPendingRevealStage(Number(deadline), auctionTimeRemain, commitments)) {
             return Stages.pendingReveal;
-        } else if (isRevealStage(Number(deadline), auctionTimeRemain)) {
-            return Stages.reveal;
+        } else if (await isOwnerStage(domain, tld)) {
+            return Stages.owner;
         } else if (isCommitStage(commitments)) {
             return Stages.commit;
         } else {
@@ -174,7 +174,8 @@ export default function Domain() {
         });
 
         if (!signer || !event) return;
-
+        const commitments = await CommitmentStore.getCommitments(signer.address, tld, domain);
+        if (commitments.length > 0) return;
         await onOwnerStage();
     }
 
@@ -192,7 +193,8 @@ export default function Domain() {
         const highestCommitment = await CommitmentStore.getHighestCommitment(signer.address, tld, domain);
         if (!highestCommitment) return;
 
-        if (highestCommitment.value === ethers.formatEther(event.args.refund)) {
+        const commitmentHash = await dnsContract.makeCommitment(provider, signer, highestCommitment.secret, highestCommitment.tld, highestCommitment.domain, highestCommitment.value);
+        if (commitmentHash !== event.args.highestCommitment) {
             // Handle fail bid
             onLostStage(ethers.formatEther(event.args.refund), ethers.formatEther(event.args.highestBid));
         }
@@ -217,7 +219,8 @@ export default function Domain() {
             tld: tld!,
             domain: domain!,
             secret: randomSecret(),
-            value: bid.toString()
+            value: bid.toString(),
+            timestamp: Math.round(Date.now() / 1000)
         }
         try {
             setTxLoading(true);

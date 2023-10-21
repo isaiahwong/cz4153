@@ -80,8 +80,8 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         return makeCommitment(msg.sender, getDomainCurrentVersion(domain), secret, value);
     }
 
-    function hasDomainCommitment(bytes32 domain, bytes32 secret, uint256 value) public view returns (bool) {
-        return hasCommitment(makeCommitment(msg.sender, getDomainCurrentVersion(domain), secret, value));
+    function hasDomainCommitment(bytes32 domain, bytes32 secret, uint256 value) private view returns (bool) {
+        return hasCommitment(makeDomainCommitment(domain, secret, value));
     }
 
     function setCName(string memory domain) external auth(keccak256(abi.encodePacked(domain))) {
@@ -129,12 +129,16 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         }
     }
 
-    function revealRegister(string calldata domain, bytes32 secret, uint256 value) public returns (bool) {
+    /**
+     * @dev Takes in a domain, plaintext secret and value and reveals the bid.
+     * Secret is hashed and commitment is reconstructed to ensure that the bid is valid.
+     */
+    function revealRegister(string calldata domain, string calldata secret, uint256 value) public returns (bool) {
         bytes32 domainHash = keccak256(abi.encodePacked(domain));
 
-        (bool bidSuccess, uint256 refund) = revealAuction(
+        (bool bidSuccess, uint256 refund, bytes32 highestCommitment) = revealAuction(
             getDomainCurrentVersion(domainHash),
-            secret,
+            keccak256(abi.encodePacked(secret)),
             value
         );
 
@@ -148,7 +152,8 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
                 domain,
                 expiries[domainHash],
                 refund,
-                auctionHighestBid(getDomainCurrentVersion(domainHash))
+                auctionHighestBid(getDomainCurrentVersion(domainHash)),
+                highestCommitment
             );
             return bidSuccess;
         }

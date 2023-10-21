@@ -26,7 +26,7 @@ import type {
 export declare namespace IRegistrar {
   export type RevealTypeStruct = {
     domain: string;
-    secret: BytesLike;
+    secret: string;
     value: BigNumberish;
   };
 
@@ -56,7 +56,6 @@ export interface RegistrarInterface extends Interface {
       | "getTLD"
       | "hasAuctionExpired"
       | "hasCommitment"
-      | "hasDomainCommitment"
       | "hasDomainExpired"
       | "isApprovedForAll"
       | "isAuthorized"
@@ -147,10 +146,6 @@ export interface RegistrarInterface extends Interface {
     values: [BytesLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "hasDomainCommitment",
-    values: [BytesLike, BytesLike, BigNumberish]
-  ): string;
-  encodeFunctionData(
     functionFragment: "hasDomainExpired",
     values: [BytesLike]
   ): string;
@@ -182,7 +177,7 @@ export interface RegistrarInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "revealRegister",
-    values: [string, BytesLike, BigNumberish]
+    values: [string, string, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "safeTransferFrom(address,address,uint256)",
@@ -259,10 +254,6 @@ export interface RegistrarInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "hasCommitment",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "hasDomainCommitment",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -374,7 +365,8 @@ export namespace DomainBidFailedEvent {
     domain: string,
     expires: BigNumberish,
     refund: BigNumberish,
-    highestBid: BigNumberish
+    highestBid: BigNumberish,
+    highestCommitment: BytesLike
   ];
   export type OutputTuple = [
     owner: string,
@@ -384,7 +376,8 @@ export namespace DomainBidFailedEvent {
     domain: string,
     expires: bigint,
     refund: bigint,
-    highestBid: bigint
+    highestBid: bigint,
+    highestCommitment: string
   ];
   export interface OutputObject {
     owner: string;
@@ -395,6 +388,7 @@ export namespace DomainBidFailedEvent {
     expires: bigint;
     refund: bigint;
     highestBid: bigint;
+    highestCommitment: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -566,12 +560,6 @@ export interface Registrar extends BaseContract {
     "view"
   >;
 
-  hasDomainCommitment: TypedContractMethod<
-    [domain: BytesLike, secret: BytesLike, value: BigNumberish],
-    [boolean],
-    "view"
-  >;
-
   hasDomainExpired: TypedContractMethod<[domain: BytesLike], [boolean], "view">;
 
   isApprovedForAll: TypedContractMethod<
@@ -608,7 +596,7 @@ export interface Registrar extends BaseContract {
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
   revealRegister: TypedContractMethod<
-    [domain: string, secret: BytesLike, value: BigNumberish],
+    [domain: string, secret: string, value: BigNumberish],
     [boolean],
     "nonpayable"
   >;
@@ -725,13 +713,6 @@ export interface Registrar extends BaseContract {
     nameOrSignature: "hasCommitment"
   ): TypedContractMethod<[commitment: BytesLike], [boolean], "view">;
   getFunction(
-    nameOrSignature: "hasDomainCommitment"
-  ): TypedContractMethod<
-    [domain: BytesLike, secret: BytesLike, value: BigNumberish],
-    [boolean],
-    "view"
-  >;
-  getFunction(
     nameOrSignature: "hasDomainExpired"
   ): TypedContractMethod<[domain: BytesLike], [boolean], "view">;
   getFunction(
@@ -778,7 +759,7 @@ export interface Registrar extends BaseContract {
   getFunction(
     nameOrSignature: "revealRegister"
   ): TypedContractMethod<
-    [domain: string, secret: BytesLike, value: BigNumberish],
+    [domain: string, secret: string, value: BigNumberish],
     [boolean],
     "nonpayable"
   >;
@@ -897,7 +878,7 @@ export interface Registrar extends BaseContract {
       ApprovalForAllEvent.OutputObject
     >;
 
-    "DomainBidFailed(address,bytes32,bytes32,string,string,uint256,uint256,uint256)": TypedContractEvent<
+    "DomainBidFailed(address,bytes32,bytes32,string,string,uint256,uint256,uint256,bytes32)": TypedContractEvent<
       DomainBidFailedEvent.InputTuple,
       DomainBidFailedEvent.OutputTuple,
       DomainBidFailedEvent.OutputObject

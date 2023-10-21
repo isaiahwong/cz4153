@@ -2,7 +2,7 @@ import {ethers} from "hardhat";
 import {expect} from "chai";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 
-import {DNSRegistry, IRegistrar, IRegistrar__factory, Registrar} from "../../frontend/src/api/typechain-types";
+import {DNSRegistry, IRegistrar} from "../../frontend/src/api/typechain-types";
 import {moveTime} from "../util/time";
 import {expectFailure} from "../util/exception";
 import {deployDNS, deployRegistrar, randomSecret} from "../../scripts/setup";
@@ -36,25 +36,25 @@ before(async () => {
 });
 
 it("should allow commit and reveal", async () => {
-    const subdomain = "student";
-    const subdomainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
+    const domain = "student";
+    const domainHash = ethers.keccak256(ethers.toUtf8Bytes(domain));
     const initialBalance = await ethers.provider.getBalance(registrar.target);
 
     const bids = {
         "buyer1": {
             bidder: buyer1,
-            secret: ethers.keccak256(ethers.toUtf8Bytes(randomSecret())),
+            secret: randomSecret(),
             value: ethers.parseEther("0.01"),
         },
         "buyer2": {
             bidder: buyer2,
-            secret: ethers.keccak256(ethers.toUtf8Bytes(randomSecret())),
+            secret: randomSecret(),
             value: ethers.parseEther("0.01"),
         }
     }
 
-    const commits = Object.values(bids).map(bid =>
-        registrar.connect(bid.bidder).commit(subdomainHash, bid.secret, {value: bid.value}),
+    const commits = Object.values(bids).map(async (bid) =>
+        registrar.connect(bid.bidder).commit(domainHash, ethers.keccak256(ethers.toUtf8Bytes(bid.secret)), {value: bid.value})
     );
     await Promise.all(commits);
 
@@ -71,7 +71,7 @@ it("should allow commit and reveal", async () => {
 
     // Reveal
     const reveals = Object.values(bids).map(bid =>
-        registrar.connect(bid.bidder).revealRegister(subdomain, bid.secret, bid.value),
+        registrar.connect(bid.bidder).revealRegister(domain, bid.secret, bid.value),
     );
     await Promise.all(reveals);
 
@@ -94,20 +94,20 @@ it("should register multiple domains and list all domains owned", async () => {
         {
             domain: "scse",
             domainHash: ethers.keccak256(ethers.toUtf8Bytes("scse")),
-            secret: ethers.keccak256(ethers.toUtf8Bytes(randomSecret())),
+            secret: randomSecret(),
             value: ethers.parseEther("0.01"),
         },
         {
             domain: "nbs",
             domainHash: ethers.keccak256(ethers.toUtf8Bytes("nbs")),
-            secret: ethers.keccak256(ethers.toUtf8Bytes(randomSecret())),
+            secret: randomSecret(),
             value: ethers.parseEther("0.01"),
         },
     ];
 
     // Execute commits
     const commits = Object.values(bids).map(bid =>
-        registrar.connect(buyer3).commit(bid.domainHash, bid.secret, {value: bid.value}),
+        registrar.connect(buyer3).commit(bid.domainHash, ethers.keccak256(ethers.toUtf8Bytes(bid.secret)), {value: bid.value}),
     );
     await Promise.all(commits);
 
@@ -126,7 +126,7 @@ it("should register multiple domains and list all domains owned", async () => {
     // Filter out expired domains
     const domains = events
         .map(event => event.args)
-        .filter(args => args !== undefined && args.expires> Date.now() / 1000)
+        .filter(args => args !== undefined && args.expires > Date.now() / 1000)
         .map(args => args!);
 
     expect(domains.length).equal(2);
