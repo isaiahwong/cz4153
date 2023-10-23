@@ -1,5 +1,5 @@
 import crypto from "crypto-js";
-import {BrowserProvider, ethers} from "ethers";
+import {BrowserProvider} from "ethers";
 
 export function randomSecret() {
     return (
@@ -24,4 +24,8 @@ export function tryAlert(e: any) {
     if (e.message.includes("insufficient")) alert("Insufficient funds");
     if (e.message.includes("nonce")) alert("Nonce too high. Try resetting it");
     return;
+}
+
+export async function getBlockTime(provider: BrowserProvider) {
+    return (await provider.getBlock("latest"))!.timestamp;
 }

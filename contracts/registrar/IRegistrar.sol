@@ -10,6 +10,14 @@ interface IRegistrar is IAuction {
         uint256 value;
     }
 
+    event DomainAuctionStarted(
+        bytes32 indexed domainHash,
+        string tld,
+        string domain,
+        uint256 duration,
+        uint256 deadline
+    );
+
     event DomainRegistered(
         address indexed owner,
         bytes32 indexed tldHash,
@@ -34,7 +42,7 @@ interface IRegistrar is IAuction {
 
     function expiry(bytes32 domain) external view returns (uint256);
 
-    function commit(bytes32 domain, bytes32 secret) external payable returns (bytes32);
+    function commit(string calldata domain, bytes32 secret) external payable returns (bytes32);
 
     function batchRevealRegister(RevealType[] calldata commitments) external;
 

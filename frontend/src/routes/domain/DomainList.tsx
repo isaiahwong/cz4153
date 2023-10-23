@@ -1,13 +1,13 @@
 import React, {useEffect} from "react";
 
 import Header from "../../components/header/Header";
-import DomainPanel, {Domain} from "../../components/panels/DomainsPanel";
-import {dnsContract} from "../../api/dns/dns";
+import DomainPanel from "../../components/panels/DomainsPanel";
+import {Domain, dnsContract} from "../../api/dns/dns";
 import {useWallet} from "../../api/wallet/wallet";
 
-import style from "./DomainList.module.css";
 import {Box, Grid, Typography,} from "@mui/material";
 import {WithLoader} from "../../components/hoc/hoc";
+import style from "./DomainCommon.module.css";
 
 export default function DomainList() {
     const {provider, signer} = useWallet();
@@ -19,22 +19,7 @@ export default function DomainList() {
     }, []);
 
     const getOwnersDomains = async () => {
-        const tlds = await dnsContract.getTLDs(provider);
-        const domains = await Promise.all(
-            tlds.map((tld) =>
-                dnsContract.getDomainRegistered(provider, tld.name, undefined, undefined)
-            ))
-            .then((results) => results.flatMap((events) => events))
-            .then((events) => events.map((event) => event.args))
-            .then((args) => args.filter((arg) =>
-                arg.expires > BigInt(Math.round(Date.now() / 1000))
-            ))
-            .then((args) => args.map<Domain>((arg) => ({
-                name: arg.domain,
-                tld: arg.tld,
-                owner: arg.owner,
-                expires: Number(arg.expires)
-            })).sort((a, b) => a.tld > b.tld ? 1 : -1));
+        const domains = await dnsContract.getAllDomainRegistered(provider);
         setDomains(domains);
         setLoading(false);
     }

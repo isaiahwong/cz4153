@@ -3,11 +3,26 @@ import {ethers, JsonRpcSigner, namehash} from "ethers";
 import localAddress from "../addresses.local.json";
 import sepoliaAddress from "../addresses.sepolia.json";
 import {Commitment} from "../../store/commits";
+import {getBlockTime} from "../../common/common";
 
 
 export interface TLD {
     name: string;
     owner: string;
+}
+
+export interface Auction {
+    domain: string;
+    tld: string;
+    duration: number;
+    deadline: number;
+}
+
+export interface Domain {
+    name: string;
+    tld: string;
+    owner: string;
+    expires: number;
 }
 
 type DomainRegisteredCB = ((event: any, a1: any, a2: any) => void);
@@ -32,10 +47,6 @@ export class DNSContract {
         } else {
             this.address = localAddress.dns;
         }
-    }
-
-    removeTLD(tld: string, domain: string) {
-        return domain.replace(tld, '').replace('.', '');
     }
 
     async getExpiry(provider: any, tld: string, subdomain: string) {
@@ -96,9 +107,8 @@ export class DNSContract {
     async commit(provider: any, signer: JsonRpcSigner, secret: string, tld: string, domain: string, value: string) {
         const registrar = await this.getRegistrar(provider, tld);
         secret = ethers.keccak256(ethers.toUtf8Bytes(secret));
-        const domainHash = ethers.keccak256(ethers.toUtf8Bytes(domain));
 
-        return await registrar.connect(signer).commit(domainHash, secret, {value: ethers.parseEther(value)});
+        return await registrar.connect(signer).commit(domain, secret, {value: ethers.parseEther(value)});
     }
 
     async makeCommitment(provider: any, signer: JsonRpcSigner, secret: string, tld: string, domain: string, value: string) {
@@ -136,6 +146,31 @@ export class DNSContract {
         }));
     }
 
+    async getActiveAuctions(provider: any) {
+        const tlds = await dnsContract.getTLDs(provider);
+        const now = await getBlockTime(provider);
+        return Promise.all(
+            tlds.map((tld) => dnsContract.getAuctions(provider, tld.name))
+        )
+            .then((results) => results.flatMap((events) => events))
+            .then((events) => events.map((event) => event.args))
+            .then((args) => args.filter((arg) =>
+                arg.deadline > BigInt(now)
+            ))
+            .then((args) => args.map<Auction>((arg) => ({
+                domain: arg.domain,
+                tld: arg.tld,
+                duration: Number(arg.duration),
+                deadline: Number(arg.deadline),
+            })).sort((a, b) => a.tld > b.tld ? 1 : -1));
+    }
+
+    async getAuctions(provider: any, tld: string) {
+        const registrar = await this.getRegistrar(provider, tld);
+        const filter = registrar.filters.DomainAuctionStarted(undefined, undefined, undefined, undefined);
+        return await registrar.queryFilter(filter);
+    }
+
     async getAuctionDuration(provider: any, tld: string) {
         const registrar = await this.getRegistrar(provider, tld);
         return registrar.getAuctionDuration();
@@ -157,6 +192,26 @@ export class DNSContract {
         return await registrar.queryFilter(filter);
     }
 
+    async getAllDomainRegistered(provider: any) {
+        const tlds = await dnsContract.getTLDs(provider);
+        const now = await getBlockTime(provider);
+        return Promise.all(
+            tlds.map((tld) =>
+                dnsContract.getDomainRegistered(provider, tld.name, undefined, undefined)
+            ))
+            .then((results) => results.flatMap((events) => events))
+            .then((events) => events.map((event) => event.args))
+            .then((args) => args.filter((arg) =>
+                arg.expires > BigInt(now)
+            ))
+            .then((args) => args.map<Domain>((arg) => ({
+                name: arg.domain,
+                tld: arg.tld,
+                owner: arg.owner,
+                expires: Number(arg.expires)
+            })).sort((a, b) => a.tld > b.tld ? 1 : -1));
+    }
+
     async getDomainRegistered(provider: any, tld: string, owner: string | undefined, subdomain: string | undefined) {
         const registrar = await this.getRegistrar(provider, tld);
         const tldHash = ethers.keccak256(ethers.toUtf8Bytes(tld));
@@ -165,7 +220,6 @@ export class DNSContract {
         const filter = registrar.filters.DomainRegistered(owner, tldHash, domainHash);
         return await registrar.queryFilter(filter);
     }
-
 
     async onRegisteredDomains(provider: any, tld: string, subdomain: string, callback: DomainRegisteredCB) {
         const registrar = await this.getRegistrar(provider, tld);

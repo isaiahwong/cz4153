@@ -37,7 +37,6 @@ before(async () => {
 
 it("should allow commit and reveal", async () => {
     const domain = "student";
-    const domainHash = ethers.keccak256(ethers.toUtf8Bytes(domain));
     const initialBalance = await ethers.provider.getBalance(registrar.target);
 
     const bids = {
@@ -54,7 +53,7 @@ it("should allow commit and reveal", async () => {
     }
 
     const commits = Object.values(bids).map(async (bid) =>
-        registrar.connect(bid.bidder).commit(domainHash, ethers.keccak256(ethers.toUtf8Bytes(bid.secret)), {value: bid.value})
+        registrar.connect(bid.bidder).commit(domain, ethers.keccak256(ethers.toUtf8Bytes(bid.secret)), {value: bid.value})
     );
     await Promise.all(commits);
 
@@ -80,12 +79,11 @@ it("should allow commit and reveal", async () => {
 });
 
 it("should fail to register owned domains", async () => {
-    const subdomain = ethers.keccak256(ethers.toUtf8Bytes("student"));
     const secret = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
     const value = ethers.parseEther("0.01");
 
     await expectFailure(
-        registrar.connect(buyer2).commit(subdomain, secret, {value: value})
+        registrar.connect(buyer2).commit("student", secret, {value: value})
     );
 });
 
@@ -107,7 +105,7 @@ it("should register multiple domains and list all domains owned", async () => {
 
     // Execute commits
     const commits = Object.values(bids).map(bid =>
-        registrar.connect(buyer3).commit(bid.domainHash, ethers.keccak256(ethers.toUtf8Bytes(bid.secret)), {value: bid.value}),
+        registrar.connect(buyer3).commit(bid.domain, ethers.keccak256(ethers.toUtf8Bytes(bid.secret)), {value: bid.value}),
     );
     await Promise.all(commits);
 

@@ -57,7 +57,10 @@ export interface IRegistrarInterface extends Interface {
   ): FunctionFragment;
 
   getEvent(
-    nameOrSignatureOrTopic: "DomainBidFailed" | "DomainRegistered"
+    nameOrSignatureOrTopic:
+      | "DomainAuctionStarted"
+      | "DomainBidFailed"
+      | "DomainRegistered"
   ): EventFragment;
 
   encodeFunctionData(
@@ -78,7 +81,7 @@ export interface IRegistrarInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "commit",
-    values: [BytesLike, BytesLike]
+    values: [string, BytesLike]
   ): string;
   encodeFunctionData(functionFragment: "expiry", values: [BytesLike]): string;
   encodeFunctionData(
@@ -158,6 +161,34 @@ export interface IRegistrarInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "setCName", data: BytesLike): Result;
+}
+
+export namespace DomainAuctionStartedEvent {
+  export type InputTuple = [
+    domainHash: BytesLike,
+    tld: string,
+    domain: string,
+    duration: BigNumberish,
+    deadline: BigNumberish
+  ];
+  export type OutputTuple = [
+    domainHash: string,
+    tld: string,
+    domain: string,
+    duration: bigint,
+    deadline: bigint
+  ];
+  export interface OutputObject {
+    domainHash: string;
+    tld: string;
+    domain: string;
+    duration: bigint;
+    deadline: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
 
 export namespace DomainBidFailedEvent {
@@ -294,7 +325,7 @@ export interface IRegistrar extends BaseContract {
   >;
 
   commit: TypedContractMethod<
-    [domain: BytesLike, secret: BytesLike],
+    [domain: string, secret: BytesLike],
     [string],
     "payable"
   >;
@@ -356,7 +387,7 @@ export interface IRegistrar extends BaseContract {
   getFunction(
     nameOrSignature: "commit"
   ): TypedContractMethod<
-    [domain: BytesLike, secret: BytesLike],
+    [domain: string, secret: BytesLike],
     [string],
     "payable"
   >;
@@ -397,6 +428,13 @@ export interface IRegistrar extends BaseContract {
   ): TypedContractMethod<[domain: string], [void], "nonpayable">;
 
   getEvent(
+    key: "DomainAuctionStarted"
+  ): TypedContractEvent<
+    DomainAuctionStartedEvent.InputTuple,
+    DomainAuctionStartedEvent.OutputTuple,
+    DomainAuctionStartedEvent.OutputObject
+  >;
+  getEvent(
     key: "DomainBidFailed"
   ): TypedContractEvent<
     DomainBidFailedEvent.InputTuple,
@@ -412,6 +450,17 @@ export interface IRegistrar extends BaseContract {
   >;
 
   filters: {
+    "DomainAuctionStarted(bytes32,string,string,uint256,uint256)": TypedContractEvent<
+      DomainAuctionStartedEvent.InputTuple,
+      DomainAuctionStartedEvent.OutputTuple,
+      DomainAuctionStartedEvent.OutputObject
+    >;
+    DomainAuctionStarted: TypedContractEvent<
+      DomainAuctionStartedEvent.InputTuple,
+      DomainAuctionStartedEvent.OutputTuple,
+      DomainAuctionStartedEvent.OutputObject
+    >;
+
     "DomainBidFailed(address,bytes32,bytes32,string,string,uint256,uint256,uint256,bytes32)": TypedContractEvent<
       DomainBidFailedEvent.InputTuple,
       DomainBidFailedEvent.OutputTuple,

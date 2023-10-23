@@ -6,10 +6,10 @@ import Header from "../../components/header/Header";
 
 import style from "./Address.module.css";
 import {routes} from "../app/App";
-import {dnsContract} from "../../api/dns/dns";
+import {dnsContract, Domain} from "../../api/dns/dns";
 import {useWallet} from "../../api/wallet/wallet";
 import {WithLoader} from "../../components/hoc/hoc";
-import DomainPanel, {Domain} from "../../components/panels/DomainsPanel";
+import DomainPanel from "../../components/panels/DomainsPanel";
 import OwnerCNamePanel from "../../components/panels/OwnerCNamePanel";
 import Button from "@mui/material/Button";
 
