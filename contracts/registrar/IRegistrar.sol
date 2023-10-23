@@ -25,7 +25,8 @@ interface IRegistrar is IAuction {
         string tld,
         string domain,
         uint256 expires,
-        uint256 cost
+        uint256 cost,
+        uint256 timestamp
     );
 
     event DomainBidFailed(

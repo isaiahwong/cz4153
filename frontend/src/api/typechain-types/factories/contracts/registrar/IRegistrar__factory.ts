@@ -152,6 +152,12 @@ const _abi = [
         name: "cost",
         type: "uint256",
       },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "timestamp",
+        type: "uint256",
+      },
     ],
     name: "DomainRegistered",
     type: "event",

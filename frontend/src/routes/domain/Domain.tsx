@@ -225,6 +225,7 @@ export default function Domain() {
         try {
             setTxLoading(true);
             await CommitmentStore.addCommit(commitment);
+            await CommitmentStore.storeHighestCommitment(signer.address, tld, domain);
             const tx = await dnsContract.commit(provider, signer, commitment.secret, tld!, domain!, commitment.value)
             await tx.wait();
             setSubmittedCommitments([...submittedCommitments, commitment])
@@ -249,7 +250,6 @@ export default function Domain() {
                 ? await dnsContract.reveal(provider, signer, submittedCommitments[0].secret, tld, domain, submittedCommitments[0].value)
                 : await dnsContract.batchReveal(provider, signer, submittedCommitments);
             await tx.wait();
-            await CommitmentStore.storeHighestCommitment(signer.address, tld, domain);
             await CommitmentStore.deleteCommitment(signer.address, tld, domain);
             setSubmittedCommitments([]);
         } catch (e) {

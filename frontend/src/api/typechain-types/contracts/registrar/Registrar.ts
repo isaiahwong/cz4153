@@ -442,7 +442,8 @@ export namespace DomainRegisteredEvent {
     tld: string,
     domain: string,
     expires: BigNumberish,
-    cost: BigNumberish
+    cost: BigNumberish,
+    timestamp: BigNumberish
   ];
   export type OutputTuple = [
     owner: string,
@@ -451,7 +452,8 @@ export namespace DomainRegisteredEvent {
     tld: string,
     domain: string,
     expires: bigint,
-    cost: bigint
+    cost: bigint,
+    timestamp: bigint
   ];
   export interface OutputObject {
     owner: string;
@@ -461,6 +463,7 @@ export namespace DomainRegisteredEvent {
     domain: string;
     expires: bigint;
     cost: bigint;
+    timestamp: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -954,7 +957,7 @@ export interface Registrar extends BaseContract {
       DomainBidFailedEvent.OutputObject
     >;
 
-    "DomainRegistered(address,bytes32,bytes32,string,string,uint256,uint256)": TypedContractEvent<
+    "DomainRegistered(address,bytes32,bytes32,string,string,uint256,uint256,uint256)": TypedContractEvent<
       DomainRegisteredEvent.InputTuple,
       DomainRegisteredEvent.OutputTuple,
       DomainRegisteredEvent.OutputObject

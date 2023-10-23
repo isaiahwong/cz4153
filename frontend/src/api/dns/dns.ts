@@ -60,7 +60,9 @@ export class DNSContract {
         const namehash = ethers.namehash(`${domain}.${tld}`);
         const registrar = await this.getRegistrar(provider, tld);
         const expired = await registrar.hasDomainExpired(ethers.keccak256(ethers.toUtf8Bytes(domain)));
-        return (await dnsRegistry.available(namehash)) && expired;
+        const auctionOnGoing = await this.isAuctionOngoing(provider, tld, domain);
+
+        return ((await dnsRegistry.available(namehash)) && expired) || auctionOnGoing;
     }
 
     async getRegistrar(provider: any, tld: string) {
@@ -181,6 +183,12 @@ export class DNSContract {
         const domainHash = ethers.keccak256(ethers.toUtf8Bytes(subdomain));
 
         return registrar.auctionDeadline(domainHash);
+    }
+
+    async isAuctionOngoing(provider: any, tld: string, domain: string) {
+        const now = await getBlockTime(provider);
+        const deadline = await this.getAuctionDeadline(provider, tld, domain);
+        return deadline > BigInt(now);
     }
 
     async getDomainBidFailed(provider: any, tld: string, subdomain: string) {

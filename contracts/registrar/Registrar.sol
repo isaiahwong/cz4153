@@ -173,7 +173,16 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         }
         _mint(msg.sender, id);
         dns.setSubDomain(tld, domain, msg.sender);
-        emit DomainRegistered(msg.sender, keccak256(abi.encodePacked(name())), domainHash, name(), domain, expiries[domainHash], auctionHighestBid(getDomainCurrentVersion(domainHash)));
+        emit DomainRegistered(
+            msg.sender,
+            keccak256(abi.encodePacked(name())),
+            domainHash,
+            name(),
+            domain,
+            expiries[domainHash],
+            auctionHighestBid(getDomainCurrentVersion(domainHash)),
+            block.timestamp
+        );
 
         return bidSuccess;
     }
