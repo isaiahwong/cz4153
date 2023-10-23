@@ -34,10 +34,10 @@ export default function OngoingDomainPanel(props: OngoingDomainPanelProps) {
     if (!signer) connect();
   }, []);
 
-  if (!domains) {
+  if (domains.length == 0) {
     return (
       <>
-        <Typography>No ongoing domains</Typography>
+        <Typography>No ongoing bids</Typography>
       </>
     );
   }
