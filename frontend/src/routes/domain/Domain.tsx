@@ -224,9 +224,9 @@ export default function Domain() {
         }
         try {
             setTxLoading(true);
+            await CommitmentStore.addCommit(commitment);
             const tx = await dnsContract.commit(provider, signer, commitment.secret, tld!, domain!, commitment.value)
             await tx.wait();
-            await CommitmentStore.addCommit(commitment);
             setSubmittedCommitments([...submittedCommitments, commitment])
             setStage(Stages.wait);
         } catch (e) {
