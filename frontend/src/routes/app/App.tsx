@@ -15,6 +15,7 @@ import {setDNSAddr} from "../../api/dns/dns";
 import {WithLoader} from "../../components/hoc/hoc";
 import DomainList from "../domain/DomainList";
 import SendEther from "../ether/SendEther";
+import DomainOngoingAuctions from "../domain/DomainOngoingAuctions";
 
 listenToEvents();
 
@@ -44,6 +45,7 @@ export const routes: Record<string, any> = {
     "address": (address: string) => `/address/${address}`,
     "needWallet": "/need-wallet",
     "sendEther": "/send-ether",
+    "auctions": "/auctions",
     "chainNotSupported": "/chain-not-supported",
     "domains": "/domains",
     "notFound": "/not-found"
@@ -79,6 +81,7 @@ export default function App() {
                             <Route path={routes.addressRoot} element={<Address/>}/>
                             <Route path={routes.domainRoot} element={<Domain/>}/>
                             <Route path={routes.domains} element={<DomainList/>}/>
+                            <Route path={routes.auctions} element={<DomainOngoingAuctions/>}/>
                             <Route path={routes.sendEther} element={<SendEther/>}/>
                         </Route>
                         <Route path={routes.chainNotSupported} element={<ChainNotSupported/>}/>

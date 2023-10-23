@@ -45,6 +45,10 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         dns = IDNS(_dns);
     }
 
+    function setDuration(uint256 duration) external onlyOwner {
+        Auction._setDuration(duration);
+    }
+
     function isAuthorized(bytes32 domain) public view returns (bool) {
         if (authorized[msg.sender]) {
             return true;
@@ -101,7 +105,9 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
      * This is to ensure that in the event where a domain is not revealed, it will
      * still be available for renewal.
      */
-    function commit(bytes32 domain, bytes32 secret) public payable returns (bytes32) {
+    function commit(string calldata domainStr, bytes32 secret) public payable returns (bytes32) {
+        bytes32 domain = keccak256(abi.encodePacked(domainStr));
+
         // Check if the name is available
         if (!canCommit(domain)) {
             revert Errors.DomainNotExpired();
@@ -114,6 +120,7 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
 
             // Set expiry time to duration of auction
             expiries[domain] = block.timestamp + TENURE + getAuctionDuration();
+            emit DomainAuctionStarted(domain, name(), domainStr, getAuctionDuration(), block.timestamp + getAuctionDuration());
         }
 
         bytes32 commitment = makeDomainCommitment(domain, secret, msg.value);

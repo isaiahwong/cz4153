@@ -2,8 +2,7 @@ import React, {useEffect, useState} from "react";
 import {Box, CircularProgress, FormControl, MenuItem, Select, Typography} from "@mui/material";
 import LoadingButton from '@mui/lab/LoadingButton';
 import {useWallet} from "../../api/wallet/wallet";
-import {Domain} from "./DomainsPanel";
-import {dnsContract} from "../../api/dns/dns";
+import {dnsContract, Domain} from "../../api/dns/dns";
 import {WithPred} from "../hoc/hoc";
 
 const style = {

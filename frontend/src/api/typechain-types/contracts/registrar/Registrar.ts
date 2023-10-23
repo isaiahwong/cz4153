@@ -70,6 +70,7 @@ export interface RegistrarInterface extends Interface {
       | "safeTransferFrom(address,address,uint256,bytes)"
       | "setApprovalForAll"
       | "setCName"
+      | "setDuration"
       | "supportsInterface"
       | "symbol"
       | "tokenURI"
@@ -81,6 +82,7 @@ export interface RegistrarInterface extends Interface {
     nameOrSignatureOrTopic:
       | "Approval"
       | "ApprovalForAll"
+      | "DomainAuctionStarted"
       | "DomainBidFailed"
       | "DomainRegistered"
       | "OwnershipTransferred"
@@ -121,7 +123,7 @@ export interface RegistrarInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "commit",
-    values: [BytesLike, BytesLike]
+    values: [string, BytesLike]
   ): string;
   encodeFunctionData(functionFragment: "expiry", values: [BytesLike]): string;
   encodeFunctionData(
@@ -192,6 +194,10 @@ export interface RegistrarInterface extends Interface {
     values: [AddressLike, boolean]
   ): string;
   encodeFunctionData(functionFragment: "setCName", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "setDuration",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "supportsInterface",
     values: [BytesLike]
@@ -301,6 +307,10 @@ export interface RegistrarInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "setCName", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "setDuration",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "supportsInterface",
     data: BytesLike
   ): Result;
@@ -349,6 +359,34 @@ export namespace ApprovalForAllEvent {
     owner: string;
     operator: string;
     approved: boolean;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace DomainAuctionStartedEvent {
+  export type InputTuple = [
+    domainHash: BytesLike,
+    tld: string,
+    domain: string,
+    duration: BigNumberish,
+    deadline: BigNumberish
+  ];
+  export type OutputTuple = [
+    domainHash: string,
+    tld: string,
+    domain: string,
+    duration: bigint,
+    deadline: bigint
+  ];
+  export interface OutputObject {
+    domainHash: string;
+    tld: string;
+    domain: string;
+    duration: bigint;
+    deadline: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -533,7 +571,7 @@ export interface Registrar extends BaseContract {
   canCommit: TypedContractMethod<[domain: BytesLike], [boolean], "view">;
 
   commit: TypedContractMethod<
-    [domain: BytesLike, secret: BytesLike],
+    [domainStr: string, secret: BytesLike],
     [string],
     "payable"
   >;
@@ -626,6 +664,12 @@ export interface Registrar extends BaseContract {
 
   setCName: TypedContractMethod<[domain: string], [void], "nonpayable">;
 
+  setDuration: TypedContractMethod<
+    [duration: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
   supportsInterface: TypedContractMethod<
     [interfaceId: BytesLike],
     [boolean],
@@ -687,7 +731,7 @@ export interface Registrar extends BaseContract {
   getFunction(
     nameOrSignature: "commit"
   ): TypedContractMethod<
-    [domain: BytesLike, secret: BytesLike],
+    [domainStr: string, secret: BytesLike],
     [string],
     "payable"
   >;
@@ -793,6 +837,9 @@ export interface Registrar extends BaseContract {
     nameOrSignature: "setCName"
   ): TypedContractMethod<[domain: string], [void], "nonpayable">;
   getFunction(
+    nameOrSignature: "setDuration"
+  ): TypedContractMethod<[duration: BigNumberish], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "supportsInterface"
   ): TypedContractMethod<[interfaceId: BytesLike], [boolean], "view">;
   getFunction(
@@ -825,6 +872,13 @@ export interface Registrar extends BaseContract {
     ApprovalForAllEvent.InputTuple,
     ApprovalForAllEvent.OutputTuple,
     ApprovalForAllEvent.OutputObject
+  >;
+  getEvent(
+    key: "DomainAuctionStarted"
+  ): TypedContractEvent<
+    DomainAuctionStartedEvent.InputTuple,
+    DomainAuctionStartedEvent.OutputTuple,
+    DomainAuctionStartedEvent.OutputObject
   >;
   getEvent(
     key: "DomainBidFailed"
@@ -876,6 +930,17 @@ export interface Registrar extends BaseContract {
       ApprovalForAllEvent.InputTuple,
       ApprovalForAllEvent.OutputTuple,
       ApprovalForAllEvent.OutputObject
+    >;
+
+    "DomainAuctionStarted(bytes32,string,string,uint256,uint256)": TypedContractEvent<
+      DomainAuctionStartedEvent.InputTuple,
+      DomainAuctionStartedEvent.OutputTuple,
+      DomainAuctionStartedEvent.OutputObject
+    >;
+    DomainAuctionStarted: TypedContractEvent<
+      DomainAuctionStartedEvent.InputTuple,
+      DomainAuctionStartedEvent.OutputTuple,
+      DomainAuctionStartedEvent.OutputObject
     >;
 
     "DomainBidFailed(address,bytes32,bytes32,string,string,uint256,uint256,uint256,bytes32)": TypedContractEvent<
