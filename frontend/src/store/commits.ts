@@ -72,7 +72,6 @@ class CommitmentStore extends Store {
     async storeHighestCommitment(owner: string, tld: string, domain: string) {
         const getHighestCommitment = await this._getHighestCommitment(owner, tld, domain);
         if (!getHighestCommitment) return;
-        console.log(getHighestCommitment)
         let commitmentStore = await this.store.getItem<Record<string, Commitment[]>>(getHighestCommitment.owner);
         if (!commitmentStore) {
             commitmentStore = {};
@@ -101,7 +100,6 @@ class CommitmentStore extends Store {
     async _getHighestCommitment(owner: string, tld: string, domain: string) {
         const commitments = await this.getCommitments(owner, tld, domain);
         if (commitments.length === 0) return;
-        console.log(commitments)
         return commitments.reduce((prev, current) => {
             if (prev.value === current.value) {
                 return prev.timestamp < current.timestamp ? prev : current;
