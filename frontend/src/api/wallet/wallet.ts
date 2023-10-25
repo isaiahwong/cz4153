@@ -4,6 +4,7 @@ import {dnsContract, Chain} from "../dns/dns";
 import {routes} from "../../routes/app/App";
 import CommitmentStore from "../../store/commits";
 import FQDNStore from "../../store/domains";
+import {tryAlert} from "../../common/common";
 
 declare global {
     interface Window {
@@ -59,11 +60,14 @@ function useWallet() {
 
     const connect = async () => {
         if (!window.ethereum) throw Error('Could not find wallet extension');
-
-        const network: Network = await provider.getNetwork();
-        const signer: JsonRpcSigner = await provider.getSigner();
-        setNetwork(network);
-        setSigner(signer);
+        try {
+            const network: Network = await provider.getNetwork();
+            const signer: JsonRpcSigner = await provider.getSigner();
+            setNetwork(network);
+            setSigner(signer);
+        } catch (e) {
+            tryAlert(e)
+        }
     }
 
     return {

@@ -23,6 +23,7 @@ export function tryAlert(e: any) {
     if (!(e instanceof Error)) return;
     if (e.message.includes("insufficient")) alert("Insufficient funds");
     if (e.message.includes("nonce")) alert("Nonce too high. Try resetting it");
+    if (e.message.includes("coalesce error")) alert("Try unlocking metamask");
     return;
 }
 

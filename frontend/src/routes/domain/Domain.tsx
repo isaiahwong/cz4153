@@ -68,7 +68,6 @@ export default function Domain() {
 
             // Attempt to connect
             await connect();
-
             setTLD(tld!);
             setDomain(domain);
             // dnsContract.onRegisteredDomains(provider, tld!, subdomain, onDomainRegistered);
