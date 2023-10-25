@@ -89,7 +89,6 @@ class CommitmentStore extends Store {
     async deleteHighestCommitment(owner: string, tld: string, domain: string) {
         const key = this.getHighKey(domain, tld);
         const commitments = await this.store.getItem<Record<string, Commitment>>(owner);
-
         if (!commitments || !(key in commitments)) {
             return
         }

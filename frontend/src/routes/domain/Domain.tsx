@@ -156,6 +156,7 @@ export default function Domain() {
         if (!domain || !tld) return;
         const addr = await dnsContract.getAddr(provider, `${domain}.${tld}`);
         if (addr !== dnsContract.EMPTY_ADDRESS) {
+            if (signer) await CommitmentStore.deleteHighestCommitment(signer.address, tld, domain);
             setStage(Stages.owner);
             setOwner(addr);
             return;
@@ -200,7 +201,6 @@ export default function Domain() {
             onLostStage(ethers.formatEther(event.args.refund), ethers.formatEther(event.args.highestBid));
         }
 
-        await CommitmentStore.deleteHighestCommitment(signer.address, tld, domain);
     }
 
     const onBidChange = (e: any) => {
