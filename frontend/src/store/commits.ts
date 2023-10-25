@@ -57,6 +57,30 @@ class CommitmentStore extends Store {
         return commitmentStore[key];
     }
 
+    async getAllUserCommits(
+        owner: string
+    ): Promise<Array<{ tld: string; subdomain: string }>> {
+        const commitments = await this.store.getItem<Record<string, Commitment>>(
+            owner
+        );
+        if (!commitments) {
+            return [];
+        }
+
+        // Extract TLDs and subdomains from commitments
+        const committedTLDsAndSubdomains: Array<{
+            tld: string;
+            subdomain: string;
+        }> = [];
+        for (const key of Object.keys(commitments)) {
+            // hack workaround for ignoring the high key
+            if (key.includes("high")) continue;
+            const [subdomain, tld] = key.split(".");
+            committedTLDsAndSubdomains.push({ tld, subdomain });
+        }
+        return committedTLDsAndSubdomains;
+    }
+
     // Hacky work around for storing failed bids
     async getHighestCommitment(owner: string, tld: string, domain: string) {
         const key = this.getHighKey(domain, tld);
