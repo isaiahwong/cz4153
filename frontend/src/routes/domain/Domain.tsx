@@ -125,6 +125,7 @@ export default function Domain() {
         const deadline = await dnsContract.getAuctionDeadline(provider, tld, domain);
         const auctionTimeRemain = await timeDiffFromBlock(provider, Number(deadline));
         const commitments = await CommitmentStore.getCommitments(signer.address, tld, domain);
+
         setSubmittedCommitments(commitments);
 
         if (isRevealStage(Number(deadline), auctionTimeRemain)) {
@@ -224,9 +225,9 @@ export default function Domain() {
         }
         try {
             setTxLoading(true);
+            const tx = await dnsContract.commit(provider, signer, commitment.secret, tld!, domain!, commitment.value)
             await CommitmentStore.addCommit(commitment);
             await CommitmentStore.storeHighestCommitment(signer.address, tld, domain);
-            const tx = await dnsContract.commit(provider, signer, commitment.secret, tld!, domain!, commitment.value)
             await tx.wait();
             setSubmittedCommitments([...submittedCommitments, commitment])
             setStage(Stages.wait);
@@ -249,8 +250,8 @@ export default function Domain() {
             const tx = (submittedCommitments.length == 1)
                 ? await dnsContract.reveal(provider, signer, submittedCommitments[0].secret, tld, domain, submittedCommitments[0].value)
                 : await dnsContract.batchReveal(provider, signer, submittedCommitments);
-            await tx.wait();
             await CommitmentStore.deleteCommitment(signer.address, tld, domain);
+            await tx.wait();
             setSubmittedCommitments([]);
         } catch (e) {
             tryAlert(e);
