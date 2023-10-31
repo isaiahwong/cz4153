@@ -40,11 +40,11 @@ export async function deployRegistrar(
     const registrar = await registrarFactory.connect(deployer).deploy(tld, `${tld}.dns`, fqdn, auctionDuration, dns.target);
 
     // Set registrar as owner of TLD
-    await dns.setSubDomain(
+    await (await dns.setSubDomain(
         EMPTY_BYTES32,
         tld,
         registrar.target,
-    );
+    )).wait();
 
     return registrar;
 }

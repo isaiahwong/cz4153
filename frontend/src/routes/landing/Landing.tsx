@@ -23,6 +23,7 @@ export default function Landing() {
   const [searchDomain, setSearchDomain] = useState("");
   const [searchTerms, setSearchTerms] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState<boolean>(true);
+  const [searching, setSearching] = useState<boolean>(false);
   const navigate = useNavigate();
   const { provider } = useWallet();
 
@@ -35,6 +36,7 @@ export default function Landing() {
   }, []);
 
   useEffect(() => {
+    setSearching(true)
     const delay = setTimeout(async () => {
       if (!tlds || !searchDomain) return;
 
@@ -48,7 +50,6 @@ export default function Landing() {
       ) {
         return;
       }
-
       const search = searchDomain.split(".").splice(-1).join("");
       const request: Record<string, boolean> = {};
       for (let tld of tlds) {
@@ -58,9 +59,9 @@ export default function Landing() {
           tld.name,
           search
         );
-        await DomainStore.setFQDN({ name: fqdn, available: request[fqdn] });
       }
 
+      setSearching(false);
       setSearchTerms(request);
     }, 1000);
 
@@ -97,7 +98,9 @@ export default function Landing() {
                   id="free-solo-demo"
                   onChange={onChange}
                   onClose={handleClose}
-                  loading
+                  loading={searching}
+                  loadingText={"Searching..."}
+                  noOptionsText={'No domains found'}
                   options={Object.keys(searchTerms)}
                   renderOption={(props: any, option: string) => {
                     return (

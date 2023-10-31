@@ -10,6 +10,7 @@ The following repo defines the implementation of a decentralized DNS on the Ethe
 2. [Quickstart](#quickstart-)
 3. [Running Locally](#running-locally)
 4. [Configuration](#configuration-after-deployment)
+5. [Deploying to Sepolia](#deploying-to-sepolia)
 
 
 # Setting up Environment
@@ -36,11 +37,11 @@ $ npm run start
 
 ### Sepolia Deployed Addresses
 ```
-"dns": "0x1Bf2882D12d051Bfa41c21bEC466cfA5d0C881dA",
-"ntuRegistrar": "0xE1F29A08b57d73bD5d1E8aD5f551C91e4920cBc5",
-"devRegistrar": "0x6661ba311eCA6a3753B8E5E93C8f1C0F67F9F5ec",
-"comRegistrar": "0x9326Dd1860eb1461a079588b3cE5556Ea248044c",
-"xyzRegistrar": "0x25202cBa51645f4bd2a4f8785A36124Cc226e287"
+"dns": "0xfD9930AEF55272A37B5FF8C2F588d329148b8ecA",
+"ntuRegistrar": "0xC228aB676b1D9E6e49d284bf6b39Ba637a31Fb2e",
+"devRegistrar": "0x0A380dd4F81c98412e06b67F2687B0F26b3724aa",
+"comRegistrar": "0x0aBacbe7b428d01f7F66DcA4A3347A60278E12cC",
+"xyzRegistrar": "0xc9a7d62623ecce9803836c9cAF0EC33526e3bc1c"
 ```
 
 ## Running Locally
@@ -99,11 +100,35 @@ You may add the dummy private keys to metamask to use the preloaded accounts wit
 1. Keys are under `hardhat.config.ts`
 2. Import private key to metamask
 
-# Configuration after deployment
+# Configuration after deployment [Local node only]
 ### Configuring the auction duration 
+**Parameters**
+- `REGISTRAR` - The registrar contract to configure. Refer the list of registrars in `addresses.local.json`.
+- `DURATION_IN_SECONDS` - The duration of the auction in seconds.
+
 ```
 #  npm run auction_duration ntuRegistrar 30
 $  npm run auction_duration <REGISTRAR> <DURATION_IN_SECONDS>
+```
+
+# Deploying to Sepolia
+You can deploy the contracts to sepolia where the contracts will be updated in source.
+> Note: This will override the existing contracts in source.
+
+1. Rename the `.env.cp` to `.env`
+```
+$ mv .env.cp .env
+```
+
+2. Update the environment file with your private key and Node URL such as Infura or Alchemy
+```
+SEPOLIA_URL=YOUR_NODE_URL
+DEPLOYER_PRIVATE_KEY=YOUR_DEPLOYER_PRIVATE_KEY
+```
+
+3. Deploy the contracts
+```
+$ npm run deploy:sepolia
 ```
 
 # Running Tests
