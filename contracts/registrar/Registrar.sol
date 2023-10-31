@@ -11,29 +11,46 @@ import "../registry/IDNS.sol";
 
 import "hardhat/console.sol";
 
+/**
+ * @dev Implementation of the {IRegistrar} interface. The Registrar  contract is a ERC721 contract that manages
+ * the registration of its domains under its TLD. It inherits from the Auction contract which
+ * handles the bidding process.
+ */
 contract Registrar is ERC721, Auction, IRegistrar, Ownable {
 
+    // Stores a reference to the DNSRegistry contract
     IDNS private dns;
 
+    // The top level domain hash
     bytes32 private tld;
 
+    // Tenure of a domain
     uint256 private TENURE = 365 days;
+
+    // Grace period for rebidding a domain
     uint256 private GRACE_PERIOD = 90 days;
 
-    // domain to expiry times
+    // Stores domain hash to expiry times
     mapping(bytes32 => uint256) private expiries;
 
-    // domain to monotonic increasing version
+    // Stores domain hash to monotonic increasing versions
     mapping(bytes32 => uint256) private versions;
 
-    // authorized addresses
+    // Whitelisted authorized addresses
     mapping(address => bool) private authorized;
 
+    /**
+     * @dev Modifier that checks if the caller is whitelisted.
+     */
     modifier auth(bytes32 domain) {
         require(isAuthorized(domain));
         _;
     }
 
+    /**
+     * @dev Initializes the contract by initializing the NFT contract and auction contract.this
+     * It stores the top level domain hash and the DNSRegistry contract address.
+     */
     constructor(
         string memory name,
         string memory symbol,
@@ -45,19 +62,14 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         dns = IDNS(_dns);
     }
 
-    function setDuration(uint256 duration) external onlyOwner {
-        Auction._setDuration(duration);
+    function isAuthorized(bytes32 domain) public view returns (bool) {
+        if (authorized[msg.sender]) return true;
+        if (hasDomainExpired(domain)) return false;
+        return dns.addr(dns.makeDomain(tld, domain)) == msg.sender;
     }
 
-    function isAuthorized(bytes32 domain) public view returns (bool) {
-        if (authorized[msg.sender]) {
-            return true;
-        }
-
-        if (hasDomainExpired(domain)) {
-            return false;
-        }
-        return dns.addr(dns.makeDomain(tld, domain)) == msg.sender;
+    function setDuration(uint256 duration) external onlyOwner {
+        Auction._setDuration(duration);
     }
 
     function auctionDeadline(bytes32 domain) public override (IAuction, Auction) view virtual returns (uint256) {
@@ -84,10 +96,19 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         return makeCommitment(msg.sender, getDomainCurrentVersion(domain), secret, value);
     }
 
+    /**
+     * @dev Checks if a domain has a commitment committed.
+     * @param domain The domain to check encoded in keccak256.
+     * @param secret The secret to check.
+     * @param value The value to check.
+     */
     function hasDomainCommitment(bytes32 domain, bytes32 secret, uint256 value) private view returns (bool) {
         return hasCommitment(makeDomainCommitment(domain, secret, value));
     }
 
+    /**
+     * @dev sets the canonical name for an address.
+     */
     function setCName(string memory domain) external auth(keccak256(abi.encodePacked(domain))) {
         dns.setCName(tld, string(abi.encodePacked(domain, ".", name())), msg.sender);
     }
@@ -104,6 +125,8 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
      * When the first commit happens, a new expiry time is set.
      * This is to ensure that in the event where a domain is not revealed, it will
      * still be available for renewal.
+     * @param domainStr The domain to commit
+     * @param secret The secret to commit. Recommended to use keccak256 to conceal it.
      */
     function commit(string calldata domainStr, bytes32 secret) public payable returns (bytes32) {
         bytes32 domain = keccak256(abi.encodePacked(domainStr));
@@ -123,6 +146,7 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
             emit DomainAuctionStarted(domain, name(), domainStr, getAuctionDuration(), block.timestamp + getAuctionDuration());
         }
 
+        // Create commitment
         bytes32 commitment = makeDomainCommitment(domain, secret, msg.value);
 
         // Commit the bid
@@ -130,6 +154,10 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         return commitment;
     }
 
+    /**
+     * @dev batchCommit reveals multiple domain bids to an auction.
+     * @param commitments The commitments to commit.
+     */
     function batchRevealRegister(RevealType[] calldata commitments) public {
         for (uint256 i = 0; i < commitments.length; i++) {
             revealRegister(commitments[i].domain, commitments[i].secret, commitments[i].value);
@@ -139,6 +167,9 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
     /**
      * @dev Takes in a domain, plaintext secret and value and reveals the bid.
      * Secret is hashed and commitment is reconstructed to ensure that the bid is valid.
+     * @param domain The domain to reveal.
+     * @param secret The plaintext secret to reveal.
+     * @param value The value to reveal.
      */
     function revealRegister(string calldata domain, string calldata secret, uint256 value) public returns (bool) {
         bytes32 domainHash = keccak256(abi.encodePacked(domain));

@@ -27,7 +27,7 @@ before(async () => {
 
 describe("TestAuction", () => {
 
-    it("should deny 0 eth", async ()=> {
+    it("👮🏻 should deny 0 eth", async ()=> {
         const label1 = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
         const secret1 = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
         const value1 = ethers.parseEther("0");
@@ -39,7 +39,7 @@ describe("TestAuction", () => {
         );
     });
 
-    it("should deny change in commitment", async ()=> {
+    it("👮🏻 should deny change in commitment", async ()=> {
         const label1 = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
         const labelChanged = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
         const secret1 = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
@@ -60,7 +60,7 @@ describe("TestAuction", () => {
         );
     });
 
-    it("should commit and reveal highest", async () => {
+    it("💸 should commit and reveal highest", async () => {
         const auctionInitialBalance = await ethers.provider.getBalance(auction.target);
 
         // Buyer 1 commits
@@ -98,7 +98,7 @@ describe("TestAuction", () => {
         expect(await ethers.provider.getBalance(auction.target)).to.equal(auctionInitialBalance + value2);
     });
 
-    it("should commit and reveal FIFO with equal value", async () => {
+    it("🏃🏻should commit and reveal FIFO with equal value", async () => {
         const auctionInitialBalance = await ethers.provider.getBalance(auction.target);
 
         // Buyer 1

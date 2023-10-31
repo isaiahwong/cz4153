@@ -35,7 +35,7 @@ before(async () => {
     registrar = await deployRegistrar(registrarOwner, dns, tld, AUCTION_DURATION);
 });
 
-it("should allow commit and reveal", async () => {
+it("👻 should allow commit and reveal", async () => {
     const domain = "student";
     const initialBalance = await ethers.provider.getBalance(registrar.target);
 
@@ -78,7 +78,7 @@ it("should allow commit and reveal", async () => {
     expect(await dns.addr(ethers.namehash("student.ntu"))).to.equal(buyer1.address);
 });
 
-it("should fail to register owned domains", async () => {
+it("😢 should fail to register owned domains", async () => {
     const secret = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
     const value = ethers.parseEther("0.01");
 
@@ -87,7 +87,7 @@ it("should fail to register owned domains", async () => {
     );
 });
 
-it("should register multiple domains and list all domains owned", async () => {
+it("🏠 should register multiple domains and list all domains owned", async () => {
     const bids = [
         {
             domain: "scse",
@@ -135,12 +135,12 @@ it("should register multiple domains and list all domains owned", async () => {
     });
 });
 
-it("should allow setting of cname", async () => {
+it("👨🏻‍💻 should allow setting of cname", async () => {
     await registrar.connect(buyer3).setCName("scse");
     expect(await dns.cname(buyer3.address)).equal("scse.ntu");
 });
 
-it("should not allow setting of cname of not owner", async () => {
+it("👮🏻‍ should not allow setting of cname of not owner", async () => {
     await expectFailure(
         registrar.connect(buyer2).setCName("scse")
     );

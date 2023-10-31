@@ -20,10 +20,21 @@ export default function truncateAddress(address?: string) {
 }
 
 export function tryAlert(e: any) {
-    if (!(e instanceof Error)) return;
-    if (e.message.includes("insufficient")) alert("Insufficient funds");
-    if (e.message.includes("nonce")) alert("Nonce too high. Try resetting it");
-    if (e.message.includes("coalesce error")) alert("Try unlocking metamask");
+    if (!(e instanceof Error)) {
+        return;
+    }
+    if (e.message.includes("insufficient")) {
+        alert("Insufficient funds");
+        return;
+    }
+    if (e.message.includes("nonce") || e.message.includes("Nonce")) {
+        alert("Nonce too high. Try resetting it");
+        return;
+    }
+    if (e.message.includes("coalesce error")) {
+        alert("Try unlocking metamask");
+        return;
+    }
     return;
 }
 

@@ -15,6 +15,7 @@ import { useWallet } from "../../api/wallet/wallet";
 import Header from "../../components/header/Header";
 import DomainStore from "../../store/domains";
 import { routes } from "../app/App";
+import { ethers } from "ethers";
 
 export default function Landing() {
   const [tlds, setTLDS] = useState<TLD[]>();

@@ -3,6 +3,9 @@ import dotenv from "dotenv";
 import "@nomicfoundation/hardhat-toolbox";
 import "@typechain/hardhat";
 
+import "./scripts/auction_duration.local";
+import "./scripts/transfer.local";
+
 dotenv.config();
 
 const {SEPOLIA_URL, DEPLOYER_PRIVATE_KEY} = process.env;

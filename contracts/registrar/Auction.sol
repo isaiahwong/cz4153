@@ -6,6 +6,9 @@ import "./Errors.sol";
 
 import "hardhat/console.sol";
 
+/**
+ * @dev Implementation of the {IAuction} interface. The Auction contract consists of logic to handle a blind auction
+ */
 abstract contract Auction is IAuction {
     struct Record {
         address maxBidder;
@@ -14,12 +17,18 @@ abstract contract Auction is IAuction {
         bytes32 maxCommitment;
     }
 
+    // Stores a mapping of address that stores a mapping of labels to bid amounts
     mapping(address => mapping(bytes32 => uint256)) internal bids;
 
+    // The duration of the auction
     uint256 private auctionDuration;
 
+    // Stores a mapping of labels to auction records
     mapping(bytes32 => Record) internal auctions;
 
+    /**
+     * @dev Modifier that ensures details of the auction can be revealed after the auction has ended.
+     */
     modifier revealAfter(bytes32 label) {
         if (!auctionExists(label)) {
             revert Errors.AuctionDoesNotExist();
@@ -76,6 +85,11 @@ abstract contract Auction is IAuction {
         auctions[label].end = block.timestamp + auctionDuration;
     }
 
+    /**
+     * @dev Takes in a label that maps a label to a commitment.
+     * @param label The label mapped to an auction.
+     * @param commitment The commitment of the bid.
+     */
     function commitBid(bytes32 label, bytes32 commitment) internal {
         // Check if bid exists
         if (hasCommitment(commitment)) {
@@ -105,6 +119,12 @@ abstract contract Auction is IAuction {
         }
     }
 
+    /**
+     * @dev Takes in a label that reconstructs the commitment and reveals the bid.
+     * @param label The label mapped to an auction.
+     * @param secret The hashed secret to reveal.
+     * @param value The value to reveal.
+     */
     function revealAuction(bytes32 label, bytes32 secret, uint256 value) internal returns (bool, uint256, bytes32) {
         bytes32 commitment = makeCommitment(msg.sender, label, secret, value);
 

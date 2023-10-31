@@ -25,7 +25,6 @@ import CommitmentStore from "../../store/commits";
 
 export function Address() {
   const { address } = useParams();
-  console.log(address);
   const { provider, signer } = useWallet();
   const navigate = useNavigate();
 
