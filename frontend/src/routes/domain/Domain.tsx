@@ -102,7 +102,7 @@ export default function Domain() {
     }, 500);
 
     return () => clearInterval(listeners);
-  }, [tld, domain, stage]);
+  }, [tld, domain, stage, submittedCommitments]);
 
   useEffect(() => {
     if (!signer || !tld || !domain) return;
@@ -193,12 +193,13 @@ export default function Domain() {
     if (!domain || !tld) return;
     const addr = await dnsContract.getAddr(provider, `${domain}.${tld}`);
     if (addr !== dnsContract.EMPTY_ADDRESS) {
-      if (signer)
-        await CommitmentStore.deleteHighestCommitment(
+      if (signer && (await CommitmentStore.getHighestCommitment(
           signer.address,
           tld,
           domain
-        );
+      )))
+        return;
+
       setStage(Stages.owner);
       setOwner(addr);
       return;
@@ -228,12 +229,8 @@ export default function Domain() {
     });
 
     if (!signer || !event) return;
-    const commitments = await CommitmentStore.getCommitments(
-      signer.address,
-      tld,
-      domain
-    );
-    if (commitments.length > 0) return;
+
+    if (submittedCommitments.length > 0) return;
     await onOwnerStage();
   };
 
@@ -265,6 +262,9 @@ export default function Domain() {
     );
     if (!highestCommitment) return;
 
+    // Verify if user has revealed
+    if (submittedCommitments.length > 0) return;
+
     const commitmentHash = await dnsContract.makeCommitment(
       provider,
       signer,
@@ -280,6 +280,12 @@ export default function Domain() {
         ethers.formatEther(event.args.highestBid)
       );
     }
+
+    await CommitmentStore.deleteHighestCommitment(
+        signer.address,
+        tld,
+        domain
+    );
   };
 
   const onBidChange = (e: any) => {

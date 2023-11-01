@@ -9,8 +9,8 @@ The following repo defines the implementation of a decentralized DNS on the Ethe
 1. [Setting up Environment](#setting-up-environment)
 2. [Quickstart](#quickstart-)
 3. [Running Locally](#running-locally)
-4. [Configuration](#configuration-after-deployment)
-5. [Deploying to Sepolia](#deploying-to-sepolia)
+4. [Deploying to Sepolia](#deploying-to-sepolia)
+5. [Configuration](#configuration-after-deployment)
 
 
 # Setting up Environment
@@ -100,17 +100,6 @@ You may add the dummy private keys to metamask to use the preloaded accounts wit
 1. Keys are under `hardhat.config.ts`
 2. Import private key to metamask
 
-# Configuration after deployment [Local node only]
-### Configuring the auction duration 
-**Parameters**
-- `REGISTRAR` - The registrar contract to configure. Refer the list of registrars in `addresses.local.json`.
-- `DURATION_IN_SECONDS` - The duration of the auction in seconds.
-
-```
-#  npm run auction_duration ntuRegistrar 30
-$  npm run auction_duration <REGISTRAR> <DURATION_IN_SECONDS>
-```
-
 # Deploying to Sepolia
 You can deploy the contracts to sepolia where the contracts will be updated in source.
 > Note: This will override the existing contracts in source.
@@ -129,6 +118,25 @@ DEPLOYER_PRIVATE_KEY=YOUR_DEPLOYER_PRIVATE_KEY
 3. Deploy the contracts
 ```
 $ npm run deploy:sepolia
+```
+
+# Configuration after deployment 
+### Configuring the auction duration
+**Parameters**
+- `REGISTRAR` - The registrar contract to configure. Refer the list of registrars in `addresses.local.json`.
+- `DURATION_IN_SECONDS` - The duration of the auction in seconds.
+
+Local Hardhat
+```
+#  npm run auction_duration ntuRegistrar 30
+$  npm run auction_duration <REGISTRAR> <DURATION_IN_SECONDS>
+```
+
+Sepolia
+> Ensure that you have deployed a new set of contracts to Sepolia and your `.env` is defined. 
+```
+# npm run auction_duration:sepolia ntuRegistrar 
+# npm run auction_duration:sepolia <REGISTRAR> <DURATION_IN_SECONDS>
 ```
 
 # Running Tests

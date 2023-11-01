@@ -4,7 +4,9 @@ import "@nomicfoundation/hardhat-toolbox";
 import "@typechain/hardhat";
 
 import "./scripts/auction_duration.local";
+import "./scripts/auction_duration.sepolia";
 import "./scripts/transfer.local";
+
 
 dotenv.config();
 

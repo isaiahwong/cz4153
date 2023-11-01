@@ -1,4 +1,4 @@
-import addresses from "../addresses.local.json"
+import addresses from "../addresses.sepolia.json"
 import { task } from "hardhat/config";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {changeAuction} from "./auction_duration";
@@ -22,13 +22,13 @@ async function main(hre: HardhatRuntimeEnvironment, taskArgs: Args) {
     }
 
     const accounts = await hre.ethers.getSigners();
-    const registrarOwner = accounts[1];
+    const registrarOwner = accounts[0];
 
     // @ts-ignore
     await changeAuction(duration, addresses[registrarName], registrarOwner);
 }
 
-task("auction_duration", "Set auction duration for a registrar")
+task("auction_duration_sepolia", "Set auction duration for a registrar")
     .addPositionalParam("registrarName", "The name of the registrar")
     .addPositionalParam("duration", "The duration of the auction in seconds")
     .setAction(async (taskArgs, hre) => {
