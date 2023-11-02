@@ -14,16 +14,11 @@ let dnsRegistry: DNSRegistry;
 let dnsOwner: SignerWithAddress;
 
 let buyer1: SignerWithAddress;
-let buyer2: SignerWithAddress;
-let buyer3: SignerWithAddress;
-
 before(async () => {
     const accounts = await ethers.getSigners();
     dnsOwner = accounts[0];
     registrarOwner = accounts[1];
     buyer1 = accounts[2];
-    buyer2 = accounts[3];
-    buyer3 = accounts[4];
 
     // Deploy DNS
     dnsRegistry = await deployDNS(dnsOwner);
@@ -65,24 +60,26 @@ before(async () => {
     await registrar.connect(buyer1).batchRevealRegister(reveals);
 });
 
-it("☕️should show domain is available", async () => {
-    const domain = ethers.namehash("coe.ntu") ;
-    expect(await dnsRegistry.available(domain)).to.be.true;
+describe("☕️ DNSRegistry", () => {
+
+    it("should show domain is available", async () => {
+        const domain = ethers.namehash("coe.ntu") ;
+        expect(await dnsRegistry.available(domain)).to.be.true;
+    });
+
+    it("should show domain is unavailable for registered domains", async () => {
+        const spms = ethers.namehash("spms.ntu") ;
+        expect(await dnsRegistry.available(spms)).to.be.false;
+    });
+
+    it("should bulk resolve", async () => {
+        const domains = [
+            ethers.namehash("spms.ntu"),
+            ethers.namehash("nbs.ntu"),
+        ]
+
+        // bulk resolve
+        const addresses = await dnsRegistry.connect(dnsOwner).bulkResolve(domains);
+        expect(addresses.every(address => address === buyer1.address)).to.be.true;
+    });
 });
-
-it("☕️should show domain is unavailable for registered domains", async () => {
-    const spms = ethers.namehash("spms.ntu") ;
-    expect(await dnsRegistry.available(spms)).to.be.false;
-});
-
-it("☕️should bulk resolve", async () => {
-    const domains = [
-        ethers.namehash("spms.ntu"),
-        ethers.namehash("nbs.ntu"),
-    ]
-
-    // bulk resolve
-    const addresses = await dnsRegistry.connect(dnsOwner).bulkResolve(domains);
-    expect(addresses.every(address => address === buyer1.address)).to.be.true;
-});
-
