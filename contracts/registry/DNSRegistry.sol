@@ -2,7 +2,6 @@
 pragma solidity ^0.8.9;
 
 import "./IDNS.sol";
-import "./Errors.sol";
 import "hardhat/console.sol";
 
 /**
@@ -24,7 +23,7 @@ contract DNSRegistry is IDNS {
      * @dev Modifier that checks if the caller is the owner of the domain.
      */
     modifier auth(bytes32 domain) {
-        require(registrars[domain].owner == msg.sender);
+        require(registrars[domain].owner == msg.sender, "not authorized");
         _;
     }
 
@@ -57,6 +56,7 @@ contract DNSRegistry is IDNS {
         bytes32 domainHash = keccak256(abi.encodePacked(domain));
         bytes32 fqdn = makeDomain(parentDomain, domainHash);
         registrars[fqdn].owner = owner;
+
         emit NewDomainOwner(parentDomain, domainHash, domain, owner);
         return fqdn;
     }

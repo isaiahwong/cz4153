@@ -1,6 +1,5 @@
 import {ethers} from "hardhat";
-import { expect } from "chai";
-import crypto from "crypto";
+import {expect} from "chai";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 
 import {AuctionMock} from "../../frontend/src/api/typechain-types";
@@ -27,7 +26,7 @@ before(async () => {
 
 describe("TestAuction", () => {
 
-    it("👮🏻 should deny 0 eth", async ()=> {
+    it("👮🏻 should deny 0 eth", async () => {
         const label1 = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
         const secret1 = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
         const value1 = ethers.parseEther("0");
@@ -39,7 +38,44 @@ describe("TestAuction", () => {
         );
     });
 
-    it("👮🏻 should deny change in commitment", async ()=> {
+    it("👮should deny duplicate commitments", async () => {
+        const label = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
+        const secret = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
+        const value = ethers.parseEther("1");
+
+        const commitment = await auction.makeCommitment(buyer1.address, label, secret, value);
+
+        await auction.connect(buyer1).commit(label, commitment, {value: value})
+
+        await expectFailure(
+            auction.connect(buyer1).commit(label, commitment, {value: value})
+        );
+    });
+
+
+    it("👮🏻 should throw error for revealing highest bid for non-existent auction", async () => {
+        const label = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
+
+        await expectFailure(
+            auction.connect(buyer1).auctionHighestBid(label)
+        );
+    });
+
+    it("👮🏻 should prevent revealing highest bid before reveal", async () => {
+        const label = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
+        const secret = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
+        const value = ethers.parseEther("1");
+
+        const commitment = await auction.makeCommitment(buyer1.address, label, secret, value);
+
+        await auction.connect(buyer1).commit(label, commitment, {value: value})
+
+        await expectFailure(
+            auction.connect(buyer1).auctionHighestBid(label)
+        );
+    });
+
+    it("👮🏻 should deny change in commitment", async () => {
         const label1 = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
         const labelChanged = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
         const secret1 = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
@@ -60,7 +96,43 @@ describe("TestAuction", () => {
         );
     });
 
-    it("💸 should commit and reveal highest", async () => {
+    it("👮should deny commitments for auction that ended", async () => {
+        const label = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
+        const secret1 = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
+        const secret2 = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
+        const value = ethers.parseEther("1");
+
+        const commitment1 = await auction.makeCommitment(buyer1.address, label, secret1, value);
+
+        await auction.connect(buyer1).commit(label, commitment1, {value: value})
+
+        await moveTime(AUCTION_DURATION + 1);
+
+        const commitment2 = await auction.makeCommitment(buyer2.address, label, secret2, value);
+
+        await expectFailure(
+            auction.connect(buyer2).commit(label, commitment2, {value: value})
+        );
+    });
+
+    it("👮🏻should throw error for revealing invalid commitment", async () => {
+        const label = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
+        const secret = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
+        const value = ethers.parseEther("1");
+
+        const commitment = await auction.makeCommitment(buyer1.address, label, secret, value);
+
+        await auction.connect(buyer1).commit(label, commitment, {value: value})
+
+        // Advance time
+        await moveTime(AUCTION_DURATION + 1);
+
+        await expectFailure(
+            auction.connect(buyer2).reveal(label, secret, value)
+        );
+    });
+
+    it("💸should commit and reveal highest", async () => {
         const auctionInitialBalance = await ethers.provider.getBalance(auction.target);
 
         // Buyer 1 commits
@@ -83,9 +155,6 @@ describe("TestAuction", () => {
         expect(await ethers.provider.getBalance(auction.target)).to.equal(auctionInitialBalance + value1 + value2);
 
         // Advance time
-        const block = await ethers.provider.getBlock("latest");
-        await ethers.provider.send("evm_mine", [block!.timestamp + AUCTION_DURATION + 1]);
-
         await moveTime(AUCTION_DURATION + 1);
 
         // Reveal

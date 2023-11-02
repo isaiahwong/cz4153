@@ -51,9 +51,8 @@ export default function Domain() {
   const [txLoading, setTxLoading] = useState(false);
   const [bid, setBid] = useState(0.003);
   const [stage, setStage] = useState<Stages>(Stages.commit);
-  const [submittedCommitments, setSubmittedCommitments] = useState<
-    Commitment[]
-  >([]);
+  const [submittedCommitments, setSubmittedCommitments] =
+      useState<Commitment[]>([]);
   const [owner, setOwner] = useState<string | null>(null);
   const [refund, setRefund] = useState<string>("0");
   const [highestBid, setHighestBid] = useState<string>("0");

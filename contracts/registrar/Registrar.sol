@@ -76,10 +76,6 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         return Auction.auctionDeadline(getDomainCurrentVersion(domain));
     }
 
-    function getTLD() public view returns (bytes32) {
-        return tld;
-    }
-
     function expiry(bytes32 domain) public view returns (uint256) {
         return expiries[domain];
     }
@@ -94,16 +90,6 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
 
     function makeDomainCommitment(bytes32 domain, bytes32 secret, uint256 value) public view returns (bytes32) {
         return makeCommitment(msg.sender, getDomainCurrentVersion(domain), secret, value);
-    }
-
-    /**
-     * @dev Checks if a domain has a commitment committed.
-     * @param domain The domain to check encoded in keccak256.
-     * @param secret The secret to check.
-     * @param value The value to check.
-     */
-    function hasDomainCommitment(bytes32 domain, bytes32 secret, uint256 value) private view returns (bool) {
-        return hasCommitment(makeDomainCommitment(domain, secret, value));
     }
 
     /**

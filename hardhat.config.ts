@@ -2,6 +2,7 @@ import {HardhatUserConfig} from "hardhat/config";
 import dotenv from "dotenv";
 import "@nomicfoundation/hardhat-toolbox";
 import "@typechain/hardhat";
+import "solidity-coverage";
 
 import "./scripts/auction_duration.local";
 import "./scripts/auction_duration.sepolia";

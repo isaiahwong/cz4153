@@ -70,10 +70,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.DNSRegistry__factory>;
     getContractFactory(
-      name: "Errors",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Errors__factory>;
-    getContractFactory(
       name: "IDNS",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IDNS__factory>;
@@ -149,11 +145,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.DNSRegistry>;
     getContractAt(
-      name: "Errors",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Errors>;
-    getContractAt(
       name: "IDNS",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -215,10 +206,6 @@ declare module "hardhat/types/runtime" {
       name: "DNSRegistry",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.DNSRegistry>;
-    deployContract(
-      name: "Errors",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Errors>;
     deployContract(
       name: "IDNS",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -294,11 +281,6 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.DNSRegistry>;
-    deployContract(
-      name: "Errors",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Errors>;
     deployContract(
       name: "IDNS",
       args: any[],

@@ -53,7 +53,6 @@ export interface RegistrarInterface extends Interface {
       | "getApproved"
       | "getAuctionDuration"
       | "getDomainCurrentVersion"
-      | "getTLD"
       | "hasAuctionExpired"
       | "hasCommitment"
       | "hasDomainExpired"
@@ -138,7 +137,6 @@ export interface RegistrarInterface extends Interface {
     functionFragment: "getDomainCurrentVersion",
     values: [BytesLike]
   ): string;
-  encodeFunctionData(functionFragment: "getTLD", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "hasAuctionExpired",
     values: [BytesLike]
@@ -253,7 +251,6 @@ export interface RegistrarInterface extends Interface {
     functionFragment: "getDomainCurrentVersion",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "getTLD", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "hasAuctionExpired",
     data: BytesLike
@@ -591,8 +588,6 @@ export interface Registrar extends BaseContract {
     "view"
   >;
 
-  getTLD: TypedContractMethod<[], [string], "view">;
-
   hasAuctionExpired: TypedContractMethod<[label: BytesLike], [boolean], "view">;
 
   hasCommitment: TypedContractMethod<
@@ -750,9 +745,6 @@ export interface Registrar extends BaseContract {
   getFunction(
     nameOrSignature: "getDomainCurrentVersion"
   ): TypedContractMethod<[domain: BytesLike], [string], "view">;
-  getFunction(
-    nameOrSignature: "getTLD"
-  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "hasAuctionExpired"
   ): TypedContractMethod<[label: BytesLike], [boolean], "view">;

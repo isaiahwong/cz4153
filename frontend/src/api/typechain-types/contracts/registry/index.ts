@@ -2,5 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { DNSRegistry } from "./DNSRegistry";
-export type { Errors } from "./Errors";
 export type { IDNS } from "./IDNS";
