@@ -114,15 +114,15 @@ export function Address() {
               alignItems={"left"}
             >
               <Typography variant="h5" fontWeight="bold">
-                Your Domains
+                Owned Domains
               </Typography>
               <Box
                 mb={3}
                 display={"flex"}
                 justifyContent={"space-between"}
               ></Box>
-
-              <OwnerCNamePanel address={address} domains={domains} />
+              {/* 
+              <OwnerCNamePanel address={address} domains={domains} /> */}
               <WithLoader loading={loading}>
                 <DomainPanel domains={domains} />
               </WithLoader>

@@ -24,9 +24,19 @@ export default function DomainList() {
 
   const getOwnersDomains = async () => {
     const domains = await dnsContract.getAllDomainRegistered(provider);
+    domains.sort((a, b) => {
+      if (a.name < b.name) {
+        return -1;
+      }
+      if (a.name > b.name) {
+        return 1;
+      }
+      return 0;
+    });
+
     setDomains(domains);
     setDomainsFiltered(domains);
-    setDomainsList(domains.map((d) => d.name));
+    setDomainsList([...new Set(domains.map((d) => d.name))]);
     setLoading(false);
   };
 
@@ -54,20 +64,13 @@ export default function DomainList() {
               All Registered Domains
             </Typography>
 
-            <Autocomplete
+            <TextField
               className={style.search}
-              id="free-solo-demo"
-              options={domainList}
-              renderInput={(params) => (
-                <TextField
-                  className={style.search_input}
-                  sx={{ "& fieldset": { border: "none" } }} // Removes border
-                  {...params}
-                  placeholder={"Search for a registered domain"}
-                  onChange={(e) => onChange(domains, e.target.value)}
-                />
-              )}
+              sx={{ "& fieldset": { border: "none" } }} // Removes border
+              placeholder={"Search for a registered domain"}
+              onChange={(e) => onChange(domains, e.target.value)}
             />
+
             <Box
               className={style.panel}
               display={"flex"}
