@@ -453,7 +453,7 @@ export default function Domain() {
             >
                 <Grid item xs={12}>
                     <Box className={style.wrapper}>
-                        <Typography variant="h5" fontWeight="bold" style={{color: "white"}}>
+                        <Typography variant="h5" fontWeight="bold">
                             {fqdn}
                         </Typography>
                         <Box

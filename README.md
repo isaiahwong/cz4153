@@ -17,6 +17,7 @@ In order to successfully bid for a domain, the user have to submit `2` Ethereum 
  commit(string calldata domainStr, bytes32 secret)
 ```
 
+
 ### 2. Reveal process
 - Users will reveal a bid where the user submits the `plaintext` secret where the smart contract can reconstruct the commitment via hashing.
 - If user's bid is the highest, the smart contract will mint and allocate the domain to the user.
@@ -54,11 +55,11 @@ $ npm run start
 
 ### Sepolia Deployed Addresses
 ```
-"dns": "0xfD9930AEF55272A37B5FF8C2F588d329148b8ecA",
-"ntuRegistrar": "0xC228aB676b1D9E6e49d284bf6b39Ba637a31Fb2e",
-"devRegistrar": "0x0A380dd4F81c98412e06b67F2687B0F26b3724aa",
-"comRegistrar": "0x0aBacbe7b428d01f7F66DcA4A3347A60278E12cC",
-"xyzRegistrar": "0xc9a7d62623ecce9803836c9cAF0EC33526e3bc1c"
+"dns": "0x777d60f657F31a6396201a30eDd341EEbD4A6f7e",
+"ntuRegistrar": "0x9B52eDb680f93D9f88b35A17CE4031d8126d762A",
+"devRegistrar": "0xA68476b7cE46e1E206B160E0D4d57b9A7731a098",
+"comRegistrar": "0x56566909572C574df13E6b118a841457771bA514",
+"xyzRegistrar": "0xa5c945408B9Ddf177AB0ab10E15E4ca552F22EC1"
 ```
 
 ## Running Locally
@@ -168,5 +169,12 @@ $ npm run test
 $  npx hardhat coverage 
 ```
 
-    
+## Screenshots
+### Landing 
+<img src="./screenshots/landing.png">
 
+### Bidding
+<img src="./screenshots/bidding.png">
+
+### All auctions
+<img src="./screenshots/all_auctions.png">
