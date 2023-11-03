@@ -24,7 +24,7 @@ before(async () => {
     auction = await auctionFactory.connect(auctionOwner).deploy(AUCTION_DURATION);
 });
 
-describe("👮🏻 TestAuction", () => {
+describe("👮🏻 Test Auction Contract", () => {
 
     describe("💸 commit", () => {
         it("should deny 0 eth", async () => {
@@ -197,7 +197,7 @@ describe("👮🏻 TestAuction", () => {
         });
     });
 
-    describe("👮🏻 post commit-reveal", () => {
+    describe("post commit-reveal", () => {
         it("should deny commitments for auction that ended", async () => {
             const label = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
             const secret1 = ethers.keccak256(ethers.toUtf8Bytes(randomSecret()));
@@ -216,7 +216,6 @@ describe("👮🏻 TestAuction", () => {
                 auction.connect(buyer2).commit(label, commitment2, {value: value})
             );
         });
-
 
     });
 });

@@ -40,6 +40,7 @@ export declare namespace IRegistrar {
 export interface RegistrarInterface extends Interface {
   getFunction(
     nameOrSignature:
+      | "MIN_BID"
       | "approve"
       | "auctionDeadline"
       | "auctionExists"
@@ -49,10 +50,12 @@ export interface RegistrarInterface extends Interface {
       | "batchRevealRegister"
       | "canCommit"
       | "commit"
+      | "commitb"
       | "expiry"
       | "getApproved"
       | "getAuctionDuration"
       | "getDomainCurrentVersion"
+      | "getDomainFutureVersion"
       | "hasAuctionExpired"
       | "hasCommitment"
       | "hasDomainExpired"
@@ -60,9 +63,12 @@ export interface RegistrarInterface extends Interface {
       | "isAuthorized"
       | "makeCommitment"
       | "makeDomainCommitment"
+      | "makeDomainPreCommitment"
       | "name"
       | "owner"
       | "ownerOf"
+      | "precommit"
+      | "refundPrecommitment"
       | "renounceOwnership"
       | "revealRegister"
       | "safeTransferFrom(address,address,uint256)"
@@ -88,6 +94,7 @@ export interface RegistrarInterface extends Interface {
       | "Transfer"
   ): EventFragment;
 
+  encodeFunctionData(functionFragment: "MIN_BID", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "approve",
     values: [AddressLike, BigNumberish]
@@ -124,6 +131,10 @@ export interface RegistrarInterface extends Interface {
     functionFragment: "commit",
     values: [string, BytesLike]
   ): string;
+  encodeFunctionData(
+    functionFragment: "commitb",
+    values: [string, BytesLike]
+  ): string;
   encodeFunctionData(functionFragment: "expiry", values: [BytesLike]): string;
   encodeFunctionData(
     functionFragment: "getApproved",
@@ -135,6 +146,10 @@ export interface RegistrarInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "getDomainCurrentVersion",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getDomainFutureVersion",
     values: [BytesLike]
   ): string;
   encodeFunctionData(
@@ -165,11 +180,23 @@ export interface RegistrarInterface extends Interface {
     functionFragment: "makeDomainCommitment",
     values: [BytesLike, BytesLike, BigNumberish]
   ): string;
+  encodeFunctionData(
+    functionFragment: "makeDomainPreCommitment",
+    values: [BytesLike, BytesLike]
+  ): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "ownerOf",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "precommit",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "refundPrecommitment",
+    values: [BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
@@ -214,6 +241,7 @@ export interface RegistrarInterface extends Interface {
     values: [AddressLike]
   ): string;
 
+  decodeFunctionResult(functionFragment: "MIN_BID", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "auctionDeadline",
@@ -238,6 +266,7 @@ export interface RegistrarInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "canCommit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "commit", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "commitb", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "expiry", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getApproved",
@@ -249,6 +278,10 @@ export interface RegistrarInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "getDomainCurrentVersion",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getDomainFutureVersion",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -279,9 +312,18 @@ export interface RegistrarInterface extends Interface {
     functionFragment: "makeDomainCommitment",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "makeDomainPreCommitment",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ownerOf", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "precommit", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "refundPrecommitment",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
     data: BytesLike
@@ -542,6 +584,8 @@ export interface Registrar extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  MIN_BID: TypedContractMethod<[], [bigint], "view">;
+
   approve: TypedContractMethod<
     [to: AddressLike, tokenId: BigNumberish],
     [void],
@@ -576,6 +620,12 @@ export interface Registrar extends BaseContract {
     "payable"
   >;
 
+  commitb: TypedContractMethod<
+    [domain: string, secret: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+
   expiry: TypedContractMethod<[domain: BytesLike], [bigint], "view">;
 
   getApproved: TypedContractMethod<[tokenId: BigNumberish], [string], "view">;
@@ -583,6 +633,12 @@ export interface Registrar extends BaseContract {
   getAuctionDuration: TypedContractMethod<[], [bigint], "view">;
 
   getDomainCurrentVersion: TypedContractMethod<
+    [domain: BytesLike],
+    [string],
+    "view"
+  >;
+
+  getDomainFutureVersion: TypedContractMethod<
     [domain: BytesLike],
     [string],
     "view"
@@ -623,11 +679,25 @@ export interface Registrar extends BaseContract {
     "view"
   >;
 
+  makeDomainPreCommitment: TypedContractMethod<
+    [domain: BytesLike, secret: BytesLike],
+    [string],
+    "view"
+  >;
+
   name: TypedContractMethod<[], [string], "view">;
 
   owner: TypedContractMethod<[], [string], "view">;
 
   ownerOf: TypedContractMethod<[tokenId: BigNumberish], [string], "view">;
+
+  precommit: TypedContractMethod<[precommitment: BytesLike], [void], "payable">;
+
+  refundPrecommitment: TypedContractMethod<
+    [precommitment: BytesLike],
+    [void],
+    "nonpayable"
+  >;
 
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
@@ -695,6 +765,9 @@ export interface Registrar extends BaseContract {
   ): T;
 
   getFunction(
+    nameOrSignature: "MIN_BID"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "approve"
   ): TypedContractMethod<
     [to: AddressLike, tokenId: BigNumberish],
@@ -734,6 +807,13 @@ export interface Registrar extends BaseContract {
     "payable"
   >;
   getFunction(
+    nameOrSignature: "commitb"
+  ): TypedContractMethod<
+    [domain: string, secret: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
     nameOrSignature: "expiry"
   ): TypedContractMethod<[domain: BytesLike], [bigint], "view">;
   getFunction(
@@ -744,6 +824,9 @@ export interface Registrar extends BaseContract {
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "getDomainCurrentVersion"
+  ): TypedContractMethod<[domain: BytesLike], [string], "view">;
+  getFunction(
+    nameOrSignature: "getDomainFutureVersion"
   ): TypedContractMethod<[domain: BytesLike], [string], "view">;
   getFunction(
     nameOrSignature: "hasAuctionExpired"
@@ -784,6 +867,13 @@ export interface Registrar extends BaseContract {
     "view"
   >;
   getFunction(
+    nameOrSignature: "makeDomainPreCommitment"
+  ): TypedContractMethod<
+    [domain: BytesLike, secret: BytesLike],
+    [string],
+    "view"
+  >;
+  getFunction(
     nameOrSignature: "name"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
@@ -792,6 +882,12 @@ export interface Registrar extends BaseContract {
   getFunction(
     nameOrSignature: "ownerOf"
   ): TypedContractMethod<[tokenId: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "precommit"
+  ): TypedContractMethod<[precommitment: BytesLike], [void], "payable">;
+  getFunction(
+    nameOrSignature: "refundPrecommitment"
+  ): TypedContractMethod<[precommitment: BytesLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "renounceOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;

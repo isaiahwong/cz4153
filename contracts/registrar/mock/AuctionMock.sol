@@ -11,7 +11,7 @@ contract AuctionMock is Auction {
     constructor(uint256 duration) Auction(duration) {}
 
     function commit(bytes32 label, bytes32 commitment) public payable {
-        commitBid(label, commitment);
+        commitBid(label, commitment, msg.value);
     }
 
     function reveal(bytes32 label, bytes32 secret, uint256 value) public returns (bool, uint256, bytes32) {

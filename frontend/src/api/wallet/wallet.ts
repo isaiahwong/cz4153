@@ -3,6 +3,7 @@ import {BrowserProvider, JsonRpcSigner, Network} from "ethers";
 import {dnsContract, Chain} from "../dns/dns";
 import {routes} from "../../routes/app/App";
 import CommitmentStore from "../../store/commits";
+import PrecommitmentStore from "../../store/precommits";
 import FQDNStore from "../../store/domains";
 import {tryAlert} from "../../common/common";
 
@@ -39,6 +40,7 @@ export const listenToEvents = () => {
             window.location.replace(routes.landing);
             // reset stores
             await CommitmentStore.clear();
+            await PrecommitmentStore.clear();
             await FQDNStore.clear();
             return;
         }
