@@ -12,7 +12,7 @@ import {
 import LinearProgressWithLabel from "../common/LinearProgressWithLabel";
 import {WithPred} from "../hoc/hoc";
 import {routes} from "../../routes/app/App";
-import BidPanel from "./BidPanel";
+import BidPanel, {CommitStages} from "./BidPanel";
 import CommittedBidsPanel from "./CommittedBidsPanel";
 import {BrowserProvider} from "ethers";
 import {getBlockTime} from "../../common/common";
@@ -24,10 +24,12 @@ export interface WaitPanelProps {
     onBidChange: (e: any) => void;
     onClick: () => void;
     txLoading?: boolean;
+    precommitment?: Commitment;
+    stages?: CommitStages;
 }
 
 export default function WaitPanel(props: WaitPanelProps) {
-    const {commitments, onAuctionEnded} = props;
+    const {commitments, stages, onAuctionEnded, precommitment} = props;
     const {provider} = useWallet();
     const [progress, setProgress] = useState(0);
     const [remain, setRemain] = useState(0);
@@ -96,7 +98,14 @@ export default function WaitPanel(props: WaitPanelProps) {
                 </WithPred>
                 <LinearProgressWithLabel value={progress}/>
                 <Box mt={2} mb={2}>
-                    <BidPanel loading={props.txLoading} bid={props.bid} onBidChange={props.onBidChange} onClick={props.onClick}/>
+                    <BidPanel
+                        loading={props.txLoading}
+                        bid={props.bid}
+                        onBidChange={props.onBidChange}
+                        onClick={props.onClick}
+                        precommitment={precommitment}
+                        stages={stages}
+                    />
                 </Box>
                 <Divider/>
                 <Box mt={2}>

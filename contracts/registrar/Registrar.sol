@@ -30,6 +30,9 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
     // Grace period for rebidding a domain
     uint256 private GRACE_PERIOD = 90 days;
 
+    // Minimum bid for a domain
+    uint256 constant public MIN_BID = 0.003 ether;
+
     // Stores domain hash to expiry times
     mapping(bytes32 => uint256) private expiries;
 
@@ -38,6 +41,9 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
 
     // Whitelisted authorized addresses
     mapping(address => bool) private authorized;
+
+    // Stores commitment to domain
+    mapping(address => mapping(bytes32 => uint256)) private precommitments;
 
     /**
      * @dev Modifier that checks if the caller is whitelisted.
@@ -93,6 +99,18 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
     }
 
     /**
+     * @dev Returns a future version of the domain hash if the domain has expired.
+     */
+    function getDomainFutureVersion(bytes32 domain) public view returns (bytes32) {
+        if (hasDomainExpired(domain)) return keccak256(abi.encodePacked(domain, versions[domain] + 1));
+        return getDomainCurrentVersion(domain);
+    }
+
+    function makeDomainPreCommitment(bytes32 domain, bytes32 secret) public view returns (bytes32) {
+        return keccak256(abi.encodePacked(msg.sender, getDomainFutureVersion(domain), secret));
+    }
+
+    /**
      * @dev sets the canonical name for an address.
      */
     function setCName(string memory domain) external auth(keccak256(abi.encodePacked(domain))) {
@@ -104,6 +122,58 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
      */
     function canCommit(bytes32 domain) public view returns (bool) {
         return hasDomainExpired(domain) || !hasAuctionExpired(getDomainCurrentVersion(domain));
+    }
+
+    function precommit(bytes32 precommitment) public payable {
+        if (msg.value < MIN_BID) {
+            revert Errors.InsufficientBid();
+        }
+        precommitments[msg.sender][precommitment] = msg.value;
+    }
+
+    function refundPrecommitment(bytes32 precommitment) public {
+        uint256 value = precommitments[msg.sender][precommitment];
+        if (value == 0) {
+            revert Errors.CommitmentDoesNotExist();
+        }
+        precommitments[msg.sender][precommitment] = 0;
+        payable(msg.sender).transfer(value);
+    }
+
+    function commitb(string calldata domain, bytes32 secret) public {
+        bytes32 domainHash = keccak256(abi.encodePacked(domain));
+
+        // Create precommitment
+        bytes32 precommitment = makeDomainPreCommitment(domainHash, secret);
+
+        // verify commitment
+        if (precommitments[msg.sender][precommitment] < MIN_BID) {
+            revert Errors.InsufficientBid();
+        }
+
+        // Check if the name is available
+        if (!canCommit(domainHash)) {
+            revert Errors.DomainNotExpired();
+        }
+
+        // Set new expiry time if it expired
+        if (hasDomainExpired(domainHash)) {
+            // Increment version
+            versions[domainHash] += 1;
+
+            // Set expiry time to duration of auction
+            expiries[domainHash] = block.timestamp + TENURE + getAuctionDuration();
+            emit DomainAuctionStarted(domainHash, name(), domain, getAuctionDuration(), block.timestamp + getAuctionDuration());
+        }
+
+        // Create commitment
+        bytes32 commitment = makeDomainCommitment(domainHash, secret, precommitments[msg.sender][precommitment]);
+
+        // Commit the bid
+        commitBid(getDomainCurrentVersion(domainHash), commitment, precommitments[msg.sender][precommitment]);
+
+        // remove precommitment
+        precommitments[msg.sender][precommitment] = 0;
     }
 
     /**
@@ -136,7 +206,7 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         bytes32 commitment = makeDomainCommitment(domain, secret, msg.value);
 
         // Commit the bid
-        commitBid(getDomainCurrentVersion(domain), commitment);
+        commitBid(getDomainCurrentVersion(domain), commitment, msg.value);
         return commitment;
     }
 

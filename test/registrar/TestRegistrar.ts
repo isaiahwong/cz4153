@@ -37,7 +37,7 @@ before(async () => {
     registrar = await deployRegistrar(registrarOwner, dnsRegistry, tld, AUCTION_DURATION);
 });
 
-describe("💻 TestRegistrar", () => {
+describe("💻 Test Registrar Contract", () => {
 
     describe("💸 commit", () => {
         it("should ensure deadline is correct after commiting", async () => {
@@ -67,6 +67,38 @@ describe("💻 TestRegistrar", () => {
             const expiry = await registrar.expiry(ethers.keccak256(ethers.toUtf8Bytes(domain)));
 
             expect(expiry).equal(block!.timestamp + TENURE + Number(auctionDuration));
+        });
+
+        it ("should allow precommit", async () => {
+            const domain = "dydx";
+            const secret = randomSecret();
+            const secretHash = ethers.keccak256(ethers.toUtf8Bytes(secret));
+            const value = ethers.parseEther("0.01");
+
+
+            const domainHash = await registrar.getDomainFutureVersion(ethers.keccak256(ethers.toUtf8Bytes(domain)))
+            const commitment = ethers.solidityPackedKeccak256(["address", "bytes32", "bytes32"], [buyer1.address, domainHash, secretHash]);
+
+            await registrar.connect(buyer1).precommit(commitment,  {value: value});
+            await registrar.connect(buyer1).commitb(domain, secretHash);
+
+            await moveTime(AUCTION_DURATION + 1);
+
+            await registrar.connect(buyer1).revealRegister(domain, secret, value);
+        });
+
+        it ("should refund if precommit", async () => {
+            const domain = "dydx";
+            const secret = randomSecret();
+            const secretHash = ethers.keccak256(ethers.toUtf8Bytes(secret));
+            const value = ethers.parseEther("0.01");
+
+
+            const domainHash = await registrar.getDomainFutureVersion(ethers.keccak256(ethers.toUtf8Bytes(domain)))
+            const commitment = ethers.solidityPackedKeccak256(["address", "bytes32", "bytes32"], [buyer1.address, domainHash, secretHash]);
+
+            await registrar.connect(buyer1).precommit(commitment,  {value: value});
+            await registrar.connect(buyer1).refundPrecommitment(commitment);
         });
     });
 

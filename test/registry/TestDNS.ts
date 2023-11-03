@@ -60,7 +60,7 @@ before(async () => {
     await registrar.connect(buyer1).batchRevealRegister(reveals);
 });
 
-describe("☕️ DNSRegistry", () => {
+describe("☕️ Test DNSRegistry Contract", () => {
 
     it("should show domain is available", async () => {
         const domain = ethers.namehash("coe.ntu") ;

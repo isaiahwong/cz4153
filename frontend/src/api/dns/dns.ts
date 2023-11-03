@@ -106,6 +106,20 @@ export class DNSContract {
         return dnsRegistry.cname(address);
     }
 
+    async precommit(provider: any, signer: JsonRpcSigner, secret: string, tld: string, domain: string, value: string) {
+        const registrar = await this.getRegistrar(provider, tld);
+        const secretHash = ethers.keccak256(ethers.toUtf8Bytes(secret));
+        const domainHash = await registrar.getDomainFutureVersion(ethers.keccak256(ethers.toUtf8Bytes(domain)))
+        const precommitment = ethers.solidityPackedKeccak256(["address", "bytes32", "bytes32"], [signer.address, domainHash, secretHash]);
+        return await registrar.connect(signer).precommit(precommitment, {value: ethers.parseEther(value)});
+    }
+
+    async commitb(provider: any, signer: JsonRpcSigner, secret: string, tld: string, domain: string) {
+        const registrar = await this.getRegistrar(provider, tld);
+        const secretHash = ethers.keccak256(ethers.toUtf8Bytes(secret));
+        return await registrar.connect(signer).commitb(domain, secretHash);
+    }
+
     async commit(provider: any, signer: JsonRpcSigner, secret: string, tld: string, domain: string, value: string) {
         const registrar = await this.getRegistrar(provider, tld);
         secret = ethers.keccak256(ethers.toUtf8Bytes(secret));

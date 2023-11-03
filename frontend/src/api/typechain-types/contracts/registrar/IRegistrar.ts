@@ -45,13 +45,17 @@ export interface IRegistrarInterface extends Interface {
       | "auctionHighestBidder"
       | "batchRevealRegister"
       | "commit"
+      | "commitb"
       | "expiry"
       | "getAuctionDuration"
       | "getDomainCurrentVersion"
+      | "getDomainFutureVersion"
       | "hasAuctionExpired"
       | "hasCommitment"
       | "hasDomainExpired"
       | "makeDomainCommitment"
+      | "makeDomainPreCommitment"
+      | "precommit"
       | "revealRegister"
       | "setCName"
   ): FunctionFragment;
@@ -83,6 +87,10 @@ export interface IRegistrarInterface extends Interface {
     functionFragment: "commit",
     values: [string, BytesLike]
   ): string;
+  encodeFunctionData(
+    functionFragment: "commitb",
+    values: [string, BytesLike]
+  ): string;
   encodeFunctionData(functionFragment: "expiry", values: [BytesLike]): string;
   encodeFunctionData(
     functionFragment: "getAuctionDuration",
@@ -90,6 +98,10 @@ export interface IRegistrarInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "getDomainCurrentVersion",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getDomainFutureVersion",
     values: [BytesLike]
   ): string;
   encodeFunctionData(
@@ -107,6 +119,14 @@ export interface IRegistrarInterface extends Interface {
   encodeFunctionData(
     functionFragment: "makeDomainCommitment",
     values: [BytesLike, BytesLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "makeDomainPreCommitment",
+    values: [BytesLike, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "precommit",
+    values: [BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "revealRegister",
@@ -131,6 +151,7 @@ export interface IRegistrarInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "commit", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "commitb", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "expiry", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getAuctionDuration",
@@ -138,6 +159,10 @@ export interface IRegistrarInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "getDomainCurrentVersion",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getDomainFutureVersion",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -156,6 +181,11 @@ export interface IRegistrarInterface extends Interface {
     functionFragment: "makeDomainCommitment",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "makeDomainPreCommitment",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "precommit", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "revealRegister",
     data: BytesLike
@@ -333,11 +363,23 @@ export interface IRegistrar extends BaseContract {
     "payable"
   >;
 
+  commitb: TypedContractMethod<
+    [domain: string, secret: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+
   expiry: TypedContractMethod<[domain: BytesLike], [bigint], "view">;
 
   getAuctionDuration: TypedContractMethod<[], [bigint], "view">;
 
   getDomainCurrentVersion: TypedContractMethod<
+    [domain: BytesLike],
+    [string],
+    "view"
+  >;
+
+  getDomainFutureVersion: TypedContractMethod<
     [domain: BytesLike],
     [string],
     "view"
@@ -358,6 +400,14 @@ export interface IRegistrar extends BaseContract {
     [string],
     "view"
   >;
+
+  makeDomainPreCommitment: TypedContractMethod<
+    [domain: BytesLike, secret: BytesLike],
+    [string],
+    "view"
+  >;
+
+  precommit: TypedContractMethod<[precommitment: BytesLike], [void], "payable">;
 
   revealRegister: TypedContractMethod<
     [domain: string, secret: string, value: BigNumberish],
@@ -395,6 +445,13 @@ export interface IRegistrar extends BaseContract {
     "payable"
   >;
   getFunction(
+    nameOrSignature: "commitb"
+  ): TypedContractMethod<
+    [domain: string, secret: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
     nameOrSignature: "expiry"
   ): TypedContractMethod<[domain: BytesLike], [bigint], "view">;
   getFunction(
@@ -402,6 +459,9 @@ export interface IRegistrar extends BaseContract {
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "getDomainCurrentVersion"
+  ): TypedContractMethod<[domain: BytesLike], [string], "view">;
+  getFunction(
+    nameOrSignature: "getDomainFutureVersion"
   ): TypedContractMethod<[domain: BytesLike], [string], "view">;
   getFunction(
     nameOrSignature: "hasAuctionExpired"
@@ -419,6 +479,16 @@ export interface IRegistrar extends BaseContract {
     [string],
     "view"
   >;
+  getFunction(
+    nameOrSignature: "makeDomainPreCommitment"
+  ): TypedContractMethod<
+    [domain: BytesLike, secret: BytesLike],
+    [string],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "precommit"
+  ): TypedContractMethod<[precommitment: BytesLike], [void], "payable">;
   getFunction(
     nameOrSignature: "revealRegister"
   ): TypedContractMethod<

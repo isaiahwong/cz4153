@@ -276,6 +276,24 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "string",
+        name: "domain",
+        type: "string",
+      },
+      {
+        internalType: "bytes32",
+        name: "secret",
+        type: "bytes32",
+      },
+    ],
+    name: "commitb",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "bytes32",
         name: "domain",
         type: "bytes32",
@@ -314,6 +332,25 @@ const _abi = [
       },
     ],
     name: "getDomainCurrentVersion",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "domain",
+        type: "bytes32",
+      },
+    ],
+    name: "getDomainFutureVersion",
     outputs: [
       {
         internalType: "bytes32",
@@ -408,6 +445,43 @@ const _abi = [
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "domain",
+        type: "bytes32",
+      },
+      {
+        internalType: "bytes32",
+        name: "secret",
+        type: "bytes32",
+      },
+    ],
+    name: "makeDomainPreCommitment",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "precommitment",
+        type: "bytes32",
+      },
+    ],
+    name: "precommit",
+    outputs: [],
+    stateMutability: "payable",
     type: "function",
   },
   {

@@ -90,7 +90,7 @@ abstract contract Auction is IAuction {
      * @param label The label mapped to an auction.
      * @param commitment The commitment of the bid.
      */
-    function commitBid(bytes32 label, bytes32 commitment) internal {
+    function commitBid(bytes32 label, bytes32 commitment, uint256 bid) internal {
         // Check if bid exists
         if (hasCommitment(commitment)) {
             revert Errors.BidExists();
@@ -105,16 +105,16 @@ abstract contract Auction is IAuction {
             revert Errors.AuctionExpired();
         }
 
-        if (msg.value <= 0) {
+        if (bid <= 0) {
             revert Errors.BidTooLow();
         }
 
-        bids[msg.sender][commitment] = msg.value;
+        bids[msg.sender][commitment] = bid;
 
         // Check for strictly greater bid
-        if (msg.value > auctions[label].maxBid) {
+        if (bid > auctions[label].maxBid) {
             auctions[label].maxBidder = msg.sender;
-            auctions[label].maxBid = msg.value;
+            auctions[label].maxBid = bid;
             auctions[label].maxCommitment = commitment;
         }
     }
@@ -148,8 +148,7 @@ abstract contract Auction is IAuction {
         // Refund if not max bidder
         if (auctions[label].maxCommitment != commitment) {
             refund =  bids[msg.sender][commitment];
-            (bool success,) = msg.sender.call{value:refund}("");
-            require(success, "Refund failed");
+            payable(msg.sender).transfer(refund);
         }
 
         // Delete commitment

@@ -43,6 +43,10 @@ interface IRegistrar is IAuction {
 
     function expiry(bytes32 domain) external view returns (uint256);
 
+    function precommit(bytes32 precommitment) external payable;
+
+    function commitb(string calldata domain, bytes32 secret) external;
+
     function commit(string calldata domain, bytes32 secret) external payable returns (bytes32);
 
     function batchRevealRegister(RevealType[] calldata commitments) external;
@@ -56,4 +60,8 @@ interface IRegistrar is IAuction {
     function getDomainCurrentVersion(bytes32 domain) external view returns (bytes32);
 
     function makeDomainCommitment(bytes32 domain, bytes32 secret, uint256 value) external view returns (bytes32);
+
+    function getDomainFutureVersion(bytes32 domain) external view returns (bytes32);
+
+    function makeDomainPreCommitment(bytes32 domain, bytes32 secret) external view returns (bytes32);
 }

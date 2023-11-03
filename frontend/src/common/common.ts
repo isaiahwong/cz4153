@@ -35,6 +35,7 @@ export function tryAlert(e: any) {
         alert("Try unlocking metamask");
         return;
     }
+    console.error(e)
     return;
 }
 

@@ -5,6 +5,7 @@ library Errors {
     error NotOwner();
     error InvalidGovernance();
     error InsufficientBalance();
+    error InsufficientBid();
     error AuctionExpired();
     error AuctionNotExpired();
     error AuctionDoesNotExist();
