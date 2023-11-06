@@ -7,21 +7,25 @@ The following repo defines the implementation of a decentralized DNS on the Ethe
 
 # About
 The DNS utilizes a blind auction `commit and reveal` scheme where the bid of each commitment is hidden. 
-In order to successfully bid for a domain, the user have to submit `2` Ethereum transactions in total.
-### 1. Bidding process
-- Users will submit a bid and pay the cost `upfront` for a domain name. 
-- The dApp then generates a `secret` and submits a hashed version of it.
+In order to successfully bid for a domain, the user have to submit `3` Ethereum transactions in total.
 
-> A plaintext domain is supplied as it is used for emitting an auction for the domain. 
-```
- commit(string calldata domainStr, bytes32 secret)
-```
+### 1. Precommitment
+- Users will submit a bid `upfront` and a `commitment`.
+- The transaction submitted links the payment to the precommitment.
+- Domain name will not be part of tx to prevent correlation between the domain and the bid.
+- Smart contract stores mapping of commitment to bid
+> Commitment = sha3(address, domainHash, secret)
 
+### 2. Bidding process
+- Users submits the `secret` and domain name for bidding process. 
+- Smart contract will recreate the commitment and retrieve bid for the commitment.
+- Starts auction process
+> A plaintext domain is supplied as it is used for emitting an auction for the domain.
 
-### 2. Reveal process
-- Users will reveal a bid where the user submits the `plaintext` secret where the smart contract can reconstruct the commitment via hashing.
+### 3. Reveal process
+- Users will reveal the bid where the `plaintext` secret is submitted. The smart contract will reconstruct the commitment via hashing.
 - If user's bid is the highest, the smart contract will mint and allocate the domain to the user.
-- Else, the user will be refunded the amount bidded prior.
+- Else, the user will be refunded the amount bid prior.
 
 # Contents
 1. [Setting up Environment](#setting-up-environment)
