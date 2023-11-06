@@ -45,7 +45,6 @@ export interface IRegistrarInterface extends Interface {
       | "auctionHighestBidder"
       | "batchRevealRegister"
       | "commit"
-      | "commitb"
       | "expiry"
       | "getAuctionDuration"
       | "getDomainCurrentVersion"
@@ -85,10 +84,6 @@ export interface IRegistrarInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "commit",
-    values: [string, BytesLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "commitb",
     values: [string, BytesLike]
   ): string;
   encodeFunctionData(functionFragment: "expiry", values: [BytesLike]): string;
@@ -151,7 +146,6 @@ export interface IRegistrarInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "commit", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "commitb", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "expiry", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getAuctionDuration",
@@ -359,12 +353,6 @@ export interface IRegistrar extends BaseContract {
 
   commit: TypedContractMethod<
     [domain: string, secret: BytesLike],
-    [string],
-    "payable"
-  >;
-
-  commitb: TypedContractMethod<
-    [domain: string, secret: BytesLike],
     [void],
     "nonpayable"
   >;
@@ -439,13 +427,6 @@ export interface IRegistrar extends BaseContract {
   >;
   getFunction(
     nameOrSignature: "commit"
-  ): TypedContractMethod<
-    [domain: string, secret: BytesLike],
-    [string],
-    "payable"
-  >;
-  getFunction(
-    nameOrSignature: "commitb"
   ): TypedContractMethod<
     [domain: string, secret: BytesLike],
     [void],

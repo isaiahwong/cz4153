@@ -31,7 +31,6 @@ before(async () => {
 
     // Deploy DNS
     dnsRegistry = await deployDNS(dnsOwner);
-
     // Deploy Registrar
     const tld = "ntu";
     registrar = await deployRegistrar(registrarOwner, dnsRegistry, tld, AUCTION_DURATION);
@@ -54,7 +53,7 @@ describe("💻 Test Registrar Contract", () => {
 
             const commitment = ethers.solidityPackedKeccak256(["address", "bytes32", "bytes32"], [buyer1.address, domainHash, secretHash]);
             await registrar.connect(buyer1).precommit(commitment, {value: value});
-            await registrar.connect(buyer1).commitb(domain, secretHash);
+            await registrar.connect(buyer1).commit(domain, secretHash);
 
             const block = await ethers.provider.getBlock("latest");
 
@@ -74,7 +73,7 @@ describe("💻 Test Registrar Contract", () => {
 
             const commitment = ethers.solidityPackedKeccak256(["address", "bytes32", "bytes32"], [buyer2.address, domainHash, secretHash]);
             await registrar.connect(buyer2).precommit(commitment, {value: value});
-            await registrar.connect(buyer2).commitb(domain, secretHash);
+            await registrar.connect(buyer2).commit(domain, secretHash);
 
             const expiry = await registrar.expiry(ethers.keccak256(ethers.toUtf8Bytes(domain)));
 
@@ -105,7 +104,7 @@ describe("💻 Test Registrar Contract", () => {
             const commitment = ethers.solidityPackedKeccak256(["address", "bytes32", "bytes32"], [buyer1.address, domainHash, secretHash]);
 
             await registrar.connect(buyer1).precommit(commitment, {value: value});
-            await registrar.connect(buyer1).commitb(domain, secretHash);
+            await registrar.connect(buyer1).commit(domain, secretHash);
 
             await moveTime(AUCTION_DURATION + 1);
 
@@ -124,7 +123,7 @@ describe("💻 Test Registrar Contract", () => {
             await registrar.connect(buyer1).precommit(commitment, {value: value});
 
             await expectFailure(
-                registrar.connect(buyer1).commitb(domain, secretHash)
+                registrar.connect(buyer1).commit(domain, secretHash)
             );
         });
 
@@ -164,7 +163,7 @@ describe("💻 Test Registrar Contract", () => {
             const commitment = ethers.solidityPackedKeccak256(["address", "bytes32", "bytes32"], [buyer1.address, domainHash, secretHash]);
 
             await expectFailure(
-                registrar.connect(buyer1).commitb(commitment, secretHash)
+                registrar.connect(buyer1).commit(commitment, secretHash)
             );
         });
     });
@@ -195,7 +194,7 @@ describe("💻 Test Registrar Contract", () => {
             await Promise.all(precommits);
 
             const commits = Object.values(bids).map(async (bid) =>
-                registrar.connect(bid.bidder).commitb(domain, ethers.keccak256(ethers.toUtf8Bytes(bid.secret)))
+                registrar.connect(bid.bidder).commit(domain, ethers.keccak256(ethers.toUtf8Bytes(bid.secret)))
             );
             await Promise.all(commits);
 
@@ -260,7 +259,7 @@ describe("💻 Test Registrar Contract", () => {
 
             // Execute commits
             const commits = Object.values(bids).map(bid =>
-                registrar.connect(buyer3).commitb(bid.domain, ethers.keccak256(ethers.toUtf8Bytes(bid.secret))),
+                registrar.connect(buyer3).commit(bid.domain, ethers.keccak256(ethers.toUtf8Bytes(bid.secret))),
             );
             await Promise.all(commits);
 
@@ -313,7 +312,7 @@ describe("💻 Test Registrar Contract", () => {
             const commitment1 = ethers.solidityPackedKeccak256(["address", "bytes32", "bytes32"], [buyer1.address, domainHash, secretHash1]);
 
             await registrar.connect(buyer1).precommit(commitment1, {value: value});
-            await registrar.connect(buyer1).commitb(domain, secretHash1);
+            await registrar.connect(buyer1).commit(domain, secretHash1);
 
             await moveTime(AUCTION_DURATION + 1);
 
@@ -336,7 +335,7 @@ describe("💻 Test Registrar Contract", () => {
             const commitment2 = ethers.solidityPackedKeccak256(["address", "bytes32", "bytes32"], [buyer2.address, domainHash2, secretHash2]);
 
             await registrar.connect(buyer2).precommit(commitment2, {value: value});
-            await registrar.connect(buyer2).commitb(domain, secretHash2);
+            await registrar.connect(buyer2).commit(domain, secretHash2);
 
             await moveTime(AUCTION_DURATION + 1);
 

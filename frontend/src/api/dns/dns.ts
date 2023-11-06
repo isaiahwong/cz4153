@@ -114,17 +114,10 @@ export class DNSContract {
         return await registrar.connect(signer).precommit(precommitment, {value: ethers.parseEther(value)});
     }
 
-    async commitb(provider: any, signer: JsonRpcSigner, secret: string, tld: string, domain: string) {
+    async commit(provider: any, signer: JsonRpcSigner, secret: string, tld: string, domain: string) {
         const registrar = await this.getRegistrar(provider, tld);
         const secretHash = ethers.keccak256(ethers.toUtf8Bytes(secret));
-        return await registrar.connect(signer).commitb(domain, secretHash);
-    }
-
-    async commit(provider: any, signer: JsonRpcSigner, secret: string, tld: string, domain: string, value: string) {
-        const registrar = await this.getRegistrar(provider, tld);
-        secret = ethers.keccak256(ethers.toUtf8Bytes(secret));
-
-        return await registrar.connect(signer).commit(domain, secret, {value: ethers.parseEther(value)});
+        return await registrar.connect(signer).commit(domain, secretHash);
     }
 
     async makeCommitment(provider: any, signer: JsonRpcSigner, secret: string, tld: string, domain: string, value: string) {

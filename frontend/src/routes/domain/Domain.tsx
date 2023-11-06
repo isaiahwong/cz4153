@@ -325,7 +325,7 @@ export default function Domain() {
                 setCommitStages(CommitStages.PRECOMMIT);
             }
 
-            const tx = await dnsContract.commitb(
+            const tx = await dnsContract.commit(
                 provider,
                 signer,
                 commitment.secret,

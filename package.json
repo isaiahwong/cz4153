@@ -7,6 +7,7 @@
   "scripts": {
     "compile": "SKIP_LOAD=true hardhat clean && SKIP_LOAD=true hardhat compile",
     "node": "npx hardhat node",
+    "coverage": "npx hardhat coverage",
     "deploy": "hardhat run --network localhost scripts/deploy.local.ts",
     "deploy:sepolia": "hardhat run --network sepolia scripts/deploy.sepolia.ts",
     "auction_duration": "hardhat --network localhost auction_duration",

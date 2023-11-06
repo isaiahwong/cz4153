@@ -124,6 +124,11 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         return hasDomainExpired(domain) || !hasAuctionExpired(getDomainCurrentVersion(domain));
     }
 
+
+    /**
+     * @dev precommit submits a bid bind to a commitment
+     * @param precommitment Hash commitment. Scheme is keccak256(abi.encodePacked(msg.sender, versions[domain], secret))
+     */
     function precommit(bytes32 precommitment) public payable {
         if (msg.value < MIN_BID) {
             revert Errors.InsufficientBid();
@@ -140,7 +145,15 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         payable(msg.sender).transfer(value);
     }
 
-    function commitb(string calldata domain, bytes32 secret) public {
+    /**
+     * @dev commit commits a domain to an auction.
+     * When the first commit happens, a new expiry time is set.
+     * This is to ensure that in the event where a domain is not revealed, it will
+     * still be available for renewal.
+     * @param domain The plaintext domain to commit
+     * @param secret The secret hash to commit.
+     */
+    function commit(string calldata domain, bytes32 secret) public {
         bytes32 domainHash = keccak256(abi.encodePacked(domain));
 
         // Create precommitment
@@ -174,40 +187,6 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
 
         // remove precommitment
         precommitments[msg.sender][precommitment] = 0;
-    }
-
-    /**
-     * @dev commit commits a domain to an auction.
-     * When the first commit happens, a new expiry time is set.
-     * This is to ensure that in the event where a domain is not revealed, it will
-     * still be available for renewal.
-     * @param domainStr The domain to commit
-     * @param secret The secret to commit. Recommended to use keccak256 to conceal it.
-     */
-    function commit(string calldata domainStr, bytes32 secret) public payable returns (bytes32) {
-        bytes32 domain = keccak256(abi.encodePacked(domainStr));
-
-        // Check if the name is available
-        if (!canCommit(domain)) {
-            revert Errors.DomainNotExpired();
-        }
-
-        // Set new expiry time if it expired
-        if (hasDomainExpired(domain)) {
-            // Increment version
-            versions[domain] += 1;
-
-            // Set expiry time to duration of auction
-            expiries[domain] = block.timestamp + TENURE + getAuctionDuration();
-            emit DomainAuctionStarted(domain, name(), domainStr, getAuctionDuration(), block.timestamp + getAuctionDuration());
-        }
-
-        // Create commitment
-        bytes32 commitment = makeDomainCommitment(domain, secret, msg.value);
-
-        // Commit the bid
-        commitBid(getDomainCurrentVersion(domain), commitment, msg.value);
-        return commitment;
     }
 
     /**

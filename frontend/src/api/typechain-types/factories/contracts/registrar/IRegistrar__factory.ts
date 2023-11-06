@@ -263,30 +263,6 @@ const _abi = [
       },
     ],
     name: "commit",
-    outputs: [
-      {
-        internalType: "bytes32",
-        name: "",
-        type: "bytes32",
-      },
-    ],
-    stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "string",
-        name: "domain",
-        type: "string",
-      },
-      {
-        internalType: "bytes32",
-        name: "secret",
-        type: "bytes32",
-      },
-    ],
-    name: "commitb",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",

@@ -50,7 +50,6 @@ export interface RegistrarInterface extends Interface {
       | "batchRevealRegister"
       | "canCommit"
       | "commit"
-      | "commitb"
       | "expiry"
       | "getApproved"
       | "getAuctionDuration"
@@ -129,10 +128,6 @@ export interface RegistrarInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "commit",
-    values: [string, BytesLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "commitb",
     values: [string, BytesLike]
   ): string;
   encodeFunctionData(functionFragment: "expiry", values: [BytesLike]): string;
@@ -266,7 +261,6 @@ export interface RegistrarInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "canCommit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "commit", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "commitb", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "expiry", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getApproved",
@@ -615,12 +609,6 @@ export interface Registrar extends BaseContract {
   canCommit: TypedContractMethod<[domain: BytesLike], [boolean], "view">;
 
   commit: TypedContractMethod<
-    [domainStr: string, secret: BytesLike],
-    [string],
-    "payable"
-  >;
-
-  commitb: TypedContractMethod<
     [domain: string, secret: BytesLike],
     [void],
     "nonpayable"
@@ -801,13 +789,6 @@ export interface Registrar extends BaseContract {
   ): TypedContractMethod<[domain: BytesLike], [boolean], "view">;
   getFunction(
     nameOrSignature: "commit"
-  ): TypedContractMethod<
-    [domainStr: string, secret: BytesLike],
-    [string],
-    "payable"
-  >;
-  getFunction(
-    nameOrSignature: "commitb"
   ): TypedContractMethod<
     [domain: string, secret: BytesLike],
     [void],

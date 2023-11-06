@@ -1,15 +1,18 @@
-# CZ4153 - Decentralized DNS
+# [CZ4153 - Decentralized DNS](https://github.com/isaiahwong/cz4153)
 The following repo defines the implementation of a decentralized DNS on the Ethereum blockchain. The DNS is fully decentralized featuring smart contracts and a frontend built with [React](https://react.dev/). 
+
 ### Members
 - Isaiah Wong
 - Jefferson Liew
 - Ye Xin
 
+[Github](https://github.com/isaiahwong/cz4153)
+
 # About
 The DNS utilizes a blind auction `commit and reveal` scheme where the bid of each commitment is hidden. 
 In order to successfully bid for a domain, the user have to submit `3` Ethereum transactions in total.
 
-### 1. Precommitment
+### 1. Commitment 
 - Users will submit a bid `upfront` and a `commitment`.
 - The transaction submitted links the payment to the precommitment.
 - Domain name will not be part of tx to prevent correlation between the domain and the bid.
@@ -59,11 +62,11 @@ $ npm run start
 
 ### Sepolia Deployed Addresses
 ```
-"dns": "0x777d60f657F31a6396201a30eDd341EEbD4A6f7e",
-"ntuRegistrar": "0x9B52eDb680f93D9f88b35A17CE4031d8126d762A",
-"devRegistrar": "0xA68476b7cE46e1E206B160E0D4d57b9A7731a098",
-"comRegistrar": "0x56566909572C574df13E6b118a841457771bA514",
-"xyzRegistrar": "0xa5c945408B9Ddf177AB0ab10E15E4ca552F22EC1"
+  "dns": "0x777d60f657F31a6396201a30eDd341EEbD4A6f7e",
+  "ntuRegistrar": "0x9B52eDb680f93D9f88b35A17CE4031d8126d762A",
+  "devRegistrar": "0xA68476b7cE46e1E206B160E0D4d57b9A7731a098",
+  "comRegistrar": "0x56566909572C574df13E6b118a841457771bA514",
+  "xyzRegistrar": "0xa5c945408B9Ddf177AB0ab10E15E4ca552F22EC1"
 ```
 
 ## Running Locally
@@ -170,7 +173,7 @@ $ npm run test
 <img src="./screenshots/test_coverage.png">
 
 ```
-$  npx hardhat coverage 
+$  npm run coverage
 ```
 
 ## Screenshots

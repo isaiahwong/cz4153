@@ -43,11 +43,17 @@ before(async () => {
         },
     ];
 
+    const precommits = Object.values(bids).map(async (bid) => {
+        const domainHash = await registrar.getDomainFutureVersion(ethers.keccak256(ethers.toUtf8Bytes(bid.domain)))
+        const commitment = ethers.solidityPackedKeccak256(["address", "bytes32", "bytes32"], [buyer1.address, domainHash, ethers.keccak256(ethers.toUtf8Bytes(bid.secret))]);
+        await registrar.connect(buyer1).precommit(commitment, {value: bid.value});
+    });
+    await Promise.all(precommits);
+
     // Execute commits
     const commits = Object.values(bids).map(bid =>
-        registrar.connect(buyer1).commit(bid.domain, ethers.keccak256(ethers.toUtf8Bytes(bid.secret)), {value: bid.value}),
+        registrar.connect(buyer1).commit(bid.domain, ethers.keccak256(ethers.toUtf8Bytes(bid.secret))),
     );
-
     await Promise.all(commits);
 
     // Advance time

@@ -45,10 +45,8 @@ interface IRegistrar is IAuction {
 
     function precommit(bytes32 precommitment) external payable;
 
-    function commitb(string calldata domain, bytes32 secret) external;
-
-    function commit(string calldata domain, bytes32 secret) external payable returns (bytes32);
-
+    function commit(string calldata domain, bytes32 secret) external;
+    
     function batchRevealRegister(RevealType[] calldata commitments) external;
 
     function revealRegister(string calldata domain, string calldata secret, uint256 value) external returns (bool);
