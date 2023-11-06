@@ -228,6 +228,12 @@ export default function Domain() {
         if (!signer || !event) return;
 
         if (submittedCommitments.length > 0) return;
+
+        await CommitmentStore.deleteHighestCommitment(
+            signer.address,
+            tld,
+            domain
+        );
         await onOwnerStage();
     };
 
