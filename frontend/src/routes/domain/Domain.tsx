@@ -24,6 +24,7 @@ import LostPanel from "../../components/panels/LostPanel";
 import {routes} from "../app/App";
 
 import style from "./Domain.module.css";
+import InfoAlert from "../../components/alert/InfoAlert";
 
 enum Stages {
     viewOnly,
@@ -48,6 +49,8 @@ export default function Domain() {
     const [stage, setStage] = useState<Stages>(Stages.commit);
     const [submittedCommitments, setSubmittedCommitments] =
         useState<Commitment[]>([]);
+
+    const [alertMessage, setAlertMessage] = useState<string | null>(null);
     const [precommitment, setPrecommitment] = useState<Commitment | null>(null);
     const [commitStages, setCommitStages] = useState<CommitStages | undefined>(undefined);
 
@@ -252,17 +255,22 @@ export default function Domain() {
             if (!event.args) return false;
 
             // if domain has expired, we ignore
-            if (event.args.expires < BigInt(Math.round(Date.now() / 1000))) return;
-            return true;
+            if (event.args.expires < BigInt(Math.round(Date.now() / 1000))) return false;
+
+            // Filter for current user
+            return !(signer && event.args.owner !== signer.address);
         });
 
         if (!signer || !event) return;
+
+        setAlertMessage(`A total of  ${ethers.formatEther(event.args.refund)} ETH has been refunded`);
 
         const highestCommitment = await CommitmentStore.getHighestCommitment(
             signer.address,
             tld,
             domain
         );
+
         if (!highestCommitment) return;
 
         // Verify if user has revealed
@@ -471,6 +479,7 @@ export default function Domain() {
                             justifyContent={"center"}
                             alignItems={"center"}
                         >
+                            <InfoAlert show={!!alertMessage} dismiss={1 * 60 * 1000} message={alertMessage ?? ""}/>
                             <WithLoader loading={loading}>
                                 <WithConnect onClick={() => connect()} pred={!!signer}>
                                     {renderStage()}
