@@ -14,7 +14,7 @@ contract AuctionMock is Auction {
         commitBid(label, commitment, msg.value);
     }
 
-    function reveal(bytes32 label, bytes32 secret, uint256 value) public returns (bool, uint256, bytes32) {
+    function reveal(bytes32 label, bytes32 secret, uint256 value) public returns (Result memory) {
         return revealAuction(
             label,
             secret,

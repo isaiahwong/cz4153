@@ -17,6 +17,12 @@ abstract contract Auction is IAuction {
         bytes32 maxCommitment;
     }
 
+    struct Result {
+        bool success;
+        uint256 refund;
+        bytes32 highestCommitment;
+    }
+
     // Stores a mapping of address that stores a mapping of labels to bid amounts
     mapping(address => mapping(bytes32 => uint256)) internal bids;
 
@@ -125,7 +131,7 @@ abstract contract Auction is IAuction {
      * @param secret The hashed secret to reveal.
      * @param value The value to reveal.
      */
-    function revealAuction(bytes32 label, bytes32 secret, uint256 value) internal returns (bool, uint256, bytes32) {
+    function revealAuction(bytes32 label, bytes32 secret, uint256 value) internal returns (Result memory) {
         bytes32 commitment = makeCommitment(msg.sender, label, secret, value);
 
         // Check if auction exists
@@ -154,6 +160,6 @@ abstract contract Auction is IAuction {
         // Delete commitment
         delete bids[msg.sender][commitment];
 
-        return (auctions[label].maxCommitment == commitment, refund, auctions[label].maxCommitment);
+        return Result(auctions[label].maxCommitment == commitment, refund, auctions[label].maxCommitment);
     }
 }

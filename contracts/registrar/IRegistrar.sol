@@ -4,8 +4,7 @@ pragma solidity ^0.8.9;
 import "./IAuction.sol";
 
 interface IRegistrar is IAuction {
-    struct RevealType {
-        string domain;
+    struct CommitParam {
         string secret;
         uint256 value;
     }
@@ -47,9 +46,9 @@ interface IRegistrar is IAuction {
 
     function commit(string calldata domain, bytes32 secret) external;
     
-    function batchRevealRegister(RevealType[] calldata commitments) external;
+    function batchRevealRegister(string calldata domain, CommitParam[] calldata commitments) external;
 
-    function revealRegister(string calldata domain, string calldata secret, uint256 value) external returns (bool);
+    function revealRegister(string calldata domain, CommitParam calldata param) external returns (bool);
 
     function setCName(string memory domain) external;
 

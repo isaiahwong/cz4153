@@ -128,21 +128,20 @@ export class DNSContract {
         return registrar.connect(signer).makeDomainCommitment(domainHash, secret, ethers.parseEther(value));
     }
 
-    async reveal(provider: any, signer: JsonRpcSigner, secret: string, tld: string, subdomain: string, value: string) {
+    async reveal(provider: any, signer: JsonRpcSigner, secret: string, tld: string, domain: string, value: string) {
         const registrar = await this.getRegistrar(provider, tld);
-        return await registrar.connect(signer).revealRegister(subdomain, secret, ethers.parseEther(value));
+        return await registrar.connect(signer).revealRegister(domain, {secret: secret, value: ethers.parseEther(value)});
     }
 
-    async batchReveal(provider: any, signer: JsonRpcSigner, commitments: Commitment[]) {
-        const registrar = await this.getRegistrar(provider, commitments[0].tld);
+    async batchReveal(provider: any, signer: JsonRpcSigner,  tld: string, domain: string, commitments: Commitment[]) {
+        const registrar = await this.getRegistrar(provider, tld);
         const params = commitments.map(c =>
             ({
-                domain: c.domain,
                 secret: c.secret,
                 value: ethers.parseEther(c.value),
             })
         );
-        return await registrar.connect(signer).batchRevealRegister(params);
+        return await registrar.connect(signer).batchRevealRegister(domain, params);
     }
 
     async getTLDs(provider: any): Promise<TLD[]> {

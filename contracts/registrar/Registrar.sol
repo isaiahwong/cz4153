@@ -124,7 +124,6 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
         return hasDomainExpired(domain) || !hasAuctionExpired(getDomainCurrentVersion(domain));
     }
 
-
     /**
      * @dev precommit submits a bid bind to a commitment
      * @param precommitment Hash commitment. Scheme is keccak256(abi.encodePacked(msg.sender, versions[domain], secret))
@@ -190,33 +189,28 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
     }
 
     /**
-     * @dev batchCommit reveals multiple domain bids to an auction.
-     * @param commitments The commitments to commit.
+     * @dev batchCommit reveals multiple domain bids for the same domain
+     * @param domain The domain to reveal
+     * @param commitments The commitments submitted.
      */
-    function batchRevealRegister(RevealType[] calldata commitments) public {
-        for (uint256 i = 0; i < commitments.length; i++) {
-            revealRegister(commitments[i].domain, commitments[i].secret, commitments[i].value);
-        }
-    }
-
-    /**
-     * @dev Takes in a domain, plaintext secret and value and reveals the bid.
-     * Secret is hashed and commitment is reconstructed to ensure that the bid is valid.
-     * @param domain The domain to reveal.
-     * @param secret The plaintext secret to reveal.
-     * @param value The value to reveal.
-     */
-    function revealRegister(string calldata domain, string calldata secret, uint256 value) public returns (bool) {
+    function batchRevealRegister(string calldata domain, CommitParam[] calldata commitments) public {
+        // Accumulate refund
+        Result memory result;
         bytes32 domainHash = keccak256(abi.encodePacked(domain));
 
-        (bool bidSuccess, uint256 refund, bytes32 highestCommitment) = revealAuction(
-            getDomainCurrentVersion(domainHash),
-            keccak256(abi.encodePacked(secret)),
-            value
-        );
+        result.success = true;
 
-        // Return if bid was unsuccessful
-        if (!bidSuccess) {
+        for (uint256 i = 0; i < commitments.length; i++) {
+            Result memory res = revealRegister(domain, commitments[i], false);
+            result.refund += res.refund;
+            result.highestCommitment = res.highestCommitment;
+
+            if (!res.success) {
+                result.success = false;
+            }
+        }
+
+        if (!result.success) {
             emit DomainBidFailed(
                 msg.sender,
                 keccak256(abi.encodePacked(name())),
@@ -224,33 +218,71 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
                 name(),
                 domain,
                 expiries[domainHash],
-                refund,
+                result.refund,
                 auctionHighestBid(getDomainCurrentVersion(domainHash)),
-                highestCommitment
+                result.highestCommitment
             );
-            return bidSuccess;
         }
-
-        uint256 id = uint256(domainHash);
-
-        // Burn domain if exists prior
-        if (_exists(id)) {
-            _burn(id);
-        }
-        _mint(msg.sender, id);
-        dns.setSubDomain(tld, domain, msg.sender);
-        emit DomainRegistered(
-            msg.sender,
-            keccak256(abi.encodePacked(name())),
-            domainHash,
-            name(),
-            domain,
-            expiries[domainHash],
-            auctionHighestBid(getDomainCurrentVersion(domainHash)),
-            block.timestamp
-        );
-
-        return bidSuccess;
     }
 
+    function revealRegister(string calldata domain, CommitParam calldata param) public returns (bool) {
+        return revealRegister(domain, param, true).success;
+    }
+
+    /**
+     * @dev Takes in a domain, plaintext secret and value and reveals the bid.
+     * Secret is hashed and commitment is reconstructed to ensure that the bid is valid.
+     * @param domain The domain to reveal.
+     * @param param Commitment parameters
+     */
+    function revealRegister(string calldata domain, CommitParam calldata param, bool emitFailure) internal returns (Result memory) {
+        bytes32 domainHash = keccak256(abi.encodePacked(domain));
+
+        Result memory result = revealAuction(
+            getDomainCurrentVersion(domainHash),
+            keccak256(abi.encodePacked(param.secret)),
+            param.value
+        );
+
+        // Return if bid was unsuccessful
+        if (result.success) {
+            uint256 id = uint256(domainHash);
+
+            // Burn domain if exists prior
+            if (_exists(id)) {
+                _burn(id);
+            }
+            // Mint domain
+            _mint(msg.sender, id);
+
+            // Set domain owner
+            dns.setSubDomain(tld, domain, msg.sender);
+
+            // Emit event
+            emit DomainRegistered(
+                msg.sender,
+                keccak256(abi.encodePacked(name())),
+                domainHash,
+                name(),
+                domain,
+                expiries[domainHash],
+                auctionHighestBid(getDomainCurrentVersion(domainHash)),
+                block.timestamp
+            );
+        } else if (emitFailure) {
+            emit DomainBidFailed(
+                msg.sender,
+                keccak256(abi.encodePacked(name())),
+                domainHash,
+                name(),
+                domain,
+                expiries[domainHash],
+                result.refund,
+                auctionHighestBid(getDomainCurrentVersion(domainHash)),
+                result.highestCommitment
+            );
+        }
+
+        return result;
+    }
 }

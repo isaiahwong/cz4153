@@ -108,7 +108,7 @@ describe("💻 Test Registrar Contract", () => {
 
             await moveTime(AUCTION_DURATION + 1);
 
-            await registrar.connect(buyer1).revealRegister(domain, secret, value);
+            await registrar.connect(buyer1).revealRegister(domain, {secret, value});
         });
 
         it("should deny registered domain commit", async () => {
@@ -211,7 +211,7 @@ describe("💻 Test Registrar Contract", () => {
 
             // Reveal
             const reveals = Object.values(bids).map(bid =>
-                registrar.connect(bid.bidder).revealRegister(domain, bid.secret, bid.value),
+                registrar.connect(bid.bidder).revealRegister(domain, {secret: bid.secret, value: bid.value}),
             );
             await Promise.all(reveals);
 
@@ -235,7 +235,7 @@ describe("💻 Test Registrar Contract", () => {
         });
 
         it("should register multiple domains and list all domains owned", async () => {
-            const bids = [
+            const scseBids = [
                 {
                     domain: "scse",
                     domainHash: ethers.keccak256(ethers.toUtf8Bytes("scse")),
@@ -243,50 +243,113 @@ describe("💻 Test Registrar Contract", () => {
                     value: ethers.parseEther("0.01"),
                 },
                 {
+                    domain: "scse",
+                    domainHash: ethers.keccak256(ethers.toUtf8Bytes("scse")),
+                    secret: randomSecret(),
+                    value: ethers.parseEther("0.012"),
+                },
+                {
+                    domain: "scse",
+                    domainHash: ethers.keccak256(ethers.toUtf8Bytes("scse")),
+                    secret: randomSecret(),
+                    value: ethers.parseEther("0.02"),
+                },
+            ];
+
+            const nbsBids = [
+                {
                     domain: "nbs",
                     domainHash: ethers.keccak256(ethers.toUtf8Bytes("nbs")),
                     secret: randomSecret(),
                     value: ethers.parseEther("0.01"),
                 },
+                {
+                    domain: "nbs",
+                    domainHash: ethers.keccak256(ethers.toUtf8Bytes("nbs")),
+                    secret: randomSecret(),
+                    value: ethers.parseEther("0.012"),
+                },
+                {
+                    domain: "nbs",
+                    domainHash: ethers.keccak256(ethers.toUtf8Bytes("nbs")),
+                    secret: randomSecret(),
+                    value: ethers.parseEther("0.02"),
+                },
             ];
 
-            const precommits = Object.values(bids).map(async (bid) => {
+            const scsePrecommits = Object.values(scseBids).map(async (bid) => {
                 const domainHash = await registrar.getDomainFutureVersion(ethers.keccak256(ethers.toUtf8Bytes(bid.domain)))
                 const commitment = ethers.solidityPackedKeccak256(["address", "bytes32", "bytes32"], [buyer3.address, domainHash, ethers.keccak256(ethers.toUtf8Bytes(bid.secret))]);
                 await registrar.connect(buyer3).precommit(commitment, {value: bid.value});
             });
-            await Promise.all(precommits);
+            const nbsPrecommits = Object.values(nbsBids).map(async (bid) => {
+                const domainHash = await registrar.getDomainFutureVersion(ethers.keccak256(ethers.toUtf8Bytes(bid.domain)))
+                const commitment = ethers.solidityPackedKeccak256(["address", "bytes32", "bytes32"], [buyer3.address, domainHash, ethers.keccak256(ethers.toUtf8Bytes(bid.secret))]);
+                await registrar.connect(buyer3).precommit(commitment, {value: bid.value});
+            });
+            await Promise.all([...scsePrecommits, ...nbsPrecommits]);
 
             // Execute commits
-            const commits = Object.values(bids).map(bid =>
+            const scseCommits = Object.values(scseBids).map(bid =>
                 registrar.connect(buyer3).commit(bid.domain, ethers.keccak256(ethers.toUtf8Bytes(bid.secret))),
             );
-            await Promise.all(commits);
+            const nbsCommits = Object.values(nbsBids).map(bid =>
+                registrar.connect(buyer3).commit(bid.domain, ethers.keccak256(ethers.toUtf8Bytes(bid.secret))),
+            );
+            await Promise.all([...scseCommits, ...nbsCommits]);
 
             // Advance time
             await moveTime(AUCTION_DURATION + 1);
 
             // Reveal
-            const reveals = Object.values(bids).map(bid =>
-                ({domain: bid.domain, secret: bid.secret, value: bid.value})
+            const scseReveals = Object.values(scseBids).map(bid =>
+                ({secret: bid.secret, value: bid.value})
             );
-            await registrar.connect(buyer3).batchRevealRegister(reveals);
+            const nbsReveals = Object.values(nbsBids).map(bid =>
+                ({secret: bid.secret, value: bid.value})
+            );
 
+            await registrar.connect(buyer3).batchRevealRegister(scseBids[0].domain, scseReveals);
+            await registrar.connect(buyer3).batchRevealRegister(nbsBids[0].domain, nbsReveals);
+
+            // Verify events
             const registerFilter = registrar.filters.DomainRegistered(buyer3)
-            const events = await registrar.queryFilter(registerFilter);
+            const registeredEvents = await registrar.queryFilter(registerFilter);
 
             // Filter out expired domains
-            const domains = events
+            const domains = registeredEvents
                 .map(event => event.args)
                 .filter(args => args !== undefined && args.expires > Date.now() / 1000)
                 .map(args => args!);
 
             expect(domains.length).equal(2);
 
-            // Ensure domains are listed in events
-            bids.forEach((bid, i) => {
-                expect(domains[i].domain).equal(bid.domain);
-            });
+            // Verify events
+            const bidFailureFilter = registrar.filters.DomainBidFailed(buyer3)
+            const bidFailureEvents = await registrar.queryFilter(bidFailureFilter);
+
+            // Filter out expired domains
+            const failureBids = bidFailureEvents
+                .map(event => event.args)
+                .filter(args => args !== undefined && args.expires > Date.now() / 1000)
+                .map(args => args!);
+
+            // Remove highest bid
+            scseBids.pop();
+            nbsBids.pop();
+
+
+            const scseFailureBids = failureBids.filter(bid => bid.domain === "scse");
+            const nbsFailureBids = failureBids.filter(bid => bid.domain === "nbs");
+
+            expect(scseFailureBids.length).equal(1);
+            expect(nbsFailureBids.length).equal(1);
+
+            const scseRefund = scseBids.reduce((prev, curr) => prev + curr.value, ethers.parseEther("0"));
+            const nbsRefund = nbsBids.reduce((prev, curr) => prev + curr.value, ethers.parseEther("0"));
+
+            expect(scseFailureBids[0].refund).equal(scseRefund);
+            expect(nbsFailureBids[0].refund).equal(nbsRefund);
         });
     });
 
@@ -316,7 +379,7 @@ describe("💻 Test Registrar Contract", () => {
 
             await moveTime(AUCTION_DURATION + 1);
 
-            await registrar.connect(buyer1).revealRegister(domain, secret1, value);
+            await registrar.connect(buyer1).revealRegister(domain, {secret: secret1, value});
             const owner1 = await dnsRegistry.connect(buyer1).addr(ethers.namehash(`${domain}.ntu`));
             expect(owner1).equal(buyer1.address);
 
@@ -340,7 +403,7 @@ describe("💻 Test Registrar Contract", () => {
             await moveTime(AUCTION_DURATION + 1);
 
             // Reveal
-            await registrar.connect(buyer2).revealRegister(domain, secret2, value);
+            await registrar.connect(buyer2).revealRegister(domain, {secret: secret2, value});
             const owner2 = await dnsRegistry.addr(ethers.namehash(`${domain}.ntu`));
             expect(owner2).equal(buyer2.address);
         });

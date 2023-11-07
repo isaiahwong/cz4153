@@ -24,17 +24,12 @@ import type {
 } from "../../common";
 
 export declare namespace IRegistrar {
-  export type RevealTypeStruct = {
-    domain: string;
-    secret: string;
-    value: BigNumberish;
-  };
+  export type CommitParamStruct = { secret: string; value: BigNumberish };
 
-  export type RevealTypeStructOutput = [
-    domain: string,
-    secret: string,
-    value: bigint
-  ] & { domain: string; secret: string; value: bigint };
+  export type CommitParamStructOutput = [secret: string, value: bigint] & {
+    secret: string;
+    value: bigint;
+  };
 }
 
 export interface IRegistrarInterface extends Interface {
@@ -80,7 +75,7 @@ export interface IRegistrarInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "batchRevealRegister",
-    values: [IRegistrar.RevealTypeStruct[]]
+    values: [string, IRegistrar.CommitParamStruct[]]
   ): string;
   encodeFunctionData(
     functionFragment: "commit",
@@ -125,7 +120,7 @@ export interface IRegistrarInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "revealRegister",
-    values: [string, string, BigNumberish]
+    values: [string, IRegistrar.CommitParamStruct]
   ): string;
   encodeFunctionData(functionFragment: "setCName", values: [string]): string;
 
@@ -346,7 +341,7 @@ export interface IRegistrar extends BaseContract {
   >;
 
   batchRevealRegister: TypedContractMethod<
-    [commitments: IRegistrar.RevealTypeStruct[]],
+    [domain: string, commitments: IRegistrar.CommitParamStruct[]],
     [void],
     "nonpayable"
   >;
@@ -398,7 +393,7 @@ export interface IRegistrar extends BaseContract {
   precommit: TypedContractMethod<[precommitment: BytesLike], [void], "payable">;
 
   revealRegister: TypedContractMethod<
-    [domain: string, secret: string, value: BigNumberish],
+    [domain: string, param: IRegistrar.CommitParamStruct],
     [boolean],
     "nonpayable"
   >;
@@ -421,7 +416,7 @@ export interface IRegistrar extends BaseContract {
   getFunction(
     nameOrSignature: "batchRevealRegister"
   ): TypedContractMethod<
-    [commitments: IRegistrar.RevealTypeStruct[]],
+    [domain: string, commitments: IRegistrar.CommitParamStruct[]],
     [void],
     "nonpayable"
   >;
@@ -473,7 +468,7 @@ export interface IRegistrar extends BaseContract {
   getFunction(
     nameOrSignature: "revealRegister"
   ): TypedContractMethod<
-    [domain: string, secret: string, value: BigNumberish],
+    [domain: string, param: IRegistrar.CommitParamStruct],
     [boolean],
     "nonpayable"
   >;

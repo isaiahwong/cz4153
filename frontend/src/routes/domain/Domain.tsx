@@ -383,6 +383,8 @@ export default function Domain() {
                     : await dnsContract.batchReveal(
                         provider,
                         signer,
+                        tld,
+                        domain,
                         submittedCommitments
                     );
             await CommitmentStore.deleteCommitment(signer.address, tld, domain);

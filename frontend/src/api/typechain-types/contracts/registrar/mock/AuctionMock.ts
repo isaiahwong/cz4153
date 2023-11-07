@@ -21,6 +21,20 @@ import type {
   TypedContractMethod,
 } from "../../../common";
 
+export declare namespace Auction {
+  export type ResultStruct = {
+    success: boolean;
+    refund: BigNumberish;
+    highestCommitment: BytesLike;
+  };
+
+  export type ResultStructOutput = [
+    success: boolean,
+    refund: bigint,
+    highestCommitment: string
+  ] & { success: boolean; refund: bigint; highestCommitment: string };
+}
+
 export interface AuctionMockInterface extends Interface {
   getFunction(
     nameOrSignature:
@@ -197,7 +211,7 @@ export interface AuctionMock extends BaseContract {
 
   reveal: TypedContractMethod<
     [label: BytesLike, secret: BytesLike, value: BigNumberish],
-    [[boolean, bigint, string]],
+    [Auction.ResultStructOutput],
     "nonpayable"
   >;
 
@@ -249,7 +263,7 @@ export interface AuctionMock extends BaseContract {
     nameOrSignature: "reveal"
   ): TypedContractMethod<
     [label: BytesLike, secret: BytesLike, value: BigNumberish],
-    [[boolean, bigint, string]],
+    [Auction.ResultStructOutput],
     "nonpayable"
   >;
 

@@ -222,12 +222,12 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "string",
+        name: "domain",
+        type: "string",
+      },
+      {
         components: [
-          {
-            internalType: "string",
-            name: "domain",
-            type: "string",
-          },
           {
             internalType: "string",
             name: "secret",
@@ -239,7 +239,7 @@ const _abi = [
             type: "uint256",
           },
         ],
-        internalType: "struct IRegistrar.RevealType[]",
+        internalType: "struct IRegistrar.CommitParam[]",
         name: "commitments",
         type: "tuple[]",
       },
@@ -468,14 +468,21 @@ const _abi = [
         type: "string",
       },
       {
-        internalType: "string",
-        name: "secret",
-        type: "string",
-      },
-      {
-        internalType: "uint256",
-        name: "value",
-        type: "uint256",
+        components: [
+          {
+            internalType: "string",
+            name: "secret",
+            type: "string",
+          },
+          {
+            internalType: "uint256",
+            name: "value",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct IRegistrar.CommitParam",
+        name: "param",
+        type: "tuple",
       },
     ],
     name: "revealRegister",
