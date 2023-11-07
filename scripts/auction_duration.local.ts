@@ -25,7 +25,7 @@ async function main(hre: HardhatRuntimeEnvironment, taskArgs: Args) {
     const registrarOwner = accounts[1];
 
     // @ts-ignore
-    await changeAuction(duration, addresses[registrarName], registrarOwner);
+    await changeAuction(hre, duration, addresses[registrarName], registrarOwner);
 }
 
 task("auction_duration", "Set auction duration for a registrar")

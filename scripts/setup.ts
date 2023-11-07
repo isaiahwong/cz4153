@@ -37,7 +37,9 @@ export async function deployRegistrar(
 ): Promise<Registrar> {
     const fqdn = ethers.namehash(tld)
     const registrarFactory = await ethers.getContractFactory("Registrar");
-    const registrar = await registrarFactory.connect(deployer).deploy(tld, `${tld}.dns`, fqdn, auctionDuration, dns.target);
+    const registrar = await registrarFactory
+        .connect(deployer)
+        .deploy(tld, `${tld}.dns`, fqdn, auctionDuration, dns.target, );
 
     // Set registrar as owner of TLD
     await (await dns.setSubDomain(

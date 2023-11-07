@@ -30,6 +30,9 @@ In order to successfully bid for a domain, the user have to submit `3` Ethereum 
 - If user's bid is the highest, the smart contract will mint and allocate the domain to the user.
 - Else, the user will be refunded the amount bid prior.
 
+## Folder structure
+
+
 # Contents
 1. [Setting up Environment](#setting-up-environment)
 2. [Quickstart](#quickstart-)
@@ -45,6 +48,8 @@ The dApp is a React SPA that utilizes NodeJS and Metamask. You can install the f
 - [Metamask](https://metamask.io/download/)
 
 # Quickstart 
+> Warning, do not switch networks in the middle of a bidding. It clears the localstorage cache. 
+
 The smart contracts have been deployed on the testnet `Sepolia network` where you can run the `DNS dApp` directly without running a local node.
 
 ### 1. Enable testnet on metamask
@@ -62,11 +67,11 @@ $ npm run start
 
 ### Sepolia Deployed Addresses
 ```
-  "dns": "0x12D0A88a38dA672b006298DCf87f57c070f99468",
-  "ntuRegistrar": "0x73a71074aF4aF01184D47Bf2786285Ccf43fC031",
-  "devRegistrar": "0xC5410205Cd5E51e07a2C03b8C3C01E8D02c73046",
-  "comRegistrar": "0xfD36E18d32d4324644c4E731A929C4AD23ffe13D",
-  "xyzRegistrar": "0xAf8eE26a10b09a411C7D9Fb95D6255FE2C0DBB63"
+"dns": "0xA82a743e5abea0C6DAaD262A516FB3afa25DA8BD",
+"ntuRegistrar": "0xc4C89360aea4fA600a2fbfdc62EC65fe3feaC62A",
+"devRegistrar": "0x6275CfEC5AE3884E627e44463a3725C24d3a53d7",
+"comRegistrar": "0x036Ea9f35DD47145292Cb5ff438FeD141608598c",
+"xyzRegistrar": "0x462BE23e9043F7BAa66942367Dbe5f791b0848c3"
 ```
 
 ## Running Locally

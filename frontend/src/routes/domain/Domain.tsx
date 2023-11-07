@@ -479,7 +479,7 @@ export default function Domain() {
                             justifyContent={"center"}
                             alignItems={"center"}
                         >
-                            <InfoAlert show={!!alertMessage} dismiss={1 * 60 * 1000} message={alertMessage ?? ""}/>
+                            <InfoAlert show={!!alertMessage} dismiss={0.5 * 60 * 1000} message={alertMessage ?? ""}/>
                             <WithLoader loading={loading}>
                                 <WithConnect onClick={() => connect()} pred={!!signer}>
                                     {renderStage()}

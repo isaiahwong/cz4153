@@ -54,6 +54,9 @@ export const listenToEvents = () => {
     });
 }
 
+/**
+ * React hook to interact with the browser wallet.
+ */
 function useWallet() {
     const provider = setupProvider();
     const [hasWallet, setHasWallet] = useState<boolean>(!!window.ethereum);
