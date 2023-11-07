@@ -149,16 +149,17 @@ abstract contract Auction is IAuction {
             revert Errors.CommitmentDoesNotExist();
         }
 
-        uint256 refund = 0;
-
-        // Refund if not max bidder
-        if (auctions[label].maxCommitment != commitment) {
-            refund =  bids[msg.sender][commitment];
-            payable(msg.sender).transfer(refund);
-        }
+        uint256 refund = bids[msg.sender][commitment];
 
         // Delete commitment
         delete bids[msg.sender][commitment];
+
+        // Refund if not max bidder
+        if (auctions[label].maxCommitment != commitment) {
+            payable(msg.sender).transfer(refund);
+        } else {
+            refund = 0;
+        }
 
         return Result(auctions[label].maxCommitment == commitment, refund, auctions[label].maxCommitment);
     }
