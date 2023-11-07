@@ -10,6 +10,7 @@
     "coverage": "npx hardhat coverage",
     "deploy": "hardhat run --network localhost scripts/deploy.local.ts",
     "deploy:sepolia": "hardhat run --network sepolia scripts/deploy.sepolia.ts",
+    "seed-ntu:sepolia": "hardhat run --network sepolia scripts/seed.ntu.sepolia.ts",
     "auction_duration": "hardhat --network localhost auction_duration",
     "auction_duration:sepolia": "hardhat --network sepolia auction_duration_sepolia",
     "transfer": "hardhat --network localhost transfer",

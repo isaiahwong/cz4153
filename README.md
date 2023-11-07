@@ -31,6 +31,17 @@ In order to successfully bid for a domain, the user have to submit `3` Ethereum 
 - Else, the user will be refunded the amount bid prior.
 
 ## Folder structure
+.
+├── README.md
+├── addresses.local.json
+├── addresses.sepolia.json
+├── contracts
+├── frontend
+├── hardhat.config.ts
+├── package.json
+├── scripts
+├── test
+└── tsconfig.json
 
 
 # Contents
@@ -98,7 +109,7 @@ Open another new shell and deploy the smart contracts
 ```
 $ npm run deploy
 ```
-> The contract addresses - `address.local.json`, will be generated in the `root folder` and the `frontend` `./frontend/src/api`
+> The contract addresses is generated in the root folder `address.local.json`
 
 ### 4. Adding hardhat to metamask
 1. On Metamask, select networks and add a new network.
@@ -165,8 +176,8 @@ $  npm run auction_duration <REGISTRAR> <DURATION_IN_SECONDS>
 Sepolia
 > Ensure that you have deployed a new set of contracts to Sepolia and your `.env` is defined. 
 ```
-# npm run auction_duration:sepolia ntuRegistrar 
-# npm run auction_duration:sepolia <REGISTRAR> <DURATION_IN_SECONDS>
+# npm run auction_duration:sepolia ntuRegistrar 60
+$ npm run auction_duration:sepolia <REGISTRAR> <DURATION_IN_SECONDS>
 ```
 
 # Running Tests

@@ -1,7 +1,7 @@
 import {ethers} from "hardhat";
 import {deployDNS, deployRegistrar, writeContractAddresses} from "./setup";
 
-const AUCTION_DURATION = 1 * 60; // 1 minutes
+const AUCTION_DURATION = 3 * 60; // 1 minutes
 
 async function main() {
     const accounts = await ethers.getSigners();
