@@ -118,7 +118,7 @@ export default function Domain() {
         const isOwnerStage = async (domain: string, tld: string) => {
             const addr = await dnsContract.getAddr(provider, `${domain}.${tld}`);
             if (addr != dnsContract.EMPTY_ADDRESS) setOwner(addr);
-            return addr !== dnsContract.EMPTY_ADDRESS;
+            return addr !== dnsContract.EMPTY_ADDRESS && commitments.length == 0;
         };
 
         const isPendingRevealStage = async (
