@@ -31,6 +31,7 @@ In order to successfully bid for a domain, the user have to submit `3` Ethereum 
 - Else, the user will be refunded the amount bid prior.
 
 ## Folder structure
+```
 .
 ├── README.md
 ├── addresses.local.json
@@ -43,6 +44,7 @@ In order to successfully bid for a domain, the user have to submit `3` Ethereum 
 ├── test
 └── tsconfig.json
 
+```
 
 # Contents
 1. [Setting up Environment](#setting-up-environment)
