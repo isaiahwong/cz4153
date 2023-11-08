@@ -124,7 +124,7 @@ export default function Domain() {
         const isPendingRevealStage = async (
             deadline: number,
             auctionTimeRemain: number,
-            commitment: Commitment[]
+            commitments: Commitment[]
         ) => {
             return deadline != 0 && auctionTimeRemain <= 0 && commitments.length == 0;
         };
