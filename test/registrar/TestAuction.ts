@@ -1,4 +1,4 @@
-import {ethers} from "hardhat";
+import {ethers, upgrades} from "hardhat";
 import {expect} from "chai";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 
@@ -20,8 +20,13 @@ before(async () => {
     buyer2 = accounts[3];
 
     // Deploy auction
-    const auctionFactory = await ethers.getContractFactory("AuctionMock");
-    auction = await auctionFactory.connect(auctionOwner).deploy(AUCTION_DURATION);
+    const AuctionFactory = await ethers.getContractFactory("AuctionMock");
+
+    const auctionDeployed = await upgrades.deployProxy(AuctionFactory, [AUCTION_DURATION], {from: auctionOwner});
+    await auctionDeployed.waitForDeployment();
+
+    // @ts-ignore
+    auction = auctionDeployed as AuctionMock;
 });
 
 describe("👮🏻 Test Auction Contract", () => {

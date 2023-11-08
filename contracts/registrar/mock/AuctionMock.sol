@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../Auction.sol";
 
 /**
@@ -8,7 +9,9 @@ import "../Auction.sol";
  * concrete mock contract to test the Auction contract.
  */
 contract AuctionMock is Auction {
-    constructor(uint256 duration) Auction(duration) {}
+    function initialize(uint256 duration) public initializer {
+        __Auction_init(duration);
+    }
 
     function commit(bytes32 label, bytes32 commitment) public payable {
         commitBid(label, commitment, msg.value);

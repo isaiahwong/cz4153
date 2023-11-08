@@ -12,8 +12,8 @@ let registrarOwner: SignerWithAddress;
 
 let dnsRegistry: DNSRegistry;
 let dnsOwner: SignerWithAddress;
-
 let buyer1: SignerWithAddress;
+
 before(async () => {
     const accounts = await ethers.getSigners();
     dnsOwner = accounts[0];

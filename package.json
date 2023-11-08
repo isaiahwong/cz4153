@@ -10,6 +10,8 @@
     "coverage": "npx hardhat coverage",
     "deploy": "hardhat run --network localhost scripts/deploy.local.ts",
     "deploy:sepolia": "hardhat run --network sepolia scripts/deploy.sepolia.ts",
+    "upgrade": "hardhat run --network localhost scripts/upgrade.local.ts",
+    "upgrade:sepolia": "hardhat run --network localhost scripts/upgrade.local.ts",
     "seed-ntu:sepolia": "hardhat run --network sepolia scripts/seed.ntu.sepolia.ts",
     "auction_duration": "hardhat --network localhost auction_duration",
     "auction_duration:sepolia": "hardhat --network sepolia auction_duration_sepolia",
@@ -20,11 +22,13 @@
   "license": "ISC",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "@openzeppelin/hardhat-upgrades": "^2.3.3",
     "hardhat": "^2.17.4",
     "typechain": "^8.3.1"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.9.3",
+    "@openzeppelin/contracts": "^5.0.0",
+    "@openzeppelin/contracts-upgradeable": "^5.0.0",
     "dotenv": "^16.3.1",
     "solidity-coverage": "^0.8.5"
   }

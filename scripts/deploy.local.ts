@@ -1,4 +1,4 @@
-import {ethers} from "hardhat";
+import {ethers, upgrades} from "hardhat";
 import {deployDNS, deployRegistrar, writeContractAddresses} from "./setup";
 
 const AUCTION_DURATION = 1 * 60; // 1 minute

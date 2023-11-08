@@ -50,6 +50,8 @@ In order to successfully bid for a domain, the user have to submit `3` Ethereum 
 3. [Running Locally](#running-locally)
 4. [Deploying to Sepolia](#deploying-to-sepolia)
 5. [Configuration](#configuration-after-deployment)
+7. [Upgrading Contracts](#upgrading-contracts)
+8. [Testing](#running-tests)
 
 
 # Setting up Environment
@@ -178,6 +180,20 @@ Sepolia
 ```
 # npm run auction_duration:sepolia ntuRegistrar 60
 $ npm run auction_duration:sepolia <REGISTRAR> <DURATION_IN_SECONDS>
+```
+
+# Upgrading contracts
+You can upgrade the smart contracts without changing the deployed addresses on sepolia.
+> You will not be able to upgrade the current smart contracts as the author's private keys were used. You can define your PK in the `.env`.
+
+### Localhost
+```
+$ npm run upgrade:sepolia
+```
+
+### Sepolia
+```
+$ npm run upgrade:sepolia
 ```
 
 # Running Tests

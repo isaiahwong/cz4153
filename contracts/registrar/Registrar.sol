@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "./IRegistrar.sol";
 import "./Auction.sol";
@@ -16,7 +17,7 @@ import "hardhat/console.sol";
  * the registration of its domains under its TLD. It inherits from the Auction contract which
  * handles the bidding process.
  */
-contract Registrar is ERC721, Auction, IRegistrar, Ownable {
+contract Registrar is ERC721Upgradeable, Auction, IRegistrar, OwnableUpgradeable {
 
     // Stores a reference to the DNSRegistry contract
     IDNS private dns;
@@ -25,13 +26,13 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
     bytes32 private tld;
 
     // Tenure of a domain
-    uint256 private TENURE = 365 days;
+    uint256 private TENURE;
 
     // Grace period for rebidding a domain
-    uint256 private GRACE_PERIOD = 90 days;
+    uint256 private GRACE_PERIOD;
 
     // Minimum bid for a domain
-    uint256 constant public MIN_BID = 0.003 ether;
+    uint256 public MIN_BID;
 
     // Stores domain hash to expiry times
     mapping(bytes32 => uint256) private expiries;
@@ -57,15 +58,23 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
      * @dev Initializes the contract by initializing the NFT contract and auction contract.this
      * It stores the top level domain hash and the DNSRegistry contract address.
      */
-    constructor(
+    function initialize(
         string memory name,
         string memory symbol,
         bytes32 _tld,
         uint256 _auctionDuration,
         address _dns
-    ) ERC721(name, symbol) Auction(_auctionDuration) {
+    ) public initializer {
+        __ERC721_init(name, symbol);
+        __Auction_init(_auctionDuration);
+        __Ownable_init(msg.sender);
+
         tld = _tld;
         dns = IDNS(_dns);
+
+        TENURE = 365 days;
+        GRACE_PERIOD = 90 days;
+        MIN_BID = 0.003 ether;
     }
 
     function isAuthorized(bytes32 domain) public view returns (bool) {
@@ -249,7 +258,7 @@ contract Registrar is ERC721, Auction, IRegistrar, Ownable {
             uint256 id = uint256(domainHash);
 
             // Burn domain if exists prior
-            if (_exists(id)) {
+            if (_ownerOf(id) != address(0)) {
                 _burn(id);
             }
             // Mint domain

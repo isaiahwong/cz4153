@@ -36,6 +36,7 @@ export interface RegistrarInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "MIN_BID"
+      | "__Auction_init"
       | "approve"
       | "auctionDeadline"
       | "auctionExists"
@@ -53,6 +54,7 @@ export interface RegistrarInterface extends Interface {
       | "hasAuctionExpired"
       | "hasCommitment"
       | "hasDomainExpired"
+      | "initialize"
       | "isApprovedForAll"
       | "isAuthorized"
       | "makeCommitment"
@@ -84,11 +86,16 @@ export interface RegistrarInterface extends Interface {
       | "DomainAuctionStarted"
       | "DomainBidFailed"
       | "DomainRegistered"
+      | "Initialized"
       | "OwnershipTransferred"
       | "Transfer"
   ): EventFragment;
 
   encodeFunctionData(functionFragment: "MIN_BID", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "__Auction_init",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "approve",
     values: [AddressLike, BigNumberish]
@@ -153,6 +160,10 @@ export interface RegistrarInterface extends Interface {
   encodeFunctionData(
     functionFragment: "hasDomainExpired",
     values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "initialize",
+    values: [string, string, BytesLike, BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "isApprovedForAll",
@@ -232,6 +243,10 @@ export interface RegistrarInterface extends Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "MIN_BID", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "__Auction_init",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "auctionDeadline",
@@ -285,6 +300,7 @@ export interface RegistrarInterface extends Interface {
     functionFragment: "hasDomainExpired",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "isApprovedForAll",
     data: BytesLike
@@ -499,6 +515,18 @@ export namespace DomainRegisteredEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
+export namespace InitializedEvent {
+  export type InputTuple = [version: BigNumberish];
+  export type OutputTuple = [version: bigint];
+  export interface OutputObject {
+    version: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
 export namespace OwnershipTransferredEvent {
   export type InputTuple = [previousOwner: AddressLike, newOwner: AddressLike];
   export type OutputTuple = [previousOwner: string, newOwner: string];
@@ -575,6 +603,12 @@ export interface Registrar extends BaseContract {
 
   MIN_BID: TypedContractMethod<[], [bigint], "view">;
 
+  __Auction_init: TypedContractMethod<
+    [_duration: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
   approve: TypedContractMethod<
     [to: AddressLike, tokenId: BigNumberish],
     [void],
@@ -636,6 +670,18 @@ export interface Registrar extends BaseContract {
   >;
 
   hasDomainExpired: TypedContractMethod<[domain: BytesLike], [boolean], "view">;
+
+  initialize: TypedContractMethod<
+    [
+      name: string,
+      symbol: string,
+      _tld: BytesLike,
+      _auctionDuration: BigNumberish,
+      _dns: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
 
   isApprovedForAll: TypedContractMethod<
     [owner: AddressLike, operator: AddressLike],
@@ -751,6 +797,9 @@ export interface Registrar extends BaseContract {
     nameOrSignature: "MIN_BID"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
+    nameOrSignature: "__Auction_init"
+  ): TypedContractMethod<[_duration: BigNumberish], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "approve"
   ): TypedContractMethod<
     [to: AddressLike, tokenId: BigNumberish],
@@ -813,6 +862,19 @@ export interface Registrar extends BaseContract {
   getFunction(
     nameOrSignature: "hasDomainExpired"
   ): TypedContractMethod<[domain: BytesLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "initialize"
+  ): TypedContractMethod<
+    [
+      name: string,
+      symbol: string,
+      _tld: BytesLike,
+      _auctionDuration: BigNumberish,
+      _dns: AddressLike
+    ],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "isApprovedForAll"
   ): TypedContractMethod<
@@ -962,6 +1024,13 @@ export interface Registrar extends BaseContract {
     DomainRegisteredEvent.OutputObject
   >;
   getEvent(
+    key: "Initialized"
+  ): TypedContractEvent<
+    InitializedEvent.InputTuple,
+    InitializedEvent.OutputTuple,
+    InitializedEvent.OutputObject
+  >;
+  getEvent(
     key: "OwnershipTransferred"
   ): TypedContractEvent<
     OwnershipTransferredEvent.InputTuple,
@@ -1030,6 +1099,17 @@ export interface Registrar extends BaseContract {
       DomainRegisteredEvent.InputTuple,
       DomainRegisteredEvent.OutputTuple,
       DomainRegisteredEvent.OutputObject
+    >;
+
+    "Initialized(uint64)": TypedContractEvent<
+      InitializedEvent.InputTuple,
+      InitializedEvent.OutputTuple,
+      InitializedEvent.OutputObject
+    >;
+    Initialized: TypedContractEvent<
+      InitializedEvent.InputTuple,
+      InitializedEvent.OutputTuple,
+      InitializedEvent.OutputObject
     >;
 
     "OwnershipTransferred(address,address)": TypedContractEvent<

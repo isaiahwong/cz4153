@@ -1,6 +1,7 @@
 import {HardhatUserConfig} from "hardhat/config";
 import dotenv from "dotenv";
 import "@nomicfoundation/hardhat-toolbox";
+import '@openzeppelin/hardhat-upgrades';
 import "@typechain/hardhat";
 import "solidity-coverage";
 
@@ -33,7 +34,7 @@ declare module "hardhat/types/config" {
 }
 
 const config: HardhatUserConfig = {
-    solidity: "0.8.19",
+    solidity: "0.8.20",
     networks: {
         ...dynamicConfig,
         hardhat: {

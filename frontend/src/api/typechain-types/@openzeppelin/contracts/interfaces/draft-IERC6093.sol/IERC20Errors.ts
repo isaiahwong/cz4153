@@ -3,9 +3,7 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BytesLike,
   FunctionFragment,
-  Result,
   Interface,
   ContractRunner,
   ContractMethod,
@@ -16,28 +14,15 @@ import type {
   TypedDeferredTopicFilter,
   TypedEventLog,
   TypedListener,
-  TypedContractMethod,
 } from "../../../../common";
 
-export interface ERC165Interface extends Interface {
-  getFunction(nameOrSignature: "supportsInterface"): FunctionFragment;
+export interface IERC20ErrorsInterface extends Interface {}
 
-  encodeFunctionData(
-    functionFragment: "supportsInterface",
-    values: [BytesLike]
-  ): string;
-
-  decodeFunctionResult(
-    functionFragment: "supportsInterface",
-    data: BytesLike
-  ): Result;
-}
-
-export interface ERC165 extends BaseContract {
-  connect(runner?: ContractRunner | null): ERC165;
+export interface IERC20Errors extends BaseContract {
+  connect(runner?: ContractRunner | null): IERC20Errors;
   waitForDeployment(): Promise<this>;
 
-  interface: ERC165Interface;
+  interface: IERC20ErrorsInterface;
 
   queryFilter<TCEvent extends TypedContractEvent>(
     event: TCEvent,
@@ -76,19 +61,9 @@ export interface ERC165 extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  supportsInterface: TypedContractMethod<
-    [interfaceId: BytesLike],
-    [boolean],
-    "view"
-  >;
-
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
-
-  getFunction(
-    nameOrSignature: "supportsInterface"
-  ): TypedContractMethod<[interfaceId: BytesLike], [boolean], "view">;
 
   filters: {};
 }

@@ -8,6 +8,7 @@ import type {
   FunctionFragment,
   Result,
   Interface,
+  EventFragment,
   AddressLike,
   ContractRunner,
   ContractMethod,
@@ -17,6 +18,7 @@ import type {
   TypedContractEvent,
   TypedDeferredTopicFilter,
   TypedEventLog,
+  TypedLogDescription,
   TypedListener,
   TypedContractMethod,
 } from "../../common";
@@ -24,6 +26,7 @@ import type {
 export interface AuctionInterface extends Interface {
   getFunction(
     nameOrSignature:
+      | "__Auction_init"
       | "auctionDeadline"
       | "auctionExists"
       | "auctionHighestBid"
@@ -34,6 +37,12 @@ export interface AuctionInterface extends Interface {
       | "makeCommitment"
   ): FunctionFragment;
 
+  getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
+
+  encodeFunctionData(
+    functionFragment: "__Auction_init",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "auctionDeadline",
     values: [BytesLike]
@@ -68,6 +77,10 @@ export interface AuctionInterface extends Interface {
   ): string;
 
   decodeFunctionResult(
+    functionFragment: "__Auction_init",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "auctionDeadline",
     data: BytesLike
   ): Result;
@@ -99,6 +112,18 @@ export interface AuctionInterface extends Interface {
     functionFragment: "makeCommitment",
     data: BytesLike
   ): Result;
+}
+
+export namespace InitializedEvent {
+  export type InputTuple = [version: BigNumberish];
+  export type OutputTuple = [version: bigint];
+  export interface OutputObject {
+    version: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
 
 export interface Auction extends BaseContract {
@@ -144,6 +169,12 @@ export interface Auction extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  __Auction_init: TypedContractMethod<
+    [_duration: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
   auctionDeadline: TypedContractMethod<[label: BytesLike], [bigint], "view">;
 
   auctionExists: TypedContractMethod<[label: BytesLike], [boolean], "view">;
@@ -182,6 +213,9 @@ export interface Auction extends BaseContract {
   ): T;
 
   getFunction(
+    nameOrSignature: "__Auction_init"
+  ): TypedContractMethod<[_duration: BigNumberish], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "auctionDeadline"
   ): TypedContractMethod<[label: BytesLike], [bigint], "view">;
   getFunction(
@@ -215,5 +249,24 @@ export interface Auction extends BaseContract {
     "view"
   >;
 
-  filters: {};
+  getEvent(
+    key: "Initialized"
+  ): TypedContractEvent<
+    InitializedEvent.InputTuple,
+    InitializedEvent.OutputTuple,
+    InitializedEvent.OutputObject
+  >;
+
+  filters: {
+    "Initialized(uint64)": TypedContractEvent<
+      InitializedEvent.InputTuple,
+      InitializedEvent.OutputTuple,
+      InitializedEvent.OutputObject
+    >;
+    Initialized: TypedContractEvent<
+      InitializedEvent.InputTuple,
+      InitializedEvent.OutputTuple,
+      InitializedEvent.OutputObject
+    >;
+  };
 }
