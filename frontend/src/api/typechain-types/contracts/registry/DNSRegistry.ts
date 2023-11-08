@@ -3,6 +3,7 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumberish,
   BytesLike,
   FunctionFragment,
   Result,
@@ -30,12 +31,15 @@ export interface DNSRegistryInterface extends Interface {
       | "bulkResolve"
       | "cname"
       | "cnames"
+      | "initialize"
       | "makeDomain"
       | "setCName"
       | "setSubDomain"
   ): FunctionFragment;
 
-  getEvent(nameOrSignatureOrTopic: "NewDomainOwner"): EventFragment;
+  getEvent(
+    nameOrSignatureOrTopic: "Initialized" | "NewDomainOwner"
+  ): EventFragment;
 
   encodeFunctionData(functionFragment: "addr", values: [BytesLike]): string;
   encodeFunctionData(
@@ -48,6 +52,10 @@ export interface DNSRegistryInterface extends Interface {
   ): string;
   encodeFunctionData(functionFragment: "cname", values: [AddressLike]): string;
   encodeFunctionData(functionFragment: "cnames", values: [AddressLike]): string;
+  encodeFunctionData(
+    functionFragment: "initialize",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "makeDomain",
     values: [BytesLike, BytesLike]
@@ -69,12 +77,25 @@ export interface DNSRegistryInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "cname", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "cnames", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "makeDomain", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "setCName", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setSubDomain",
     data: BytesLike
   ): Result;
+}
+
+export namespace InitializedEvent {
+  export type InputTuple = [version: BigNumberish];
+  export type OutputTuple = [version: bigint];
+  export interface OutputObject {
+    version: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
 
 export namespace NewDomainOwnerEvent {
@@ -155,6 +176,8 @@ export interface DNSRegistry extends BaseContract {
 
   cnames: TypedContractMethod<[arg0: AddressLike], [string], "view">;
 
+  initialize: TypedContractMethod<[owner: AddressLike], [void], "nonpayable">;
+
   makeDomain: TypedContractMethod<
     [parentDomain: BytesLike, domain: BytesLike],
     [string],
@@ -193,6 +216,9 @@ export interface DNSRegistry extends BaseContract {
     nameOrSignature: "cnames"
   ): TypedContractMethod<[arg0: AddressLike], [string], "view">;
   getFunction(
+    nameOrSignature: "initialize"
+  ): TypedContractMethod<[owner: AddressLike], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "makeDomain"
   ): TypedContractMethod<
     [parentDomain: BytesLike, domain: BytesLike],
@@ -215,6 +241,13 @@ export interface DNSRegistry extends BaseContract {
   >;
 
   getEvent(
+    key: "Initialized"
+  ): TypedContractEvent<
+    InitializedEvent.InputTuple,
+    InitializedEvent.OutputTuple,
+    InitializedEvent.OutputObject
+  >;
+  getEvent(
     key: "NewDomainOwner"
   ): TypedContractEvent<
     NewDomainOwnerEvent.InputTuple,
@@ -223,6 +256,17 @@ export interface DNSRegistry extends BaseContract {
   >;
 
   filters: {
+    "Initialized(uint64)": TypedContractEvent<
+      InitializedEvent.InputTuple,
+      InitializedEvent.OutputTuple,
+      InitializedEvent.OutputObject
+    >;
+    Initialized: TypedContractEvent<
+      InitializedEvent.InputTuple,
+      InitializedEvent.OutputTuple,
+      InitializedEvent.OutputObject
+    >;
+
     "NewDomainOwner(bytes32,bytes32,string,address)": TypedContractEvent<
       NewDomainOwnerEvent.InputTuple,
       NewDomainOwnerEvent.OutputTuple,

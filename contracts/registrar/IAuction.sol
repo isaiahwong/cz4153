@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 interface IAuction {
     function hasAuctionExpired(bytes32 label) external view returns (bool);

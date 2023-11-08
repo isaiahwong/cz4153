@@ -129,7 +129,7 @@ export default function Domain() {
             return deadline != 0 && auctionTimeRemain <= 0 && commitments.length == 0;
         };
 
-        const isCommitStage = (commitment: Commitment[]) => {
+        const isCommitStage = (commitments: Commitment[]) => {
             return commitments.length == 0;
         };
 
@@ -197,7 +197,7 @@ export default function Domain() {
     };
 
     const onOwnerStage = async () => {
-        if (!domain || !tld) return;
+        if (!domain || !tld || stage == Stages.lose) return;
         const addr = await dnsContract.getAddr(provider, `${domain}.${tld}`);
         if (addr !== dnsContract.EMPTY_ADDRESS) {
             setStage(Stages.owner);
@@ -232,11 +232,6 @@ export default function Domain() {
 
         if (submittedCommitments.length > 0) return;
 
-        await CommitmentStore.deleteHighestCommitment(
-            signer.address,
-            tld,
-            domain
-        );
         await onOwnerStage();
     };
 
@@ -284,6 +279,7 @@ export default function Domain() {
             highestCommitment.domain,
             highestCommitment.value
         );
+
         if (commitmentHash !== event.args.highestCommitment) {
             // Handle fail bid
             onLostStage(
@@ -348,8 +344,9 @@ export default function Domain() {
             );
 
             await CommitmentStore.addCommit(commitment);
-            await CommitmentStore.storeHighestCommitment(signer.address, tld, domain);
             await PrecommitmentStore.deleteCommitment(commitment.owner, commitment.tld, commitment.domain);
+            await CommitmentStore.storeHighestCommitment(signer.address, tld, domain);
+
             await tx.wait();
 
             setPrecommitment(null);

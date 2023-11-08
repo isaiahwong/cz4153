@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./IDNS.sol";
 import "hardhat/console.sol";
 
@@ -8,7 +9,7 @@ import "hardhat/console.sol";
  * @dev Implementation of the {IDNS} interface. This contract is used to store a mapping of domains to owners.
  * DNSRegistry is the root domain, and all domains are stored as subdomains of the root domain.
  */
-contract DNSRegistry is IDNS {
+contract DNSRegistry is IDNS, Initializable {
     struct Record {
         address owner;
     }
@@ -30,9 +31,9 @@ contract DNSRegistry is IDNS {
     /**
      * @dev Initializes the contract by setting the contract publisher as the owner of root domain.
      */
-    constructor() {
+    function initialize(address owner) public initializer {
         // Sets the owner of the root domain
-        registrars[0x0].owner = msg.sender;
+        registrars[0x0].owner = owner;
     }
 
     /**

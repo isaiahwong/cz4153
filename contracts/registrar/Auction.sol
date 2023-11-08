@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import "./IAuction.sol";
 import "./Errors.sol";
@@ -9,7 +11,7 @@ import "hardhat/console.sol";
 /**
  * @dev Implementation of the {IAuction} interface. The Auction contract consists of logic to handle a blind auction
  */
-abstract contract Auction is IAuction {
+abstract contract Auction is IAuction, Initializable {
     struct Record {
         address maxBidder;
         uint256 maxBid;
@@ -45,7 +47,10 @@ abstract contract Auction is IAuction {
         _;
     }
 
-    constructor(uint256 _duration) {
+    /**
+     * @dev Initializes the contract by setting the auction duration.
+     */
+    function __Auction_init(uint256 _duration) public onlyInitializing {
         _setDuration(_duration);
     }
 

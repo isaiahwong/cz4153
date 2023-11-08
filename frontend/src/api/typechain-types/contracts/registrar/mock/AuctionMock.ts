@@ -8,6 +8,7 @@ import type {
   FunctionFragment,
   Result,
   Interface,
+  EventFragment,
   AddressLike,
   ContractRunner,
   ContractMethod,
@@ -17,6 +18,7 @@ import type {
   TypedContractEvent,
   TypedDeferredTopicFilter,
   TypedEventLog,
+  TypedLogDescription,
   TypedListener,
   TypedContractMethod,
 } from "../../../common";
@@ -38,6 +40,7 @@ export declare namespace Auction {
 export interface AuctionMockInterface extends Interface {
   getFunction(
     nameOrSignature:
+      | "__Auction_init"
       | "auctionDeadline"
       | "auctionExists"
       | "auctionHighestBid"
@@ -46,10 +49,17 @@ export interface AuctionMockInterface extends Interface {
       | "getAuctionDuration"
       | "hasAuctionExpired"
       | "hasCommitment"
+      | "initialize"
       | "makeCommitment"
       | "reveal"
   ): FunctionFragment;
 
+  getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
+
+  encodeFunctionData(
+    functionFragment: "__Auction_init",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "auctionDeadline",
     values: [BytesLike]
@@ -83,6 +93,10 @@ export interface AuctionMockInterface extends Interface {
     values: [BytesLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "initialize",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "makeCommitment",
     values: [AddressLike, BytesLike, BytesLike, BigNumberish]
   ): string;
@@ -91,6 +105,10 @@ export interface AuctionMockInterface extends Interface {
     values: [BytesLike, BytesLike, BigNumberish]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "__Auction_init",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "auctionDeadline",
     data: BytesLike
@@ -120,11 +138,24 @@ export interface AuctionMockInterface extends Interface {
     functionFragment: "hasCommitment",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "makeCommitment",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "reveal", data: BytesLike): Result;
+}
+
+export namespace InitializedEvent {
+  export type InputTuple = [version: BigNumberish];
+  export type OutputTuple = [version: bigint];
+  export interface OutputObject {
+    version: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
 
 export interface AuctionMock extends BaseContract {
@@ -170,6 +201,12 @@ export interface AuctionMock extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  __Auction_init: TypedContractMethod<
+    [_duration: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
   auctionDeadline: TypedContractMethod<[label: BytesLike], [bigint], "view">;
 
   auctionExists: TypedContractMethod<[label: BytesLike], [boolean], "view">;
@@ -198,6 +235,12 @@ export interface AuctionMock extends BaseContract {
     "view"
   >;
 
+  initialize: TypedContractMethod<
+    [duration: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
   makeCommitment: TypedContractMethod<
     [
       owner: AddressLike,
@@ -219,6 +262,9 @@ export interface AuctionMock extends BaseContract {
     key: string | FunctionFragment
   ): T;
 
+  getFunction(
+    nameOrSignature: "__Auction_init"
+  ): TypedContractMethod<[_duration: BigNumberish], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "auctionDeadline"
   ): TypedContractMethod<[label: BytesLike], [bigint], "view">;
@@ -248,6 +294,9 @@ export interface AuctionMock extends BaseContract {
     nameOrSignature: "hasCommitment"
   ): TypedContractMethod<[commitment: BytesLike], [boolean], "view">;
   getFunction(
+    nameOrSignature: "initialize"
+  ): TypedContractMethod<[duration: BigNumberish], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "makeCommitment"
   ): TypedContractMethod<
     [
@@ -267,5 +316,24 @@ export interface AuctionMock extends BaseContract {
     "nonpayable"
   >;
 
-  filters: {};
+  getEvent(
+    key: "Initialized"
+  ): TypedContractEvent<
+    InitializedEvent.InputTuple,
+    InitializedEvent.OutputTuple,
+    InitializedEvent.OutputObject
+  >;
+
+  filters: {
+    "Initialized(uint64)": TypedContractEvent<
+      InitializedEvent.InputTuple,
+      InitializedEvent.OutputTuple,
+      InitializedEvent.OutputObject
+    >;
+    Initialized: TypedContractEvent<
+      InitializedEvent.InputTuple,
+      InitializedEvent.OutputTuple,
+      InitializedEvent.OutputObject
+    >;
+  };
 }
