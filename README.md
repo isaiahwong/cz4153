@@ -8,6 +8,46 @@ The following repo defines the implementation of a decentralized DNS on the Ethe
 
 [Github](https://github.com/isaiahwong/cz4153)
 
+# Setting up Environment
+
+The dApp is a React SPA that utilizes NodeJS and Metamask. You can install the following with the links supplied below.
+- [NodeJS](https://nodejs.org/en)
+- [Metamask](https://metamask.io/download/)
+
+# Quickstart
+> Warning, do not switch networks in the middle of a bidding. It clears the localstorage cache.
+
+The smart contracts have been deployed on the testnet `Sepolia network` where you can run the `DNS dApp` directly without running a local node.
+
+### 1. Enable testnet on metamask
+1. On Metamask, select networks and enable test networks.
+2. Select `Sepolia` network.
+
+### 2. Getting ether for Sepolia testnet
+In order to interact with the dApp, you require some ether. You can attain some from [Sepolia Faucet](https://sepoliafaucet.com/). Supply your wallet address to attain some ether.
+
+### 3. Running the dApp
+```
+$ cd frontend && npm i
+$ npm run start
+```
+### Sepolia Deployed Addresses
+dns: [0x1bEc6C3e40f4E77cc4bbf58EA412764159d48718](https://sepolia.etherscan.io/address/0x1bEc6C3e40f4E77cc4bbf58EA412764159d48718)  
+ntuRegistrar: [0xfca0C7221AaA904fE2612F78e0148EB41CaEa676](https://sepolia.etherscan.io/address/0xfca0C7221AaA904fE2612F78e0148EB41CaEa676)  
+ntuRegistrarProxy: [0x395d751c390f08876a045c40c041d93887d94ee4](https://sepolia.etherscan.io/address/0x395d751c390f08876a045c40c041d93887d94ee4)    
+devRegistrar: [0xF8B620c109B9b96888EF98600faDd907EF00BEFF](https://sepolia.etherscan.io/address/0xF8B620c109B9b96888EF98600faDd907EF00BEFF)  
+comRegistrar: [0x9f3EBbFf77a37BfCF3a71Ec95534c8bd65c4bd5B](https://sepolia.etherscan.io/address/0x9f3EBbFf77a37BfCF3a71Ec95534c8bd65c4bd5B)  
+xyzRegistrar: [0x114a16a2002CEa9821f724f49618D8ac1eb059c7](https://sepolia.etherscan.io/address/0x114a16a2002CEa9821f724f49618D8ac1eb059c7)  
+
+# Contents
+1. [About](#about)
+2. [Running Locally](#running-locally)
+3. [Deploying to Sepolia](#deploying-to-sepolia)
+4. [Configuration](#configuration-after-deployment)
+5. [Upgrading Contracts](#upgrading-contracts)
+6. [Testing](#running-tests)
+
+
 # About
 The DNS utilizes a blind auction `commit and reveal` scheme where the bid of each commitment is hidden. 
 In order to successfully bid for a domain, the user have to submit `3` Ethereum transactions in total.
@@ -46,50 +86,7 @@ In order to successfully bid for a domain, the user have to submit `3` Ethereum 
 
 ```
 
-# Contents
-1. [Setting up Environment](#setting-up-environment)
-2. [Quickstart](#quickstart-)
-3. [Running Locally](#running-locally)
-4. [Deploying to Sepolia](#deploying-to-sepolia)
-5. [Configuration](#configuration-after-deployment)
-7. [Upgrading Contracts](#upgrading-contracts)
-8. [Testing](#running-tests)
-
-
-# Setting up Environment
-
-The dApp is a React SPA that utilizes NodeJS and Metamask. You can install the following with the links supplied below. 
-- [NodeJS](https://nodejs.org/en)
-- [Metamask](https://metamask.io/download/)
-
-# Quickstart 
-> Warning, do not switch networks in the middle of a bidding. It clears the localstorage cache. 
-
-The smart contracts have been deployed on the testnet `Sepolia network` where you can run the `DNS dApp` directly without running a local node.
-
-### 1. Enable testnet on metamask
-1. On Metamask, select networks and enable test networks.
-2. Select `Sepolia` network.
-
-### 2. Getting ether for Sepolia testnet
-In order to interact with the dApp, you require some ether. You can attain some from [Sepolia Faucet](https://sepoliafaucet.com/). Supply your wallet address to attain some ether.
-
-### 3. Running the dApp
-```
-$ cd frontend && npm i
-$ npm run start
-```
-
-### Sepolia Deployed Addresses
-```
-  "dns": "0x1bEc6C3e40f4E77cc4bbf58EA412764159d48718",
-  "ntuRegistrar": "0xfca0C7221AaA904fE2612F78e0148EB41CaEa676",
-  "devRegistrar": "0xF8B620c109B9b96888EF98600faDd907EF00BEFF",
-  "comRegistrar": "0x9f3EBbFf77a37BfCF3a71Ec95534c8bd65c4bd5B",
-  "xyzRegistrar": "0x114a16a2002CEa9821f724f49618D8ac1eb059c7"
-```
-
-## Running Locally
+# Running Locally
 Alternatively, you can run your own local node and deploy the contracts locally.
 
 ### 1. Install dependencies 

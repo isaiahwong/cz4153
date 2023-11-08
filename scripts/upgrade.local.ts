@@ -12,6 +12,8 @@ async function main() {
     await upgradeRegistrar(registrarOwner, addresses.comRegistrar);
     await upgradeRegistrar(registrarOwner, addresses.devRegistrar);
     await upgradeRegistrar(registrarOwner, addresses.xyzRegistrar);
+
+    console.log("Upgraded contracts");
 }
 
 // We recommend this pattern to be able to use async/await everywhere
